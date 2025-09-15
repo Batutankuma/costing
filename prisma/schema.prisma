@@ -1,0 +1,595 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String           @id @default(cuid())
+  name           String
+  email          String
+  emailVerified  Boolean
+  image          String?
+  role           Role             @default(COMMERCIAL)
+  createdAt      DateTime
+  updatedAt      DateTime
+  signatureDataUrl String? @db.LongText
+  sessions       Session[]
+  accounts       Account[]
+  PriceReference PriceReference[]
+  costBuildUps   CostBuildUp[]
+  salesQuotes    SalesQuote[]
+  nonMiningPrices NonMiningPriceStructure[]
+  clients        Client[]
+  prospects      Prospect[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
+model ExchangeRate {
+  id           String     @id @default(cuid())
+  deviseBase   DeviseCode @default(CDF)
+  deviseTarget DeviseCode @default(USD)
+  rate         Float // 1 base = rate target
+  validOn      DateTime   @default(now())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  priceReferences PriceReference[]
+  nonMiningPriceStructures NonMiningPriceStructure[]
+}
+
+// tableau de structure de prix 
+model PriceReference {
+  id               String           @id @default(cuid())
+  date             DateTime         @default(now()) // Historique
+  structureSociete StructureSociete @default(SOCIETE_AUTRE)
+  nomStructure     String
+  description      String?
+  userId           String
+  user             User             @relation(fields: [userId], references: [id])
+  cardinale        Cardinale        @default(SUD)
+  pmfCommercialUSD Float // P.M.F. Commercial (USD)
+  pmfCommercialCDF Float // P.M.F. Commercial (CDF)
+  exchangeRateId   String
+
+  // Totaux
+  priceRefCDF         Float // Prix de référence en CDF / M3
+  priceRefUSD         Float // Prix de référence en USD / M3
+  priceRefUSDPerLitre Float // Prix de référence en USD / Litre
+
+  // One-to-one details (owned by children)
+  logisticsCosts  LogisticsCosts?
+  commercialCosts CommercialCosts?
+  parafiscality   Parafiscality?
+  fiscality       Fiscality?
+
+  // Relations
+  exchangeRate ExchangeRate  @relation(fields: [exchangeRateId], references: [id])
+  costBuildUps CostBuildUp[]
+}
+
+// ===== Cost Build Up (Builder) =====
+enum UnitPricing {
+  USD_M3
+  USD_LITRE
+}
+
+model CostBuildUp {
+  id          String      @id @default(cuid())
+  date        DateTime    @default(now())
+  title       String
+  description String?
+  unit        UnitPricing @default(USD_M3)
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+
+  priceReferenceId String?
+  priceReference   PriceReference? @relation(fields: [priceReferenceId], references: [id])
+
+  nonMiningPriceStructureId String?
+  nonMiningPriceStructure   NonMiningPriceStructure? @relation(fields: [nonMiningPriceStructureId], references: [id])
+
+  baseCosts   BaseProductCosts?
+  supplierDDU SupplierDDUCosts?
+  customs     CustomsCollected?
+  levies      LeviesCollected?
+  transport   TransportAdditionalCosts?
+  totals      BuildUpTotals?
+  salesQuotes SalesQuote[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cost_build_up")
+}
+
+model BaseProductCosts {
+  id                 String @id @default(cuid())
+  costBuildUpId      String @unique
+  plattsFOBUSD       Float
+  truckTransportUSD  Float
+  brutCFUSD          Float
+  agencyCustomsUSD   Float
+  acquisitionCostUSD Float
+
+  costBuildUp CostBuildUp @relation(fields: [costBuildUpId], references: [id])
+
+  @@map("base_product_costs")
+}
+
+model SupplierDDUCosts {
+  id                    String @id @default(cuid())
+  costBuildUpId         String @unique
+  storageHospitalityUSD Float
+  anrDechargementUSD    Float
+  supplierMarginUSD     Float
+  sellingPriceDDUUSD    Float
+
+  costBuildUp CostBuildUp @relation(fields: [costBuildUpId], references: [id])
+
+  @@map("supplier_ddu_costs")
+}
+
+model CustomsCollected {
+  id             String @id @default(cuid())
+  costBuildUpId  String @unique
+  customsDutyUSD Float?
+  importVATUSD   Float?
+  subtotalUSD    Float?
+
+  costBuildUp CostBuildUp @relation(fields: [costBuildUpId], references: [id])
+
+  @@map("customs_collected")
+}
+
+model LeviesCollected {
+  id                         String @id @default(cuid())
+  costBuildUpId              String @unique
+  fonerUSD                   Float?
+  molecularMarkingOrStockUSD Float?
+  reconstructionStrategicUSD Float?
+  economicInterventionUSD    Float?
+  totalDutiesAndVATUSD       Float?
+  totalLeviesUSD             Float?
+
+  costBuildUp CostBuildUp @relation(fields: [costBuildUpId], references: [id])
+
+  @@map("levies_collected")
+}
+
+model TransportAdditionalCosts {
+  id                     String @id @default(cuid())
+  costBuildUpId          String @unique
+  freightToMineUSD       Float?
+  lossesLitresPerTruck   Float?
+  totalTransportFinalUSD Float?
+
+  costBuildUp CostBuildUp @relation(fields: [costBuildUpId], references: [id])
+
+  @@map("transport_additional_costs")
+}
+
+model BuildUpTotals {
+  id              String @id @default(cuid())
+  costBuildUpId   String @unique
+  totalCustomsUSD Float?
+  totalLeviesUSD  Float?
+  priceDDUUSD     Float?
+  priceDDPUSD     Float?
+
+  costBuildUp CostBuildUp @relation(fields: [costBuildUpId], references: [id])
+
+  @@map("build_up_totals")
+}
+
+// Devis commerciaux simples pour les équipes sales
+model SalesQuote {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  description String?
+  signatureDataUrl String? @db.LongText
+  proformaNumber   String?
+
+  // Référence au CostBuildUp source
+  costBuildUp   CostBuildUp @relation(fields: [costBuildUpId], references: [id])
+  costBuildUpId String
+
+  // Prix de base calculés hors marge fournisseur et freight to mine
+  baseDDUUSD Float
+  baseDDPUSD Float
+
+  // Paramètres commerciaux saisis par l'utilisateur
+  marginUSD        Float @default(0)
+  freightToMineUSD Float @default(0)
+  tvaApplicable    Boolean @default(false)
+  tvaAmount        Float? @default(0)
+
+  // Totaux calculés
+  totalDDUUSD Float
+  totalDDPUSD Float
+
+  // Optionnel: rattachement à un utilisateur
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  // Optionnel: rattachement à un client
+  client   Client?  @relation(fields: [clientId], references: [id])
+  clientId String?
+
+  @@map("sales_quote")
+}
+
+// ===== CRM: Clients & Prospects =====
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  company   String?
+  email     String?
+  phone     String?
+  address   String?
+  status    Status   @default(ACTIVE)
+  ownerId   String?
+  owner     User?    @relation(fields: [ownerId], references: [id])
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  salesQuotes SalesQuote[]
+
+  @@map("client")
+}
+
+enum ProspectStage {
+  NEW
+  CONTACTED
+  QUALIFIED
+  WON
+  LOST
+}
+
+model Prospect {
+  id        String        @id @default(cuid())
+  name      String
+  company   String?
+  email     String?
+  phone     String?
+  source    String?      // Provenance du lead
+  stage     ProspectStage @default(NEW)
+  ownerId   String?
+  owner     User?        @relation(fields: [ownerId], references: [id])
+  notes     String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@map("prospect")
+}
+
+model LogisticsCosts {
+  id               String   @id @default(cuid())
+  priceReferenceId String   @unique
+  warehouseFee     Float // Charges d'exploitation logisticiens
+  total            Float // Total frais sociétés logistiques
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  priceReference PriceReference @relation(fields: [priceReferenceId], references: [id])
+}
+
+model CommercialCosts {
+  id               String   @id @default(cuid())
+  priceReferenceId String   @unique
+  socComFee        Float // Charges exploitation SOC. Com.
+  margin           Float // Marge (10% PMF)
+  total            Float // Total frais sociétés commerciales
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  priceReference PriceReference @relation(fields: [priceReferenceId], references: [id])
+}
+
+model Parafiscality {
+  id                   String   @id @default(cuid())
+  priceReferenceId     String   @unique
+  stockSecurity1       Float
+  stockSecurity2       Float
+  molecularMarking     Float // Marquage moléculaire
+  foner                Float // FONER (Fonds National d'Entretien Routier)
+  reconstructionEffort Float // Effort de reconstruction & Stock Stratégique
+  intervention         Float // Intervention Economique & Autres
+  total                Float
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  priceReference PriceReference @relation(fields: [priceReferenceId], references: [id])
+}
+
+model Fiscality {
+  id               String   @id @default(cuid())
+  priceReferenceId String   @unique
+  venteVAT         Float? // TVA à la vente
+  customsDuty      Float? // Droits de Douane (10% PMF)
+  consumptionDuty  Float? // Droits de Consommation
+  importVAT        Float? // TVA à l'importation
+  total1           Float? // Total Fiscalité 1
+  netVAT           Float? // TVA nette à l'intérieur
+  total2           Float? // Total Fiscalité 2
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  priceReference PriceReference @relation(fields: [priceReferenceId], references: [id])
+}
+
+// ===== Structure de Prix Non-Minier =====
+model NonMiningPriceStructure {
+  id               String           @id @default(cuid())
+  date             DateTime         @default(now())
+  nomStructure     String
+  description      String?
+  userId           String
+  user             User             @relation(fields: [userId], references: [id])
+  cardinale        Cardinale        @default(SUD)
+  pmfCommercialUSD Float // P.M.F. Commercial (USD)
+  pmfCommercialCDF Float // P.M.F. Commercial (CDF)
+  exchangeRateId   String
+
+  // Totaux
+  priceRefCDF         Float // Prix de référence en CDF / M3
+  priceRefUSD         Float // Prix de référence en USD / M3
+  priceRefUSDPerLitre Float // Prix de référence en USD / Litre
+
+  // Relations
+  exchangeRate ExchangeRate @relation(fields: [exchangeRateId], references: [id])
+  
+  // Détails de la structure
+  distributionCosts NonMiningDistributionCosts?
+  securityStock     NonMiningSecurityStock?
+  parafiscality     NonMiningParafiscality?
+  fiscality         NonMiningFiscality?
+  finalPricing      NonMiningFinalPricing?
+
+  // Relations avec les builders
+  costBuildUps CostBuildUp[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("non_mining_price_structure")
+}
+
+// Frais de distribution pour non-minier
+model NonMiningDistributionCosts {
+  id                    String   @id @default(cuid())
+  nonMiningPriceId      String   @unique
+  ogefrem               Float    @default(0) // Ogefrem
+  socirFees             Float    @default(0) // Frais & services Socir
+  sepSecurityCharges    Float    @default(0) // Charges d'exploitation SEP, St.Sécurité et Stratég.
+  additionalCapacitySPSA Float   @default(0) // Charges capacités additionnelles SPSA
+  lerexcomPetroleum     Float    @default(0) // Lerexcom Petroleum
+  socComCharges         Float    @default(0) // Charges d'exploitation Soc Com
+  socComMargin          Float    @default(0) // Marges Soc, Com
+  totalDistribution     Float    @default(0) // Total frais de Distribution
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  nonMiningPrice NonMiningPriceStructure @relation(fields: [nonMiningPriceId], references: [id])
+
+  @@map("non_mining_distribution_costs")
+}
+
+// Stock de sécurité pour non-minier
+model NonMiningSecurityStock {
+  id               String   @id @default(cuid())
+  nonMiningPriceId String   @unique
+  estStock         Float    @default(0) // Stock Sécurité EST
+  sudStock         Float    @default(0) // Stock Sécurité SUD
+  totalSecurity    Float    @default(0) // Total Stock Sécurité
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  nonMiningPrice NonMiningPriceStructure @relation(fields: [nonMiningPriceId], references: [id])
+
+  @@map("non_mining_security_stock")
+}
+
+// Parafiscalité pour non-minier
+model NonMiningParafiscality {
+  id               String   @id @default(cuid())
+  nonMiningPriceId String   @unique
+  foner            Float    @default(0) // FONER
+  pmfFiscal        Float    @default(0) // PMF Fiscal (peut être négatif)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  nonMiningPrice NonMiningPriceStructure @relation(fields: [nonMiningPriceId], references: [id])
+
+  @@map("non_mining_parafiscality")
+}
+
+// Fiscalité pour non-minier
+model NonMiningFiscality {
+  id               String   @id @default(cuid())
+  nonMiningPriceId String   @unique
+  venteVAT         Float    @default(0) // TVA à la vente
+  customsDuty      Float    @default(0) // Droit de Douane
+  consumptionDuty  Float    @default(0) // Droits de consommation (peut être négatif)
+  importVAT        Float    @default(0) // TVA à l'importation
+  totalFiscality1  Float    @default(0) // Total Fiscalité 1
+  netVAT           Float    @default(0) // TVA nette à l'intérieur
+  totalFiscality2  Float    @default(0) // Total Fiscalité 2
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  nonMiningPrice NonMiningPriceStructure @relation(fields: [nonMiningPriceId], references: [id])
+
+  @@map("non_mining_fiscality")
+}
+
+// Prix final pour non-minier
+model NonMiningFinalPricing {
+  id               String   @id @default(cuid())
+  nonMiningPriceId String   @unique
+  referencePriceCDF Float   @default(0) // Prix de référence en CDF/M3
+  referencePriceUSD Float   @default(0) // Prix de référence en USD/M3
+  appliedPriceCDF  Float    @default(0) // Prix à appliquer en CDF
+  appliedPriceUSD  Float    @default(0) // Prix à appliquer en USD
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  nonMiningPrice NonMiningPriceStructure @relation(fields: [nonMiningPriceId], references: [id])
+
+  @@map("non_mining_final_pricing")
+}
+
+// Transport Rates (USD / cbm)
+model TransportRate {
+  id        String   @id @default(cuid())
+  destination String   @unique
+  rateUsdPerCbm Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("transport_rate")
+}
+
+enum DeviseCode {
+  USD
+  CDF
+}
+
+enum Role {
+  ADMIN
+  COMMERCIAL
+}
+
+enum Localisation {
+  INTERNAL
+  EXTERNAL
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+enum Cardinale {
+  SUD
+  NORD
+  EST
+  OUEST
+}
+
+enum StructureSociete {
+  SOCIETE_MINE
+  SOCIETE_AUTRE
+}
+
+enum TypeStock {
+  ENTREE
+  SORTIE
+}
+
+enum CommandeStatus {
+  DRAFT
+  CONFIRMED
+  COMPLETED // Livrée et potentiellement payée
+  CANCELLED
+  PARTIALLY_RECEIVED
+}
+
+enum DepotType {
+  OWNED // Dépôt Interne
+  EXTERNAL // Dépôt Externe
+}
+
+enum Devise {
+  XOF
+  USD
+  EUR
+  CDF
+}
+
+enum Statut {
+  EN_ATTENTE
+}
+
+enum Unite {
+  KG
+  G
+  L
+  ML
+  TONNE
+  PIECE
+  BOITE
+  CAISSON
+  POUCE
+  METRE
+  METRE_CARRE
+  METRE_CUBE
+  METRE_LINEAIRE
+}
+
+enum TypePaiement {
+  DIRECT
+  CREDIT
+}
+
+enum ReceptionStatus {
+  RECEIVED
+  IN_TRANSIT
+  CANCELLED
+}

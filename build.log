@@ -1,0 +1,29 @@
+
+> structure@0.1.0 build D:\SAEL\PERSONNEL\AAGS\structure_
+> next build --turbopack
+
+   ▲ Next.js 15.5.0 (Turbopack)
+   - Environments: .env
+
+   Creating an optimized production build ...
+ ✓ Finished writing to disk in 270ms
+ ✓ Compiled successfully in 22.9s
+   Skipping linting
+   Checking validity of types ...
+Failed to compile.
+
+./app/dashboard/non-mining-prices/views/[id]/non-mining-price-view.tsx:517:23
+Type error: Type '{ id: string; nomStructure: string; description: string | null; cardinale: "SUD" | "NORD" | "EST" | "OUEST"; pmfCommercialUSD: number; pmfCommercialCDF: number; priceRefCDF: number; priceRefUSD: number; ... 9 more ...; finalPricing: { ...; } | null; }' is not assignable to type '{ pmfCommercialCDF: number; distributionCosts: { ogefrem: number; socirFees: number; sepSecurityCharges: number; additionalCapacitySPSA: number; lerexcomPetroleum: number; socComCharges: number; socComMargin: number; totalDistribution: number; }; ... 4 more ...; exchangeRate: { ...; }; }'.
+  Types of property 'distributionCosts' are incompatible.
+    Type '{ ogefrem: number; socirFees: number; sepSecurityCharges: number; additionalCapacitySPSA: number; lerexcomPetroleum: number; socComCharges: number; socComMargin: number; totalDistribution: number; } | null' is not assignable to type '{ ogefrem: number; socirFees: number; sepSecurityCharges: number; additionalCapacitySPSA: number; lerexcomPetroleum: number; socComCharges: number; socComMargin: number; totalDistribution: number; }'.
+      Type 'null' is not assignable to type '{ ogefrem: number; socirFees: number; sepSecurityCharges: number; additionalCapacitySPSA: number; lerexcomPetroleum: number; socComCharges: number; socComMargin: number; totalDistribution: number; }'.
+
+[0m [90m 515 |[39m           [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m 516 |[39m         [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+[31m[1m>[22m[39m[90m 517 |[39m         [33m<[39m[33mSummaryTable[39m data[33m=[39m{priceStructure} [33m/[39m[33m>[39m
+ [90m     |[39m                       [31m[1m^[22m[39m
+ [90m 518 |[39m       [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m 519 |[39m       [33m<[39m[33mstyle[39m jsx global[33m>[39m{[32m`[39m
+ [90m 520 |[39m [32m        @page { size: A4; margin: 12mm; }[39m[0m
+Next.js build worker exited with code: 1 and signal: null
+ ELIFECYCLE  Command failed with exit code 1.
