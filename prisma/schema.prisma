@@ -13,7 +13,7 @@ model User {
   email          String
   emailVerified  Boolean
   image          String?
-  role           Role             @default(COMMERCIAL)
+  role           Role             @default(ADMIN)
   createdAt      DateTime
   updatedAt      DateTime
   signatureDataUrl String? @db.LongText
