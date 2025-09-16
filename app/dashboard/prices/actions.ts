@@ -152,8 +152,10 @@ export const updatePriceReference = actionClient
       if (!current) return { failure: "Structure introuvable" };
 
       // If a new rate is provided, create and use it; otherwise reuse existing
-      let rateValue = parsedInput.rate ?? null;
-      if (!rateValue) {
+      let rateValue: number;
+      if (parsedInput.rate != null) {
+        rateValue = parsedInput.rate;
+      } else {
         const existing = await prisma.exchangeRate.findUnique({ where: { id: current.exchangeRateId } });
         if (!existing) return { failure: "Taux introuvable" };
         rateValue = existing.rate;
