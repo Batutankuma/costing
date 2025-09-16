@@ -19,9 +19,8 @@ function getAuthSecret(): string {
 export const auth = betterAuth({
     database: prismaAdapter(prisma, { provider: "mysql" }),
     trustedOrigins: [
-        "http://localhost:3000",
-        "http://169.254.12.24:3000",
-    ],
+        process.env.URL,
+    ].filter((origin): origin is string => Boolean(origin)),
     emailAndPassword: { enabled: true },
     secret: getAuthSecret(),
 });

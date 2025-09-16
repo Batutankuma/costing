@@ -111,7 +111,7 @@ export function NonMiningBuilderCreateForm({ priceStructures }: NonMiningBuilder
       agencyCustomsUSD: 0,
       storageHospitalityUSD: 0,
       anrDechargementUSD: 0,
-      supplierMarginUSD: 0,
+      supplierMarginUSD: 40,
       customsDutyUSD: 0,
       importVATUSD: 0,
       internalVATUSD: 0,
@@ -279,6 +279,8 @@ export function NonMiningBuilderCreateForm({ priceStructures }: NonMiningBuilder
       setIsLoading(false);
     }
   };
+
+  
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -471,7 +473,18 @@ export function NonMiningBuilderCreateForm({ priceStructures }: NonMiningBuilder
                 id="supplierMarginUSD"
                 type="number"
                 step="any"
-                {...form.register("supplierMarginUSD", { valueAsNumber: true })}
+                {...form.register("supplierMarginUSD", {
+                  setValueAs: (v) => {
+                    if (v === "" || v === null || typeof v === "undefined") return 0;
+                    // Nettoie les espaces et séparateurs, remplace la virgule par un point
+                    const cleaned = String(v)
+                      .replace(/[^0-9,.-]/g, "") // supprime tout sauf chiffres, virgule, point, signe
+                      .replace(/,(?=.*[,])/g, "") // si plusieurs virgules, enlève les extras
+                      .replace(",", "."); // dernière virgule -> point
+                    const n = parseFloat(cleaned);
+                    return Number.isFinite(n) ? n : 0;
+                  },
+                })}
                 placeholder="0.00"
               />
             </div>
