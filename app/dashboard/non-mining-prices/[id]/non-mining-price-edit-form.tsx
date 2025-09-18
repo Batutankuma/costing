@@ -169,7 +169,7 @@ export function NonMiningPriceEditForm({ priceStructure }: NonMiningPriceEditFor
   };
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto py-10 pb-24">
       <div className="mb-6">
         <div className="flex items-center space-x-4">
           <Button variant="ghost" size="sm" asChild>
@@ -187,7 +187,7 @@ export function NonMiningPriceEditForm({ priceStructure }: NonMiningPriceEditFor
         </div>
       </div>
 
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form id="nonmining-price-edit-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         {/* Informations générales */}
         <Card>
           <CardHeader>
@@ -535,20 +535,21 @@ export function NonMiningPriceEditForm({ priceStructure }: NonMiningPriceEditFor
 
         <Separator />
 
-        <div className="flex justify-end space-x-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.back()}
-            disabled={isLoading}
-          >
-            Annuler
-          </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Mise à jour..." : "Mettre à jour"}
-          </Button>
+        <div className="hidden md:flex justify-end space-x-4">
+          <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>Annuler</Button>
+          <Button type="submit" disabled={isLoading}>{isLoading ? "Mise à jour..." : "Mettre à jour"}</Button>
         </div>
       </form>
+
+      {/* Mobile sticky action bar */}
+      <div className="md:hidden fixed bottom-[56px] inset-x-0 z-30 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-3">
+        <div className="flex gap-2">
+          <Button className="flex-1" type="button" variant="outline" disabled={isLoading} onClick={() => router.back()}>Retour</Button>
+          <Button className="flex-1" type="button" disabled={isLoading} onClick={() => (document.getElementById("nonmining-price-edit-form") as HTMLFormElement | null)?.requestSubmit()}>
+            {isLoading ? "..." : "Mettre à jour"}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

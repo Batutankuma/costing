@@ -87,6 +87,7 @@ export const getQuoteById = actionClient
 
 const UpdateQuoteSchema = z.object({
   id: z.string(),
+  // Champs éditables existants
   marginUSD: z.number().optional(),
   freightToMineUSD: z.number().optional(),
   description: z.string().optional().nullable(),
@@ -94,6 +95,12 @@ const UpdateQuoteSchema = z.object({
   tvaApplicable: z.boolean().optional(),
   tvaAmount: z.number().optional().nullable(),
   clientId: z.string().optional().nullable(),
+  // Nouveaux champs pour aligner l'édition avec la création
+  costBuildUpId: z.string().optional().nullable(),
+  baseDDUUSD: z.number().optional().nullable(),
+  baseDDPUSD: z.number().optional().nullable(),
+  totalDDUUSD: z.number().optional().nullable(),
+  totalDDPUSD: z.number().optional().nullable(),
 });
 
 export const updateQuote = actionClient
@@ -110,7 +117,14 @@ export const updateQuote = actionClient
         tvaApplicable: data.tvaApplicable ?? undefined,
         tvaAmount: data.tvaAmount ?? undefined,
         clientId: data.clientId ?? undefined,
-      },
+        // Mettre à jour les champs de base et totaux si fournis
+        baseDDUUSD: data.baseDDUUSD ?? undefined,
+        baseDDPUSD: data.baseDDPUSD ?? undefined,
+        totalDDUUSD: data.totalDDUUSD ?? undefined,
+        totalDDPUSD: data.totalDDPUSD ?? undefined,
+        // Re-lier le Cost Build Up si demandé
+        ...(data.costBuildUpId ? { costBuildUp: { connect: { id: data.costBuildUpId } } } : {}),
+      } as any,
     });
     return { success: true, result: updated } as const;
   });

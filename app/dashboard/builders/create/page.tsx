@@ -28,6 +28,8 @@ export default function CreateBuilderPage() {
   const [nonMiningPrices, setNonMiningPrices] = React.useState<any[]>([]);
   const [selectedRefId, setSelectedRefId] = React.useState<string>("");
   const [selectedNonMiningId, setSelectedNonMiningId] = React.useState<string>("");
+  const [transportRates, setTransportRates] = React.useState<Array<{ id: string; destination: string; rateUsdPerCbm: number }>>([]);
+  const [selectedTransportRateId, setSelectedTransportRateId] = React.useState<string>("");
 
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<FormData>({
     resolver: zodResolver(CreateCostBuildUpSchema as any),
@@ -41,7 +43,6 @@ export default function CreateBuilderPage() {
   // Options: local price and transport rates
   const [useLocalPrice, setUseLocalPrice] = React.useState(false);
   const [localAcquisitionCostUSD, setLocalAcquisitionCostUSD] = React.useState<number>(0);
-  const [transportRates, setTransportRates] = React.useState<Array<{ id: string; destination: string; rateUsdPerCbm: number }>>([]);
 
   React.useEffect(() => {
     if (session?.user?.id) {
@@ -226,9 +227,25 @@ export default function CreateBuilderPage() {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
-      <h1 className="text-2xl font-semibold">Créer un builder</h1>
-      <form onSubmit={handleSubmit(onSubmit as any)} className="grid gap-6">
+    <div className="p-6 max-w-5xl mx-auto space-y-6 pb-24">
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Nouveau Builder</h1>
+            <p className="text-muted-foreground">Créer une nouvelle structure de coûts</p>
+          </div>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => router.back()}
+            disabled={isPending}
+          >
+            Annuler
+          </Button>
+        </div>
+      </div>
+      
+      <form id="builder-create-form" onSubmit={handleSubmit(onSubmit as any)} className="grid gap-6">
         <div className="grid md:grid-cols-2 gap-2">
           <div>
             <Label>Titre</Label>
@@ -347,18 +364,26 @@ export default function CreateBuilderPage() {
           <div>
             <Label>Freight to Mine</Label>
             <Select
-              value={String(watch("transport.freightToMineUSD") || "")}
-              onValueChange={(v) => setValue("transport.freightToMineUSD", Number(v) as any)}
+              value={selectedTransportRateId || ""}
+              onValueChange={(id) => {
+                setSelectedTransportRateId(id);
+                const rate = transportRates.find((t) => t.id === id)?.rateUsdPerCbm ?? 0;
+                setValue("transport.freightToMineUSD", Number(rate) as any, { shouldDirty: true });
+              }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un tarif" />
+                <span>
+                  {selectedTransportRateId
+                    ? (transportRates.find((t) => t.id === selectedTransportRateId)?.destination ?? "Sélectionner un tarif")
+                    : "Sélectionner un tarif"}
+                </span>
               </SelectTrigger>
               <SelectContent>
                 {transportRates.length === 0 ? (
-                  <SelectItem value="0">0</SelectItem>
+                  <SelectItem value="no-rate" disabled>Aucun tarif</SelectItem>
                 ) : (
                   transportRates.map((t) => (
-                    <SelectItem key={t.id} value={String(t.rateUsdPerCbm)}>
+                    <SelectItem key={t.id} value={t.id}>
                       {t.destination} — {t.rateUsdPerCbm} USD/m³
                     </SelectItem>
                   ))
@@ -378,10 +403,18 @@ export default function CreateBuilderPage() {
           <div><Label>Prix DDP (auto)</Label><Input type="number" step="0.01" value={Number.isFinite(priceDDP) ? priceDDP : 0} disabled /></div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="hidden md:flex justify-end">
           <Button type="submit" disabled={isPending}>{isPending ? "Enregistrement..." : "Enregistrer"}</Button>
         </div>
       </form>
+      {/* Mobile sticky action bar */}
+      <div className="md:hidden fixed bottom-[56px] inset-x-0 z-30 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-3">
+        <div className="flex gap-2">
+          <Button className="flex-1" type="button" disabled={isPending} onClick={() => (document.getElementById("builder-create-form") as HTMLFormElement | null)?.requestSubmit()}>
+            {isPending ? "..." : "Enregistrer"}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

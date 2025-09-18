@@ -109,7 +109,7 @@ export default function BuilderEditForm({ item }: { item: any }) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit as any)} className="grid gap-6">
+    <form id="builder-edit-form" onSubmit={handleSubmit(onSubmit as any)} className="grid gap-6 pb-24">
       <div className="grid md:grid-cols-2 gap-2">
         <div>
           <Label>Titre</Label>
@@ -173,8 +173,16 @@ export default function BuilderEditForm({ item }: { item: any }) {
         <div><Label>Prix DDP</Label><Input disabled value={priceDDP} /></div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="hidden md:flex justify-end">
         <Button type="submit" disabled={isPending}>{isPending ? "Mise à jour..." : "Mettre à jour"}</Button>
+      </div>
+      {/* Mobile sticky action bar */}
+      <div className="md:hidden fixed bottom-[56px] inset-x-0 z-30 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-3">
+        <div className="flex gap-2">
+          <Button className="flex-1" type="button" disabled={isPending} onClick={() => (document.getElementById("builder-edit-form") as HTMLFormElement | null)?.requestSubmit()}>
+            {isPending ? "..." : "Mettre à jour"}
+          </Button>
+        </div>
       </div>
     </form>
   );

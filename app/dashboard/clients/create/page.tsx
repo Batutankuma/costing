@@ -37,8 +37,20 @@ export default function CreateClientPage() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Nouveau Client</h1>
-        <p className="text-muted-foreground">Créer un client</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Nouveau Client</h1>
+            <p className="text-muted-foreground">Ajouter un nouveau client à votre portefeuille</p>
+          </div>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => router.back()}
+            disabled={isPending}
+          >
+            Annuler
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -47,39 +59,52 @@ export default function CreateClientPage() {
           <CardDescription>Renseignez les coordonnées et informations principales.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <Label>Nom</Label>
-                <Input {...register("name")} />
+          <form onSubmit={handleSubmit(onSubmit)} className="grid gap-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nom *</Label>
+                <Input id="name" {...register("name")} />
                 {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
               </div>
-              <div>
-                <Label>Société</Label>
-                <Input {...register("company")} />
+              <div className="space-y-2">
+                <Label htmlFor="company">Société</Label>
+                <Input id="company" {...register("company")} />
               </div>
             </div>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <Label>Email</Label>
-                <Input type="email" {...register("email")} />
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" {...register("email")} />
               </div>
-              <div>
-                <Label>Téléphone</Label>
-                <Input {...register("phone")} />
+              <div className="space-y-2">
+                <Label htmlFor="phone">Téléphone</Label>
+                <Input id="phone" {...register("phone")} />
               </div>
             </div>
-            <div>
-              <Label>Adresse</Label>
-              <Input {...register("address")} />
+
+            <div className="space-y-2">
+              <Label htmlFor="address">Adresse</Label>
+              <Input id="address" {...register("address")} />
             </div>
-            <div>
-              <Label>Notes</Label>
-              <Input {...register("notes")} />
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Input id="notes" {...register("notes")} />
             </div>
-            <div className="flex gap-2 justify-end">
-              <Button type="button" variant="outline" onClick={() => router.back()}>Annuler</Button>
-              <Button type="submit" disabled={isPending}>{isPending ? "Création..." : "Créer"}</Button>
+
+            <div className="flex gap-4 justify-end pt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => router.back()}
+                disabled={isPending}
+              >
+                Annuler
+              </Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? "Création..." : "Créer le client"}
+              </Button>
             </div>
           </form>
         </CardContent>

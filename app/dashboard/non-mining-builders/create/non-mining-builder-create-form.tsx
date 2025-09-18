@@ -99,6 +99,7 @@ export function NonMiningBuilderCreateForm({ priceStructures }: NonMiningBuilder
   const { toast } = useToast();
   const { data: session } = authClient.useSession();
   const [transportRates, setTransportRates] = useState<Array<{ id: string; destination: string; rateUsdPerCbm: number }>>([]);
+  const [selectedTransportRateId, setSelectedTransportRateId] = useState<string | undefined>(undefined);
 
   const form = useForm({
     resolver: zodResolver(NonMiningBuilderCreateSchema),
@@ -283,7 +284,7 @@ export function NonMiningBuilderCreateForm({ priceStructures }: NonMiningBuilder
   
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+    <form id="nonmining-builder-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-24">
       {/* Informations générales */}
       <Card>
         <CardHeader>
@@ -661,18 +662,26 @@ export function NonMiningBuilderCreateForm({ priceStructures }: NonMiningBuilder
             <div className="space-y-2">
               <Label htmlFor="freightToMineUSD">Freight to Mine from L'shi (USD)</Label>
               <Select
-                value={String(form.watch("freightToMineUSD") || "")}
-                onValueChange={(v) => form.setValue("freightToMineUSD", Number(v) as any)}
+                value={(selectedTransportRateId as any) || ""}
+                onValueChange={(id) => {
+                  setSelectedTransportRateId(id as string);
+                  const rate = transportRates.find((t) => t.id === id)?.rateUsdPerCbm ?? 0;
+                  form.setValue("freightToMineUSD", Number(rate) as any, { shouldDirty: true });
+                }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un tarif" />
+                  <span>
+                    {selectedTransportRateId
+                      ? (transportRates.find((t) => t.id === selectedTransportRateId)?.destination ?? "Sélectionner un tarif")
+                      : "Sélectionner un tarif"}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   {transportRates.length === 0 ? (
-                    <SelectItem value="0">0</SelectItem>
+                    <SelectItem value="no-rate" disabled>Aucun tarif</SelectItem>
                   ) : (
                     transportRates.map((t) => (
-                      <SelectItem key={t.id} value={String(t.rateUsdPerCbm)}>
+                      <SelectItem key={t.id} value={t.id}>
                         {t.destination} — {t.rateUsdPerCbm} USD/m³
                       </SelectItem>
                     ))
@@ -724,18 +733,19 @@ export function NonMiningBuilderCreateForm({ priceStructures }: NonMiningBuilder
 
       <Separator />
 
-      <div className="flex justify-end space-x-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.back()}
-          disabled={isLoading}
-        >
-          Annuler
-        </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Création..." : "Créer le Cost Build Up"}
-        </Button>
+      <div className="hidden md:flex justify-end space-x-4">
+        <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>Annuler</Button>
+        <Button type="submit" disabled={isLoading}>{isLoading ? "Création..." : "Créer le Cost Build Up"}</Button>
+      </div>
+
+      {/* Mobile sticky action bar */}
+      <div className="md:hidden fixed bottom-[56px] inset-x-0 z-30 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-3">
+        <div className="flex gap-2">
+          <Button className="flex-1" type="button" variant="outline" disabled={isLoading} onClick={() => router.back()}>Retour</Button>
+          <Button className="flex-1" type="button" disabled={isLoading} onClick={() => (document.getElementById("nonmining-builder-form") as HTMLFormElement | null)?.requestSubmit()}>
+            {isLoading ? "..." : "Créer"}
+          </Button>
+        </div>
       </div>
     </form>
   );

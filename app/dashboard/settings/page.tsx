@@ -159,6 +159,7 @@ export default function SettingsPage() {
                 <Link href="/dashboard/builders"><Button className="w-full" variant="secondary">Builder Minier</Button></Link>
                 <Link href="/dashboard/non-mining-builders"><Button className="w-full" variant="secondary">Builder Non-Minier</Button></Link>
                 <Link href="/dashboard/transport-rates"><Button className="w-full" variant="secondary">Tarifs Transport</Button></Link>
+                <Link href="/dashboard/build-const-kalemie"><Button className="w-full" variant="secondary">Build Kalemie</Button></Link>
               </div>
             </CardContent>
           </Card>

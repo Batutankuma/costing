@@ -264,10 +264,33 @@ export default function CreateSalesQuotePage() {
   const totalDDU_TTC = useMemo(() => Number(lineTotalDDU || 0) + (tvaApplicable ? Number(lineTotalDDU || 0) * 0.16 : 0), [lineTotalDDU, tvaApplicable]);
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 py-6">
+    <div className="max-w-3xl mx-auto space-y-6 py-6 pb-24 px-4 md:px-0">
       <div>
         <h1 className="text-2xl font-semibold">Devis commercial</h1>
         <p className="text-sm text-muted-foreground">Proposition DDU / DDP basée sur un Cost Build Up</p>
+      </div>
+
+      {/* Mobile quick totals summary */}
+      <div
+        className="md:hidden sticky z-20 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b rounded-b"
+        style={{ top: "env(safe-area-inset-top, 0px)" }}
+      >
+        <div className="max-w-3xl mx-auto px-4 py-2">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1">
+              <div className="text-[11px] text-muted-foreground">PU DDU (USD/M³)</div>
+              <div className="text-base font-semibold">{Number(totalDDUUSD).toLocaleString("fr-FR", { minimumFractionDigits: 2 })}</div>
+            </div>
+            <div className="flex-1">
+              <div className="text-[11px] text-muted-foreground">PU DDP (USD/M³)</div>
+              <div className="text-base font-semibold">{Number(totalDDPUSD).toLocaleString("fr-FR", { minimumFractionDigits: 2 })}</div>
+            </div>
+            <div className="flex-1 text-right">
+              <div className="text-[11px] text-muted-foreground">QTY (M³)</div>
+              <div className="text-base font-semibold">{Number(quantityM3 || 0)}</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-4">
@@ -326,16 +349,27 @@ export default function CreateSalesQuotePage() {
           </div>
           <div>
             <Label>Freight to Mine (USD)</Label>
-            <Select value={String(freightToMineUSD || "")} onValueChange={(v) => setFreightToMineUSD(Number(v))}>
+            <Select
+              value={(transportRates.find((t) => t.rateUsdPerCbm === freightToMineUSD)?.id) || ""}
+              onValueChange={(id) => {
+                const rate = transportRates.find((t) => t.id === id)?.rateUsdPerCbm ?? 0;
+                setFreightToMineUSD(Number(rate));
+              }}
+            >
               <SelectTrigger className="h-9">
-                <SelectValue placeholder="Sélectionner un tarif" />
+                <span>
+                  {(() => {
+                    const sel = transportRates.find((t) => t.rateUsdPerCbm === freightToMineUSD);
+                    return sel ? sel.destination : "Sélectionner un tarif";
+                  })()}
+                </span>
               </SelectTrigger>
               <SelectContent>
                 {transportRates.length === 0 ? (
-                  <SelectItem value="0">0</SelectItem>
+                  <SelectItem value="no-rate" disabled>Aucun tarif</SelectItem>
                 ) : (
                   transportRates.map((t) => (
-                    <SelectItem key={t.id} value={String(t.rateUsdPerCbm)}>
+                    <SelectItem key={t.id} value={t.id}>
                       {t.destination} — {t.rateUsdPerCbm} USD/m³
                     </SelectItem>
                   ))
@@ -348,15 +382,15 @@ export default function CreateSalesQuotePage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <Label>Quantité (M³)</Label>
-            <Input type="number" step="1" value={quantityM3} onChange={(e) => setQuantityM3(Number(e.target.value || 0))} />
+            <Input className="w-full" type="number" step="1" value={quantityM3} onChange={(e) => setQuantityM3(Number(e.target.value || 0))} />
           </div>
           <div>
             <Label>PU (USD/M³)</Label>
-            <Input disabled value={Number(totalDDPUSD).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} />
+            <Input className="w-full" disabled value={Number(totalDDPUSD).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} />
           </div>
           <div>
             <Label>Total (USD)</Label>
-            <Input disabled value={(Number(totalDDPUSD) * Number(quantityM3 || 0)).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} />
+            <Input className="w-full" disabled value={(Number(totalDDPUSD) * Number(quantityM3 || 0)).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} />
           </div>
         </div>
 
@@ -394,10 +428,24 @@ export default function CreateSalesQuotePage() {
           <SignaturePad value={signatureDataUrl} onChange={setSignatureDataUrl} />
         </div>
 
-        <div className="flex gap-3">
+        <div className="hidden md:flex gap-3">
           <Button onClick={onSaveAndPrint} disabled={loading || !selectedId}>{loading ? "Traitement..." : "Enregistrer et imprimer (DDP)"}</Button>
           <Button onClick={onSaveAndPrintDDU} disabled={loading || !selectedId} variant="secondary">{loading ? "Traitement..." : "Enregistrer et imprimer (DDU)"}</Button>
           <Button variant="outline" onClick={onSave} disabled={loading || !selectedId}>{loading ? "Enregistrement..." : "Enregistrer"}</Button>
+        </div>
+      </div>
+
+      {/* Mobile sticky action bar */}
+      <div
+        className="md:hidden fixed inset-x-0 z-30 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-3 shadow-lg rounded-t-2xl"
+        style={{ bottom: "calc(56px + env(safe-area-inset-bottom, 0px))" }}
+      >
+        <div className="max-w-3xl mx-auto px-4">
+          <div className="flex gap-2">
+            <Button className="flex-1" onClick={onSave} disabled={loading || !selectedId} variant="outline">{loading ? "..." : "Enregistrer"}</Button>
+            <Button className="flex-1" onClick={onSaveAndPrint}>{loading ? "..." : "Imprimer DDP"}</Button>
+            <Button className="flex-1" onClick={onSaveAndPrintDDU} variant="secondary">{loading ? "..." : "Imprimer DDU"}</Button>
+          </div>
         </div>
       </div>
 

@@ -120,9 +120,25 @@ export default function CreatePricePage() {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
-      <h1 className="text-2xl font-semibold">Créer une structure de prix</h1>
-      <form onSubmit={handleSubmit(onSubmit as any)} className="grid gap-6">
+    <div className="p-6 max-w-5xl mx-auto space-y-6 pb-24">
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Nouvelle Structure de Prix</h1>
+            <p className="text-muted-foreground">Créer une nouvelle référence de prix officielle</p>
+          </div>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => router.back()}
+            disabled={isPending}
+          >
+            Annuler
+          </Button>
+        </div>
+      </div>
+      
+      <form id="price-create-form" onSubmit={handleSubmit(onSubmit as any)} className="grid gap-6">
         <div className="grid md:grid-cols-2 gap-2">
           <div>
             <Label>Nom structure</Label>
@@ -388,10 +404,18 @@ export default function CreatePricePage() {
 
 
 
-        <div className="flex justify-end">
+        <div className="hidden md:flex justify-end">
           <Button type="submit" disabled={isPending}>{isPending ? "Enregistrement..." : "Enregistrer"}</Button>
         </div>
       </form>
+      {/* Mobile sticky action bar */}
+      <div className="md:hidden fixed bottom-[56px] inset-x-0 z-30 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-3">
+        <div className="flex gap-2">
+          <Button className="flex-1" type="button" disabled={isPending} onClick={() => (document.getElementById("price-create-form") as HTMLFormElement | null)?.requestSubmit()}>
+            {isPending ? "..." : "Enregistrer"}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

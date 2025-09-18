@@ -104,14 +104,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenu>
                 {item.items
                   .filter((child) => {
-                    // Only ADMIN sees everything. Others see Devis + Build-Const Kalemie.
-                    if (role !== "ADMIN") {
-                      return (
-                        child.url.startsWith("/dashboard/sales-quotes") ||
-                        child.url.startsWith("/dashboard/build-const-kalemie")
-                      );
-                    }
-                    return true;
+                    // Afficher uniquement Devis et Paramètres dans la sidebar
+                    return (
+                      child.url.startsWith("/dashboard/sales-quotes") ||
+                      child.url.startsWith("/dashboard/settings")
+                    );
                   })
                   .map((child) => {
                   const isActive =

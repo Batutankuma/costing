@@ -107,6 +107,9 @@ export default function KalemieEditForm({ item }: { item: any }) {
     })();
   }, []);
 
+  // Conserver l'ID sélectionné pour un affichage correct
+  const [selectedTransportRateId, setSelectedTransportRateId] = React.useState<string>("");
+
   const onSubmit = async (data: FormData) => {
     await updateBuilder(data as any);
   };
@@ -159,18 +162,26 @@ export default function KalemieEditForm({ item }: { item: any }) {
           <div>
             <Label>Freight to Mine</Label>
             <Select
-              value={String(form.watch("transport.freightToMineUSD") || "")}
-              onValueChange={(v) => form.setValue("transport.freightToMineUSD", Number(v) as any, { shouldDirty: true })}
+              value={selectedTransportRateId}
+              onValueChange={(id) => {
+                setSelectedTransportRateId(id);
+                const rate = transportRates.find((t) => t.id === id)?.rateUsdPerCbm ?? 0;
+                form.setValue("transport.freightToMineUSD", Number(rate) as any, { shouldDirty: true });
+              }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un tarif" />
+                <span>
+                  {selectedTransportRateId
+                    ? (transportRates.find((t) => t.id === selectedTransportRateId)?.destination ?? "Sélectionner un tarif")
+                    : "Sélectionner un tarif"}
+                </span>
               </SelectTrigger>
               <SelectContent>
                 {transportRates.length === 0 ? (
-                  <SelectItem value="0">0</SelectItem>
+                  <SelectItem value="no-rate" disabled>Aucun tarif</SelectItem>
                 ) : (
                   transportRates.map((t) => (
-                    <SelectItem key={t.id} value={String(t.rateUsdPerCbm)}>
+                    <SelectItem key={t.id} value={t.id}>
                       {t.destination} — {t.rateUsdPerCbm} USD/m³
                     </SelectItem>
                   ))
@@ -195,6 +206,7 @@ export default function KalemieEditForm({ item }: { item: any }) {
     </form>
   );
 }
+
 
 
 

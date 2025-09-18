@@ -243,7 +243,7 @@ export function NonMiningPriceCreateForm({ exchangeRates }: NonMiningPriceCreate
   };
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+    <form id="nonmining-price-create-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-24">
       {/* Informations générales */}
       <Card>
         <CardHeader>
@@ -817,18 +817,19 @@ export function NonMiningPriceCreateForm({ exchangeRates }: NonMiningPriceCreate
 
       <Separator />
 
-      <div className="flex justify-end space-x-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.back()}
-          disabled={isLoading}
-        >
-          Annuler
-        </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Création..." : "Créer la structure"}
-        </Button>
+      <div className="hidden md:flex justify-end space-x-4">
+        <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>Annuler</Button>
+        <Button type="submit" disabled={isLoading}>{isLoading ? "Création..." : "Créer la structure"}</Button>
+      </div>
+
+      {/* Mobile sticky action bar */}
+      <div className="md:hidden fixed bottom-[56px] inset-x-0 z-30 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-3">
+        <div className="flex gap-2">
+          <Button className="flex-1" type="button" variant="outline" disabled={isLoading} onClick={() => router.back()}>Retour</Button>
+          <Button className="flex-1" type="button" disabled={isLoading} onClick={() => (document.getElementById("nonmining-price-create-form") as HTMLFormElement | null)?.requestSubmit()}>
+            {isLoading ? "..." : "Créer"}
+          </Button>
+        </div>
       </div>
     </form>
   );
