@@ -16,9 +16,15 @@ import { Ellipsis } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import RemoveDialog from "./delete";
-import type { User } from "@prisma/client";
 
-export const columns: ColumnDef<User>[] = [
+export type UserRow = {
+  id: string;
+  name: string | null;
+  email: string | null;
+  emailVerified?: Date | string | null;
+};
+
+export const columns: ColumnDef<UserRow>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -72,7 +78,7 @@ export const columns: ColumnDef<User>[] = [
   },
 ];
 
-function RowActions({ row }: { row: Row<User> }) {
+function RowActions({ row }: { row: Row<UserRow> }) {
   const [openRemoveDialog, setOpenRemoveDialog] = useState(false);
   return (
     <DropdownMenu>

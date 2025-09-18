@@ -69,11 +69,10 @@ import {
   Trash,
 } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
-import { columns } from "./columns";
+import { columns, type UserRow } from "./columns";
 import { useRouter } from "next/navigation";
-import type { User } from "@prisma/client";
 
-export default function DataTables({ Element }: { Element: User[] }) {
+export default function DataTables({ Element }: { Element: any[] }) {
   const id = useId();
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -83,9 +82,17 @@ export default function DataTables({ Element }: { Element: User[] }) {
 
   const [sorting, setSorting] = useState<SortingState>([{ id: "name", desc: false }]);
 
-  const [data, setData] = useState<User[]>([]);
+  const [data, setData] = useState<UserRow[]>([]);
   useEffect(() => {
-    setData(Element);
+    const rows: UserRow[] = Array.isArray(Element)
+      ? Element.map((u: any) => ({
+          id: String(u?.id ?? ""),
+          name: u?.name ?? null,
+          email: u?.email ?? null,
+          emailVerified: typeof u?.emailVerified === "boolean" ? u.emailVerified : Boolean(u?.emailVerified ?? false),
+        }))
+      : [];
+    setData(rows);
   }, [Element]);
 
   const handleDeleteRows = () => {
@@ -97,7 +104,7 @@ export default function DataTables({ Element }: { Element: User[] }) {
     table.resetRowSelection();
   };
 
-  const table = useReactTable({
+  const table = useReactTable<UserRow>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),

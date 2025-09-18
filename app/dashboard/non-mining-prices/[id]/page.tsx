@@ -3,9 +3,7 @@ import { NonMiningPriceEditForm } from "./non-mining-price-edit-form";
 import { notFound } from "next/navigation";
 
 interface NonMiningPriceEditPageProps {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }
 
 export default async function NonMiningPriceEditPage({ params }: NonMiningPriceEditPageProps) {

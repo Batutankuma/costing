@@ -3,9 +3,9 @@ import { NonMiningPriceView } from "./non-mining-price-view";
 import { notFound } from "next/navigation";
 
 interface NonMiningPriceViewPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function NonMiningPriceViewPage({ params }: NonMiningPriceViewPageProps) {
