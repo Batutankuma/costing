@@ -28,6 +28,7 @@ const trusted = [
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
     process.env.NODE_ENV !== "production" ? "http://localhost:3000" : undefined,
     // Ajouter l'URL de base pour BetterAuth
+    ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
     process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
 ].filter((origin): origin is string => Boolean(origin));
 
