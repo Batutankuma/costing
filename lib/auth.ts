@@ -27,6 +27,8 @@ const trusted = [
     process.env.NEXT_PUBLIC_APP_URL,
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
     process.env.NODE_ENV !== "production" ? "http://localhost:3000" : undefined,
+    // Ajouter l'URL de base pour BetterAuth
+    process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
 ].filter((origin): origin is string => Boolean(origin));
 
 export const auth = betterAuth({
@@ -34,4 +36,5 @@ export const auth = betterAuth({
     trustedOrigins: trusted,
     emailAndPassword: { enabled: true },
     secret: getAuthSecret(),
+    baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === "production" ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"),
 });
