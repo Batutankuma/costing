@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -16,7 +16,7 @@ model User {
   role           Role             @default(ADMIN)
   createdAt      DateTime
   updatedAt      DateTime
-  signatureDataUrl String? @db.LongText
+  signatureDataUrl String? @db.Text
   sessions       Session[]
   accounts       Account[]
   PriceReference PriceReference[]
@@ -238,7 +238,7 @@ model SalesQuote {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   description String?
-  signatureDataUrl String? @db.LongText
+  signatureDataUrl String? @db.Text
   proformaNumber   String?
 
   // Référence au CostBuildUp source
