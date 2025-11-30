@@ -1,0 +1,54 @@
+[
+  {
+    "id": "temp-1757393641063-wlte0cf4p",
+    "nomStructure": "xxxx",
+    "description": "",
+    "cardinale": "SUD",
+    "rate": 2500,
+    "pmfCommercialUSD": 0.133196,
+    "pmfCommercialCDF": 332.99,
+    "userId": "temp-user-id",
+    "distributionCosts": {
+      "ogefrem": 0,
+      "socirFees": 0,
+      "sepSecurityCharges": 0,
+      "additionalCapacitySPSA": 0,
+      "lerexcomPetroleum": 0,
+      "socComCharges": 0,
+      "socComMargin": 0
+    },
+    "securityStock": {
+      "estStock": 0,
+      "sudStock": 0
+    },
+    "parafiscality": {
+      "foner": 0,
+      "pmfFiscal": 0
+    },
+    "fiscality": {
+      "venteVAT": 4666,
+      "customsDuty": 0,
+      "consumptionDuty": 0,
+      "importVAT": 0,
+      "netVAT": 0
+    },
+    "finalPricing": {
+      "referencePriceCDF": 4998.99,
+      "referencePriceUSD": 1.999596,
+      "appliedPriceCDF": 4.99899,
+      "appliedPriceUSD": 0.001999596
+    },
+    "createdAt": "2025-09-09T04:54:01.063Z",
+    "updatedAt": "2025-09-09T04:54:01.063Z",
+    "exchangeRateId": "temp-exchange-rate-id",
+    "user": {
+      "name": "Utilisateur Test",
+      "email": "test@example.com"
+    },
+    "exchangeRate": {
+      "rate": 2500,
+      "deviseBase": "CDF",
+      "deviseTarget": "USD"
+    }
+  }
+]
