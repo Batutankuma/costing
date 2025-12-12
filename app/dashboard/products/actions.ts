@@ -10,8 +10,8 @@ export async function getProducts() {
   try {
     const items = await prisma.product.findMany({ orderBy: { name: "asc" } });
     return items;
-  } catch (e) {
-    return [] as any[];
+  } catch {
+    return [];
   }
 }
 
@@ -59,12 +59,12 @@ export const createProduct = actionClient
         if (exists) return { failure: `Un produit avec le code "${normalizedCode}" existe déjà.` } as const;
       }
       const created = await prisma.product.create({
-        data: { name: parsedInput.name, unit: parsedInput.unit as any, code: normalizedCode },
+        data: { name: parsedInput.name, unit: parsedInput.unit, code: normalizedCode },
       });
       revalidatePath("/dashboard/products");
       return { success: created } as const;
-    } catch (e: any) {
-      if (e?.code === "P2002") {
+    } catch (e: unknown) {
+      if (e && typeof e === 'object' && 'code' in e && e.code === "P2002") {
         return { failure: "Le code produit est déjà utilisé. Veuillez choisir un autre code." } as const;
       }
       return { failure: "Impossible de créer le produit." } as const;
@@ -75,7 +75,7 @@ export const updateProduct = actionClient
   .schema(CreateProductSchema.extend({ id: z.string() }))
   .action(async ({ parsedInput }) => {
     try {
-      const { id, ...data } = parsedInput as any;
+      const { id, ...data } = parsedInput;
       const code = (data.code || "").trim();
       const normalizedCode = code.length ? code : null;
       if (normalizedCode) {
@@ -84,14 +84,14 @@ export const updateProduct = actionClient
       }
       const updated = await prisma.product.update({
         where: { id },
-        data: { name: data.name, unit: data.unit as any, code: normalizedCode },
+        data: { name: data.name, unit: data.unit, code: normalizedCode },
       });
       revalidatePath("/dashboard/products");
       revalidatePath(`/dashboard/products/${id}`);
       revalidatePath(`/dashboard/products/views/${id}`);
       return { success: updated } as const;
-    } catch (e: any) {
-      if (e?.code === "P2002") {
+    } catch (e: unknown) {
+      if (e && typeof e === 'object' && 'code' in e && e.code === "P2002") {
         return { failure: "Le code produit est déjà utilisé. Veuillez choisir un autre code." } as const;
       }
       return { failure: "Impossible de mettre à jour le produit." } as const;

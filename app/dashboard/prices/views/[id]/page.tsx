@@ -8,7 +8,7 @@ import ExportButtons from "../export-buttons";
 export default async function ViewPricePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const res = await findByIdAction(id);
-  const item = (res as any)?.result;
+  const item = res.result;
 
   if (!item) {
     return (
@@ -143,7 +143,7 @@ export default async function ViewPricePage({ params }: { params: Promise<{ id: 
           <Input disabled value={item.fiscality?.importVAT?.toLocaleString("fr-FR")} />
         </div>
         <div>
-          <Label>TVA nette à l'intérieur (CDF)</Label>
+          <Label>TVA nette à l&apos;intérieur (CDF)</Label>
           <Input disabled value={item.fiscality?.netVAT?.toLocaleString("fr-FR")} />
         </div>
         <div>

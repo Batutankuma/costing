@@ -62,9 +62,9 @@ export const adminResetPasswordAction = actionClient
       const newPassword = Math.random().toString(36).slice(-10) + "!A1";
 
       // Try to import bcryptjs dynamically (so repo can build without it)
-      let bcrypt: any;
+      let bcrypt: typeof import("bcryptjs");
       try {
-        bcrypt = (await import("bcryptjs")).default ?? (await import("bcryptjs"));
+        bcrypt = (await import("bcryptjs")).default ?? (await import("bcryptjs")) as typeof import("bcryptjs");
       } catch {
         return { failure: "bcryptjs non installé. Exécutez: pnpm add bcryptjs" };
       }
@@ -150,8 +150,8 @@ export const adminCreateWithPasswordAction = actionClient
           });
           if (resp.ok) { createdOk = true; break; }
           try { lastErrorText = await resp.text(); } catch { lastErrorText = `HTTP ${resp.status}`; }
-        } catch (err: any) {
-          lastErrorText = err?.message || "Failed to fetch";
+        } catch (err: unknown) {
+          lastErrorText = (err instanceof Error ? err.message : String(err)) || "Failed to fetch";
         }
       }
 

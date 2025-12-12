@@ -70,7 +70,19 @@ import ExportExcel from "@/components/exportExcel";
 import { useRouter } from "next/navigation";
 import { removeByIdAction } from "./actions";
 
-export default function DataTables({ Element }: { Element: any[] }) {
+type Tank = {
+  id: string;
+  name: string;
+  capacity: number;
+  currentLevel: number;
+  unit: string;
+  depotId: string;
+  produitId?: string | null;
+  depot?: { id: string; name: string };
+  produit?: { id: string; name: string };
+};
+
+export default function DataTables({ Element }: { Element: Tank[] }) {
     const id = useId();
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -79,7 +91,7 @@ export default function DataTables({ Element }: { Element: any[] }) {
     const inputRef = useRef<HTMLInputElement>(null);
 
     const [sorting, setSorting] = useState<SortingState>([{ id: "name", desc: false, },]);
-    const [data, setData] = useState<any[]>([]);
+    const [data, setData] = useState<Tank[]>([]);
     useEffect(() => { setData(Element); }, [Element]);
 
     const handleDeleteRows = async () => {
@@ -228,7 +240,7 @@ export default function DataTables({ Element }: { Element: any[] }) {
                     <ExportExcel
                       data={data}
                       filename="tanks"
-                      mapRow={(row: any) => {
+                      mapRow={(row: Tank) => {
                         return {
                           Nom: row.name,
                           Dépôt: row.depot?.name || '',

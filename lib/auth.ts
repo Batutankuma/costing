@@ -6,7 +6,7 @@ import prisma from "./prisma";
 function getAuthSecret(): string {
     const fromEnv = process.env.AUTH_SECRET || process.env.BETTER_AUTH_SECRET || process.env.NEXTAUTH_SECRET;
     if (fromEnv && /^[0-9a-fA-F]{64}$/.test(fromEnv)) return fromEnv;
-    const g = globalThis as any;
+    const g = globalThis as { __BETTER_AUTH_DEV_SECRET?: string };
     if (g.__BETTER_AUTH_DEV_SECRET && typeof g.__BETTER_AUTH_DEV_SECRET === "string") {
         return g.__BETTER_AUTH_DEV_SECRET as string;
     }

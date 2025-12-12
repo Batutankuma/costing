@@ -30,7 +30,9 @@ export const createClient = () => {
           const chain = {
             select: (_cols?: string) => {
               const result = { data: [] as unknown[], error: null as unknown };
-              const obj: any = {
+              const obj: {
+                single: () => Promise<{ data: unknown; error: unknown }>;
+              } = {
                 single: () => Promise.resolve({ data: { id: 'mock-id' } as unknown, error: null as unknown }),
                 then: (resolve: (v: typeof result) => unknown) => resolve(result),
               };

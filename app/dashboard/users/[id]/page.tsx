@@ -20,7 +20,7 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
     );
   }
 
-  return <UserEditForm initial={{ id: user.id, name: user.name ?? "", email: user.email, image: user.image ?? "", emailVerified: user.emailVerified, role: user.role as any }} />;
+  return <UserEditForm initial={{ id: user.id, name: user.name ?? "", email: user.email, image: user.image ?? "", emailVerified: user.emailVerified, role: user.role as "ADMIN" | "COMMERCIAL" | undefined }} />;
 }
 
 

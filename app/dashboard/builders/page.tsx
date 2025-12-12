@@ -10,7 +10,7 @@ export const revalidate = 0;
 
 export default async function Page() {
   const res = await listBuilders();
-  const items = (res as any)?.data?.result ?? [];
+  const items = res?.data?.result ?? [];
 
   return (
     <div className="p-6 max-w-7xl mx-auto">

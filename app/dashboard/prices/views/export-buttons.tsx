@@ -2,7 +2,24 @@
 
 import { Button } from "@/components/ui/button";
 
-export default function ExportButtons({ item }: { item: any }) {
+type PriceReferenceWithRelations = {
+  date: Date | string;
+  nomStructure?: string | null;
+  structureSociete?: string | null;
+  cardinale?: string | null;
+  pmfCommercialCDF?: number | null;
+  pmfCommercialUSD?: number | null;
+  priceRefCDF?: number | null;
+  priceRefUSD?: number | null;
+  priceRefUSDPerLitre?: number | null;
+  exchangeRate?: { rate?: number | null } | null;
+  logisticsCosts?: { warehouseFee?: number | null; total?: number | null } | null;
+  commercialCosts?: { socComFee?: number | null; margin?: number | null; total?: number | null } | null;
+  parafiscality?: { stockSecurity1?: number | null; stockSecurity2?: number | null; molecularMarking?: number | null; foner?: number | null; reconstructionEffort?: number | null; intervention?: number | null; total?: number | null } | null;
+  fiscality?: { venteVAT?: number | null; customsDuty?: number | null; consumptionDuty?: number | null; importVAT?: number | null; netVAT?: number | null; total1?: number | null; total2?: number | null } | null;
+};
+
+export default function ExportButtons({ item }: { item: PriceReferenceWithRelations }) {
   function numberFr(n?: number | null) {
     if (typeof n !== "number") return "-";
     return n.toLocaleString("fr-FR");
@@ -59,9 +76,9 @@ export default function ExportButtons({ item }: { item: any }) {
           <table class="meta">
             <tr>
               <td><strong>Structure de société:</strong></td>
-              <td>${societeLabel(item?.structureSociete)}</td>
+              <td>${societeLabel(item?.structureSociete ?? undefined)}</td>
               <td><strong>Cardinale:</strong></td>
-              <td>${cardinaleLabel(item?.cardinale)}</td>
+              <td>${cardinaleLabel(item?.cardinale ?? undefined)}</td>
               <td><strong>Taux:</strong></td>
               <td class="right">${numberFr(rate)}</td>
             </tr>

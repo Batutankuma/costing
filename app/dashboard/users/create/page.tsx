@@ -34,9 +34,10 @@ export default function CreateUserPage() {
 
   const onSubmit = async (data: UserFormData) => {
     try {
-      const result = await executeAsync(data as any);
+      const result = await executeAsync(data);
       if (result?.data?.success) {
-        const generated = (result.data.success as any).password;
+        type SuccessResult = { password?: string };
+        const generated = (result.data.success as SuccessResult).password;
         if (generated) {
           try { await navigator.clipboard.writeText(generated); } catch {}
           setPasswordModal({ open: true, value: generated });
@@ -46,8 +47,9 @@ export default function CreateUserPage() {
       } else if (result?.data?.failure) {
       } else {
       }
-    } catch (e: any) {
-     
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : "Une erreur est survenue";
+      toast({ variant: "destructive", title: "Erreur", description: errorMessage });
     }
   };
 
@@ -68,7 +70,7 @@ export default function CreateUserPage() {
         
         <div>
           <Label>Rôle <span className="text-red-500">*</span></Label>
-          <Select value={watch("role") as any} onValueChange={(v: any) => setValue("role" as any, v)}>
+          <Select value={watch("role")} onValueChange={(v) => setValue("role", v as UserFormData["role"])}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Sélectionner un rôle" />
             </SelectTrigger>
@@ -77,21 +79,21 @@ export default function CreateUserPage() {
               <SelectItem value="COMMERCIAL">Commercial</SelectItem>
             </SelectContent>
           </Select>
-          {(errors as any).role && <p className="text-red-500 text-sm">{(errors as any).role?.message as string}</p>}
+          {errors.role && <p className="text-red-500 text-sm">{errors.role.message}</p>}
         </div>
         <div className="flex items-center gap-3">
           <Label htmlFor="emailVerified">Email vérifié</Label>
           <input id="emailVerified" type="checkbox" {...register("emailVerified")} />
         </div>
         
-        <Button type="submit" disabled={isPending}>{isPending ? "Enregistrement..." : "Enregistrer l'utilisateur"}</Button>
+          <Button type="submit" disabled={isPending}>{isPending ? "Enregistrement..." : "Enregistrer l&apos;utilisateur"}</Button>
       </form>
 
       <Dialog open={passwordModal.open} onOpenChange={(o) => setPasswordModal((s) => ({ ...s, open: o }))}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Mot de passe généré</DialogTitle>
-            <DialogDescription>Partagez ce mot de passe avec l'utilisateur. Il pourra le changer après connexion.</DialogDescription>
+            <DialogDescription>Partagez ce mot de passe avec l&apos;utilisateur. Il pourra le changer après connexion.</DialogDescription>
           </DialogHeader>
           <div className="rounded-md border p-3 font-mono text-sm select-all">
             {passwordModal.value}

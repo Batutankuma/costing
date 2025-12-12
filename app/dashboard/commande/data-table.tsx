@@ -65,10 +65,7 @@ import {
     Trash,
 } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
-import { columns } from "./columns";
-// Type pour Commande basé sur Supabase
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Commande = any;
+import { columns, Commande } from "./columns";
 import ExportExcel from "@/components/exportExcel";
 import { useRouter } from "next/navigation";
 import { removeByIdAction } from "./actions";
@@ -98,11 +95,11 @@ export default function DataTables({ Element }: { Element: Commande[] }) {
             // Supprimer chaque ligne sélectionnée du serveur
             for (const row of selectedRows) {
                 const result = await removeByIdAction(row.original.id);
-                if (!(result as any).success) {
+                if (!result.success) {
                     toast({
                         variant: "destructive",
                         title: "Erreur",
-                        description: `Erreur lors de la suppression de ${row.original.reference}: ${(result as any).failure}`
+                        description: `Erreur lors de la suppression de ${row.original.reference}: ${result.failure || "Erreur inconnue"}`
                     });
                     return;
                 }

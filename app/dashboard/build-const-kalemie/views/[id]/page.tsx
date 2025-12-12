@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { getKalemieBuilderById } from "../../actions";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,8 @@ interface Props { params: Promise<{ id: string }> }
 export default async function ViewKalemiePage({ params }: Props) {
   const { id } = await params;
   const res = await getKalemieBuilderById(id);
-  const it = (res as any)?.result;
+  const it = res.result;
+  if (!it) return notFound();
 
   const to = (v?: number | null) => (typeof v === "number" ? v : 0);
   const customsSubtotal = to(it?.customs?.customsDutyUSD) + to(it?.customs?.importVATUSD);
@@ -35,7 +37,7 @@ export default async function ViewKalemiePage({ params }: Props) {
         <tbody>
           {it?.baseCosts && (<>
             <tr><td className="p-2">FOB Dar</td><td className="p-2 text-right">{to(it.baseCosts.plattsFOBUSD)}</td></tr>
-            <tr><td className="p-2">Transport (camion) jusqu'à Kigoma</td><td className="p-2 text-right">{to(it.baseCosts.truckTransportUSD)}</td></tr>
+            <tr><td className="p-2">Transport (camion) jusqu&apos;à Kigoma</td><td className="p-2 text-right">{to(it.baseCosts.truckTransportUSD)}</td></tr>
             <tr><td className="p-2">Expenses Lac Tanganyika</td><td className="p-2 text-right">{to(it.baseCosts.agencyCustomsUSD)}</td></tr>
             <tr><td className="p-2">Brut C&F</td><td className="p-2 text-right">{to(it.baseCosts.brutCFUSD)}</td></tr>
             <tr className="bg-yellow-50 font-medium"><td className="p-2">Prix de revient</td><td className="p-2 text-right">{to(it.baseCosts.acquisitionCostUSD)}</td></tr>

@@ -52,7 +52,7 @@ export default function CreateClientPage() {
 
   const onSubmit = async (data: ClientFormData) => {
     try {
-      const result = await createClient(data as any);
+      const result = await createClient(data);
       if (!result?.data?.success) {
         toast({ 
           variant: "destructive",

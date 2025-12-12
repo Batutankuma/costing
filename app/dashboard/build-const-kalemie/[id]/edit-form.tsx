@@ -41,7 +41,66 @@ const Schema = z.object({
 
 type FormData = z.infer<typeof Schema>;
 
-export default function KalemieEditForm({ item }: { item: any }) {
+type KalemieBuilderItem = {
+  id: string;
+  baseCosts?: {
+    plattsFOBUSD?: number | null;
+    truckTransportUSD?: number | null;
+    agencyCustomsUSD?: number | null;
+  } | null;
+  supplierDDU?: {
+    storageHospitalityUSD?: number | null;
+    anrDechargementUSD?: number | null;
+    supplierMarginUSD?: number | null;
+  } | null;
+  customs?: {
+    customsDutyUSD?: number | null;
+    importVATUSD?: number | null;
+  } | null;
+  levies?: {
+    fonerUSD?: number | null;
+    molecularMarkingOrStockUSD?: number | null;
+    reconstructionStrategicUSD?: number | null;
+    economicInterventionUSD?: number | null;
+  } | null;
+  transport?: {
+    freightToMineUSD?: number | null;
+    lossesLitresPerTruck?: number | null;
+  } | null;
+  nonMiningPriceStructure?: {
+    id: string;
+    nomStructure?: string | null;
+    exchangeRate?: {
+      id: string;
+      rate: number;
+      deviseBase: string;
+      deviseTarget: string;
+      createdAt: Date;
+      updatedAt: Date;
+      validOn: Date;
+    } | null;
+    [key: string]: unknown;
+  } | null;
+  priceReference?: {
+    id: string;
+    exchangeRate?: {
+      id: string;
+      rate: number;
+      deviseBase: string;
+      deviseTarget: string;
+      createdAt: Date;
+      updatedAt: Date;
+      validOn: Date;
+    } | null;
+    [key: string]: unknown;
+  } | null;
+  totals?: {
+    [key: string]: unknown;
+  } | null;
+  [key: string]: unknown;
+};
+
+export default function KalemieEditForm({ item }: { item: KalemieBuilderItem }) {
   const form = useForm<FormData>({
     resolver: zodResolver(Schema),
     defaultValues: {
@@ -111,7 +170,7 @@ export default function KalemieEditForm({ item }: { item: any }) {
   const [selectedTransportRateId, setSelectedTransportRateId] = React.useState<string>("");
 
   const onSubmit = async (data: FormData) => {
-    await updateBuilder(data as any);
+    await updateBuilder(data);
   };
 
   return (
@@ -120,14 +179,14 @@ export default function KalemieEditForm({ item }: { item: any }) {
         <CardHeader><CardTitle>COÛTS DE BASE DU PRODUIT & TRANSPORT INITIAL</CardTitle></CardHeader>
         <CardContent className="grid md:grid-cols-3 gap-4">
           <div><Label>FOB Dar</Label><Input type="number" step="any" {...form.register("base.plattsFOBUSD", { valueAsNumber: true })} /></div>
-          <div><Label>Transport camion jusqu'à Kigoma</Label><Input type="number" step="any" {...form.register("base.truckTransportUSD", { valueAsNumber: true })} /></div>
+          <div><Label>Transport camion jusqu&apos;à Kigoma</Label><Input type="number" step="any" {...form.register("base.truckTransportUSD", { valueAsNumber: true })} /></div>
           <div><Label>Expenses Lac Tanganyika</Label><Input type="number" step="any" {...form.register("base.agencyCustomsUSD", { valueAsNumber: true })} /></div>
           <div className="md:col-span-3"><Label>Prix de revient (auto)</Label><Input type="number" value={acquisition} disabled /></div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>COÛTS & MARGE DU FOURNISSEUR POUR L'OFFRE DDU</CardTitle></CardHeader>
+        <CardHeader><CardTitle>COÛTS & MARGE DU FOURNISSEUR POUR L&apos;OFFRE DDU</CardTitle></CardHeader>
         <CardContent className="grid md:grid-cols-3 gap-4">
           <div><Label>Frais stock./hospitality</Label><Input type="number" step="any" {...form.register("supplier.storageHospitalityUSD", { valueAsNumber: true })} /></div>
           <div><Label>ANR-Déchargement-OCC-Hydrocarbures</Label><Input type="number" step="any" {...form.register("supplier.anrDechargementUSD", { valueAsNumber: true })} /></div>
@@ -166,7 +225,7 @@ export default function KalemieEditForm({ item }: { item: any }) {
               onValueChange={(id) => {
                 setSelectedTransportRateId(id);
                 const rate = transportRates.find((t) => t.id === id)?.rateUsdPerCbm ?? 0;
-                form.setValue("transport.freightToMineUSD", Number(rate) as any, { shouldDirty: true });
+                form.setValue("transport.freightToMineUSD", Number(rate), { shouldDirty: true });
               }}
             >
               <SelectTrigger>

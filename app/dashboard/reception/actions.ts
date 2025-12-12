@@ -56,7 +56,7 @@ export const createAction = actionClient
         }
 
         // 1. Créer la réception
-        const created = await (tx as any).reception.create({
+        const created = await tx.reception.create({
           data: {
             reference: parsedInput.reference,
             receptionDate: parsedInput.receptionDate,
@@ -107,7 +107,7 @@ export const createAction = actionClient
           if (newStatus !== commandeData.status) {
             await tx.commande.update({
               where: { id: parsedInput.commandeId },
-              data: { status: newStatus as any },
+              data: { status: newStatus },
             });
           }
         }
@@ -133,7 +133,7 @@ export const createAction = actionClient
 export async function findByIdAction(id: string) {
   try {
     if (!id) throw new Error("L'ID du reception est manquant.");
-    const result = await (prisma as any).reception.findUnique({ where: { id } });
+    const result = await prisma.reception.findUnique({ where: { id } });
     if (!result) return { success: false, failure: "Reception non trouvé." };
     return { success: true, result };
   } catch (error) {
@@ -149,7 +149,7 @@ export const findAllAction = actionClient
   .schema(z.void())
   .action(async () => {
     try {
-      const result = await (prisma as any).reception.findMany({ 
+      const result = await prisma.reception.findMany({ 
         orderBy: { createdAt: 'desc' }
       });
       return { success: true, result };
@@ -167,7 +167,7 @@ export const updateAction = actionClient
   .schema(ReceptionSchema)
   .action(async ({ parsedInput }) => {
     try {
-      const result = await (prisma as any).reception.update({
+      const result = await prisma.reception.update({
         where: { id: parsedInput.id },
         data: {
           reference: parsedInput.reference,
@@ -202,7 +202,7 @@ export async function removeByIdAction(id: string) {
   try {
     if (!id) throw new Error("L'ID du reception est manquant pour la suppression.");
     
-    await (prisma as any).reception.delete({ where: { id } });
+    await prisma.reception.delete({ where: { id } });
     revalidatePath("/dashboard/reception");
     return { success: true, message: "Reception supprimé avec succès." };
   } catch (error) {
@@ -220,12 +220,12 @@ export const deleteReception = actionClient
       const { id } = parsedInput;
       
       // Vérifier si la réception existe
-      const existing = await (prisma as any).reception.findUnique({ where: { id } });
+      const existing = await prisma.reception.findUnique({ where: { id } });
       if (!existing) {
         return { failure: "Réception introuvable." };
       }
       
-      await (prisma as any).reception.delete({ where: { id } });
+      await prisma.reception.delete({ where: { id } });
       revalidatePath("/dashboard/reception");
       return { success: true };
     } catch (error) {

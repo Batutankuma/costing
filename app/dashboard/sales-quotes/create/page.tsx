@@ -15,7 +15,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import SignaturePad from "@/components/signature-pad";
 
-type Builder = any;
+type Builder = {
+  id: string;
+  title: string;
+};
 
 export default function CreateSalesQuotePage() {
   const { toast } = useToast();
@@ -59,7 +62,7 @@ export default function CreateSalesQuotePage() {
     (async () => {
       try {
         const r = await listQuotes({});
-        const items = (r as any)?.data?.result ?? [];
+        const items = r.data?.success ? r.data.result : [];
         const next = (Array.isArray(items) ? items.length : 0) + 1;
         const mm = new Date().toLocaleDateString("fr-FR", { month: "2-digit" }).slice(0, 2);
         setProformaNumber(`${String(next).padStart(4, "0")}-${mm}`);
@@ -76,7 +79,7 @@ export default function CreateSalesQuotePage() {
         const r = await fetch("/api/clients", { cache: "no-store" });
         if (r.ok) {
           const data = await r.json();
-          setClients(Array.isArray(data) ? data.map((c: any) => ({ id: c.id, name: c.name })) : []);
+          setClients(Array.isArray(data) ? data.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name })) : []);
         }
       } catch {
         setClients([]);
@@ -88,8 +91,8 @@ export default function CreateSalesQuotePage() {
     if (!selectedId) return;
     (async () => {
       const r = await computeBasePrices(selectedId);
-      if ((r as any).success) {
-        const { baseDDUUSD: ddu, baseDDPUSD: ddp } = (r as any).result;
+      if (r.data?.success && r.data.result) {
+        const { baseDDUUSD: ddu, baseDDPUSD: ddp } = r.data.result;
         setBaseDDUUSD(ddu);
         setBaseDDPUSD(ddp);
       }
@@ -98,11 +101,11 @@ export default function CreateSalesQuotePage() {
 
   // Resolve role (from session, then API fallback)
   useEffect(() => {
-    const current = (session?.user as any)?.role as "ADMIN" | "COMMERCIAL" | undefined;
+    const current = session?.user?.role as "ADMIN" | "COMMERCIAL" | undefined;
     if (current) {
       setRole(current);
       // Précharger la signature enregistrée sur l'utilisateur s'il y en a une
-      const sig = (session?.user as any)?.signatureDataUrl as string | undefined;
+      const sig = session?.user?.signatureDataUrl;
       if (sig) setSignatureDataUrl(sig);
       return;
     }
@@ -169,7 +172,7 @@ export default function CreateSalesQuotePage() {
       proformaNumber,
       tvaApplicable,
       tvaAmount: tvaApplicable ? Number((Number(lineTotalDDP || 0) * 0.16)) : 0,
-    } as any);
+    });
     setLoading(false);
     if (res?.data?.success) {
       toast({ title: "Devis enregistré" });
@@ -237,7 +240,7 @@ export default function CreateSalesQuotePage() {
       return { head: (q === 1 && base === 1000 ? "mille" : numberToWordsFR(q) + " " + lbl), rest: r };
     };
     if (n === 0) return units[0];
-    let parts: string[] = [];
+    const parts: string[] = [];
     let rest = n;
     const milliards = scale(rest, 1_000_000_000, "milliard", "milliards");
     if (milliards.head) parts.push(milliards.head);
@@ -326,7 +329,7 @@ export default function CreateSalesQuotePage() {
               <SelectValue placeholder="Sélectionner..." />
             </SelectTrigger>
             <SelectContent>
-              {builders.map((b: any) => (
+              {builders.map((b: Builder) => (
                 <SelectItem key={b.id} value={b.id}>{b.title}</SelectItem>
               ))}
             </SelectContent>
@@ -491,7 +494,7 @@ export default function CreateSalesQuotePage() {
             <div><span className="font-semibold">Id Nat:</span></div>
             <div><span className="font-semibold">NIF:</span></div>
             <div><span className="font-semibold">Bon de Commande :</span></div>
-            <div><span className="font-semibold">Validité de l'offre:</span> 30 Jours</div>
+            <div><span className="font-semibold">Validité de l&apos;offre:</span> 30 Jours</div>
           </div>
         </div>
 
@@ -584,7 +587,7 @@ export default function CreateSalesQuotePage() {
             <div><span className="font-semibold">Id Nat:</span></div>
             <div><span className="font-semibold">NIF:</span></div>
             <div><span className="font-semibold">Bon de Commande :</span></div>
-            <div><span className="font-semibold">Validité de l'offre:</span> 30 Jours</div>
+            <div><span className="font-semibold">Validité de l&apos;offre:</span> 30 Jours</div>
           </div>
         </div>
 

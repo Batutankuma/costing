@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function Page() {
-  const deliveries = await (prisma as any).delivery.findMany({ 
+  const deliveries = await prisma.delivery.findMany({ 
     orderBy: { deliveryDate: 'desc' },
     include: {
       client: true,
@@ -48,7 +48,7 @@ export default async function Page() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <DataTablesWrapper Element={deliveries as any} />
+          <DataTablesWrapper Element={deliveries} />
         </CardContent>
       </Card>
     </div>

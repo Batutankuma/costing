@@ -72,7 +72,17 @@ import { useEffect, useId, useRef, useState } from "react";
 import { columns, type UserRow } from "./columns";
 import { useRouter } from "next/navigation";
 
-export default function DataTables({ Element }: { Element: any[] }) {
+type UserItem = {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role?: string | null;
+  emailVerified?: Date | string | null;
+  createdAt?: Date | string | null;
+};
+
+export default function DataTables({ Element }: { Element: UserItem[] }) {
   const id = useId();
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -85,7 +95,7 @@ export default function DataTables({ Element }: { Element: any[] }) {
   const [data, setData] = useState<UserRow[]>([]);
   useEffect(() => {
     const rows: UserRow[] = Array.isArray(Element)
-      ? Element.map((u: any) => ({
+      ? Element.map((u: UserItem) => ({
           id: String(u?.id ?? ""),
           name: u?.name ?? null,
           email: u?.email ?? null,

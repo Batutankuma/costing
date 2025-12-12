@@ -41,7 +41,7 @@ export default async function Page() {
           <CardDescription>Visualisez et gérez tous vos tarifs de transport (USD/CBM)</CardDescription>
         </CardHeader>
         <CardContent>
-          <DataTables Element={transportRates as any} />
+          <DataTables Element={transportRates} />
         </CardContent>
       </Card>
     </div>

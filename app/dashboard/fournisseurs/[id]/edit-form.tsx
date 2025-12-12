@@ -43,11 +43,11 @@ export default function EditForm({ id, initial }: EditFormProps) {
     setIsSubmitting(true);
     try {
       const result = await updateFournisseur({ ...data, id });
-      if (result.data?.failure) {
+      if (!result || result?.data?.failure) {
         toast({ 
           variant: "destructive", 
           title: "Erreur", 
-          description: result.data.failure || "Mise à jour échouée"
+          description: result?.data?.failure || "Mise à jour échouée"
         });
         return;
       }

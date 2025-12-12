@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { updateAction } from "../actions";
+import { updateDepot } from "../actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Warehouse, Save, X } from "lucide-react";
 import { useState } from "react";
@@ -70,9 +70,14 @@ export default function EditDepotForm({ depot }: EditFormProps) {
   const onSubmit = async (data: DepotFormData) => {
     setIsSubmitting(true);
     try {
-      const res = await updateAction({ ...data, id: depot.id });
+      const res = await updateDepot({ 
+        id: depot.id, 
+        name: data.name, 
+        type: data.type, 
+        location: data.address 
+      });
       
-      if (res.success) {
+      if (res?.data?.success) {
         toast({ 
           title: "Succès", 
           description: "Dépôt modifié avec succès" 
@@ -83,7 +88,7 @@ export default function EditDepotForm({ depot }: EditFormProps) {
         toast({ 
           variant: "destructive", 
           title: "Erreur", 
-          description: res.failure || "Mise à jour échouée" 
+          description: (res as any)?.data?.failure || "Mise à jour échouée" 
         });
       }
     } catch (error) {
@@ -105,7 +110,7 @@ export default function EditDepotForm({ depot }: EditFormProps) {
           Modifier le dépôt
         </CardTitle>
         <CardDescription>
-          Modifiez les informations du dépôt. Les champs marqués d'un * sont obligatoires.
+          Modifiez les informations du dépôt. Les champs marqués d&apos;un * sont obligatoires.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -164,7 +169,7 @@ export default function EditDepotForm({ depot }: EditFormProps) {
               <p className="text-sm text-red-500">{errors.capacity.message}</p>
             )}
             <p className="text-sm text-muted-foreground">
-              Laissez vide si la capacité n'est pas applicable
+              Laissez vide si la capacité n&apos;est pas applicable
             </p>
           </div>
 

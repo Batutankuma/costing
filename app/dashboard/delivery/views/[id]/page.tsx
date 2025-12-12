@@ -58,7 +58,7 @@ function DepotName({ depotId }: { depotId: string }) {
     const loadDepot = async () => {
       try {
         const result = await executeAsync();
-        const depots: DepotRef[] = ((result as any)?.data?.data ?? []) as DepotRef[];
+        const depots: DepotRef[] = (result?.data?.data ?? []) as DepotRef[];
         const depot = depots.find((d) => d.id === depotId);
         if (depot) {
           setDepotName(depot.name || "");
@@ -84,7 +84,7 @@ function TankName({ tankId }: { tankId: string }) {
     const loadTank = async () => {
       try {
         const result = await execTanks();
-        const tanks: TankRef[] = ((result as any)?.data?.result ?? (result as any)?.data?.data ?? []) as TankRef[];
+        const tanks: TankRef[] = (result?.data?.result ?? []) as TankRef[];
         const tank = tanks.find((t) => t.id === tankId);
         if (tank) {
           setTankName(tank.name || "");
@@ -110,7 +110,7 @@ function ProduitName({ produitId }: { produitId: string }) {
     const loadProduit = async () => {
       try {
         const result = await execProducts();
-        const produits: ProduitRef[] = ((result as any)?.data?.data ?? (result as any)?.data?.result ?? []) as ProduitRef[];
+        const produits: ProduitRef[] = (result?.data?.data ?? []).map((p: { id: string; name: string }) => ({ id: p.id, nom: p.name })) as ProduitRef[];
         const produit = produits.find((p) => p.id === produitId);
         if (produit) {
           setProduitName(produit.nom || "");

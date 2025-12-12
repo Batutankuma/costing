@@ -66,11 +66,11 @@ import {
 } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { columns } from "./columns";
-import { Delivery } from "@/models/mvc";
+import { DeliveryWithRelations } from "./columns";
 import ExportExcel from "@/components/exportExcel";
 import { useRouter } from "next/navigation";
 
-export default function DataTables({ Element }: { Element: Delivery[] }) {
+export default function DataTables({ Element }: { Element: DeliveryWithRelations[] }) {
     const id = useId();
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -80,7 +80,7 @@ export default function DataTables({ Element }: { Element: Delivery[] }) {
 
     const [sorting, setSorting] = useState<SortingState>([{ id: "note", desc: false, },]);
 
-    const [data, setData] = useState<Delivery[]>([]);
+    const [data, setData] = useState<DeliveryWithRelations[]>([]);
     useEffect(() => { 
         setData(Element); 
     }, [Element]);

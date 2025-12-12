@@ -63,16 +63,16 @@ export default function ViewReceptionPage() {
           if (receptionData.commandeId) {
             const commandesResult = await executeCommandes();
             if (commandesResult?.data?.success && commandesResult.data.result) {
-              const foundCommande = commandesResult.data.result.find((c: any) => c.id === receptionData.commandeId);
+              const foundCommande = commandesResult.data.result.find((c: CommandeRef) => c.id === receptionData.commandeId);
               setCommande(foundCommande || null);
             }
           }
           
           if (receptionData.produitId) {
             const produitsResult = await executeProduits();
-            const produits = (produitsResult as any)?.data?.data ?? [];
+            const produits = produitsResult?.data?.data ?? [];
             if (produits.length > 0) {
-              const foundProduit = produits.find((p: any) => p.id === receptionData.produitId);
+              const foundProduit = produits.find((p: ProduitRef) => p.id === receptionData.produitId);
               setProduit(foundProduit || null);
             }
           }
@@ -80,7 +80,7 @@ export default function ViewReceptionPage() {
           if (receptionData.tankId) {
             const tanksResult = await executeTanks();
             if (tanksResult?.data?.success && tanksResult.data.result) {
-              const foundTank = tanksResult.data.result.find((t: any) => t.id === receptionData.tankId);
+              const foundTank = tanksResult.data.result.find((t: TankRef) => t.id === receptionData.tankId);
               setTank(foundTank || null);
             }
           }

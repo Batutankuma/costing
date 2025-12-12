@@ -68,14 +68,44 @@ const columns: ColumnDef<BuilderRow>[] = [
   },
 ];
 
-export default function DataTable({ items }: { items: any[] }) {
+type KalemieBuilderItem = {
+  id: string;
+  date: Date | string;
+  title: string | null;
+  unit?: string | null;
+  baseCosts?: {
+    plattsFOBUSD: number;
+    truckTransportUSD: number;
+    brutCFUSD: number;
+    agencyCustomsUSD: number;
+    acquisitionCostUSD: number;
+  } | null;
+  supplierDDU?: {
+    storageHospitalityUSD: number;
+    anrDechargementUSD: number;
+    supplierMarginUSD: number;
+  } | null;
+  customs?: {
+    customsDutyUSD: number | null;
+    importVATUSD: number | null;
+  } | null;
+  levies?: {
+    totalLeviesUSD: number | null;
+  } | null;
+  transport?: {
+    freightToMineUSD: number | null;
+    lossesLitresPerTruck: number | null;
+  } | null;
+};
+
+export default function DataTable({ items }: { items: ReadonlyArray<KalemieBuilderItem> }) {
   const id = useId();
 
-  const mapped: BuilderRow[] = useMemo(() => (items ?? []).map((it: any) => ({
+  const mapped: BuilderRow[] = useMemo(() => Array.from(items ?? []).map((it: KalemieBuilderItem) => ({
     id: it.id,
     date: new Date(it.date).toLocaleDateString("fr-FR"),
-    title: it.title,
-    unit: it.unit,
+    title: it.title ?? "",
+    unit: it.unit ?? "",
   })), [items]);
 
   const [data, setData] = useState<BuilderRow[]>(mapped);

@@ -80,9 +80,9 @@ export const createDepot = actionClient
     const { name, type, location, products } = parsedInput;
     const productRecords = await Promise.all(
       products.map(async (p) => {
-        const existing = await prisma.product.findFirst({ where: { name: p.name, unit: p.unit as any } });
+        const existing = await prisma.product.findFirst({ where: { name: p.name, unit: p.unit } });
         if (existing) return { productId: existing.id, quantity: p.quantity };
-        const created = await prisma.product.create({ data: { name: p.name, unit: p.unit as any } });
+        const created = await prisma.product.create({ data: { name: p.name, unit: p.unit } });
         return { productId: created.id, quantity: p.quantity };
       })
     );
@@ -90,7 +90,7 @@ export const createDepot = actionClient
     const createdDepot = await prisma.depot.create({
       data: {
         name,
-        type: type as any,
+        type,
         location: location ?? null,
         products: {
           create: productRecords.map((r) => ({ productId: r.productId, quantity: r.quantity })),
@@ -109,7 +109,7 @@ export const updateDepot = actionClient
     const { id, name, type, location } = parsedInput;
     const updated = await prisma.depot.update({
       where: { id },
-      data: { name, type: type as any, location: location ?? null },
+      data: { name, type, location: location ?? null },
     });
     revalidatePath("/dashboard/depots");
     revalidatePath(`/dashboard/depots/${id}`);

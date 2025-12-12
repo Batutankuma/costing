@@ -21,16 +21,38 @@ export default async function EditKinshasaCostingPage(props: RoutePageProps) {
   }
 
   const products = await getProducts();
+  const toBreakdown = (arr: any): Array<{
+    label: string;
+    client: number;
+    threshold: number;
+    proposal: number;
+    mag: number;
+    afterMag: number;
+  }> =>
+    Array.isArray(arr)
+      ? arr
+          .map((row: any) => ({
+            label: typeof row?.label === "string" ? row.label : "",
+            client: Number(row?.client ?? 0),
+            threshold: Number(row?.threshold ?? 0),
+            proposal: Number(row?.proposal ?? 0),
+            mag: Number(row?.mag ?? 0),
+            afterMag: Number(row?.afterMag ?? 0),
+          }))
+          .filter((r) => r.label !== "")
+      : [];
+
   const normalized = {
     ...costing,
+    currency: costing.currency === "USD" ? ("USD" as const) : ("CDF" as const),
     volumeM3: Number(costing.volumeM3 ?? 0),
     unitPriceUsd: Number(costing.unitPriceUsd ?? 0),
     clientExchangeRate: Number(costing.clientExchangeRate ?? 0),
     benchmarkExchangeRate: Number(costing.benchmarkExchangeRate ?? 0),
     engenPriceCDF: Number(costing.engenPriceCDF ?? 0),
     engenPriceUSD: Number(costing.engenPriceUSD ?? 0),
-    cdfBreakdown: Array.isArray(costing.cdfBreakdown) ? costing.cdfBreakdown : [],
-    usdBreakdown: Array.isArray(costing.usdBreakdown) ? costing.usdBreakdown : [],
+    cdfBreakdown: toBreakdown(costing.cdfBreakdown),
+    usdBreakdown: toBreakdown(costing.usdBreakdown),
   };
 
   return (
@@ -44,7 +66,7 @@ export default async function EditKinshasaCostingPage(props: RoutePageProps) {
       </div>
       <Card>
         <CardContent className="pt-6">
-          <KinshasaCostingForm products={products} initialData={normalized as any} />
+          <KinshasaCostingForm products={products} initialData={{ ...normalized, id: costing.id } as typeof normalized & { id: string }} />
         </CardContent>
       </Card>
     </div>

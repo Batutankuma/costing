@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 export default async function ViewBuilderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const res = await findBuilderById(id);
-  const item = (res as any)?.result;
+  const item = res.result;
 
   if (!item) {
     return (
@@ -55,8 +55,8 @@ export default async function ViewBuilderPage({ params }: { params: Promise<{ id
         <div><Label>Stockage/Hospitalité</Label><Input disabled value={item.supplierDDU?.storageHospitalityUSD?.toLocaleString("fr-FR") ?? "-"} /></div>
         <div><Label>ANR-Déchargement</Label><Input disabled value={item.supplierDDU?.anrDechargementUSD?.toLocaleString("fr-FR") ?? "-"} /></div>
         <div><Label>Marge fournisseur</Label><Input disabled value={item.supplierDDU?.supplierMarginUSD?.toLocaleString("fr-FR") ?? "-"} /></div>
-        <div><Label>Frais d'Escorte (USD)</Label><Input disabled value={(item.supplierDDU as any)?.escortFeesUSD?.toLocaleString("fr-FR") ?? "-"} /></div>
-        <div><Label>Intérêts Ligne Banque (USD)</Label><Input disabled value={(item.supplierDDU as any)?.bankInterestUSD?.toLocaleString("fr-FR") ?? "-"} /></div>
+        <div><Label>Frais d&apos;Escorte (USD)</Label><Input disabled value={item.supplierDDU?.escortFeesUSD?.toLocaleString("fr-FR") ?? "-"} /></div>
+        <div><Label>Intérêts Ligne Banque (USD)</Label><Input disabled value={item.supplierDDU?.bankInterestUSD?.toLocaleString("fr-FR") ?? "-"} /></div>
         <div><Label>Prix DDU</Label><Input disabled value={item.supplierDDU?.sellingPriceDDUUSD?.toLocaleString("fr-FR") ?? "-"} /></div>
       </div>
 
@@ -81,7 +81,6 @@ export default async function ViewBuilderPage({ params }: { params: Promise<{ id
       <div className="grid md:grid-cols-4 gap-4">
         <div><Label>Freight to Mine</Label><Input disabled value={item.transport?.freightToMineUSD?.toLocaleString("fr-FR") ?? "-"} /></div>
         <div><Label>Pertes (L)</Label><Input disabled value={item.transport?.lossesLitresPerTruck?.toLocaleString("fr-FR") ?? "-"} /></div>
-        <div><Label>Valeur des pertes</Label><Input disabled value={item.transport?.lossesValueUSD?.toLocaleString("fr-FR") ?? "-"} /></div>
         <div><Label>Total transport final</Label><Input disabled value={item.transport?.totalTransportFinalUSD?.toLocaleString("fr-FR") ?? "-"} /></div>
       </div>
 

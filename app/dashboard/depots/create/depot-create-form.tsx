@@ -15,7 +15,7 @@ import { useState } from "react";
 
 const DepotFormSchema = z.object({
   name: z.string().min(1, "Nom requis"),
-  type: z.enum(["OWNED", "EXTERNAL"]).default("OWNED"),
+  type: z.enum(["OWNED", "EXTERNAL"]),
   location: z.string().optional(),
   products: z.array(
     z.object({
@@ -35,7 +35,7 @@ const DepotFormSchema = z.object({
         "METRE_CUBE",
         "METRE_LINEAIRE",
       ]),
-      quantity: z.number().min(0).default(0),
+      quantity: z.number().min(0),
     })
   ).min(1),
 });
@@ -54,7 +54,7 @@ export default function DepotCreateForm({ suggestions }: { suggestions: Array<{ 
   const onSubmit = async (data: DepotFormData) => {
     setSaving(true);
     try {
-      await createDepot(data as any);
+      await createDepot(data);
       router.push("/dashboard/depots");
     } finally {
       setSaving(false);
@@ -79,7 +79,7 @@ export default function DepotCreateForm({ suggestions }: { suggestions: Array<{ 
             </div>
             <div className="space-y-2">
               <Label>Type</Label>
-              <Select value={form.watch("type")} onValueChange={(v) => form.setValue("type", v as any)}>
+              <Select value={form.watch("type")} onValueChange={(v) => form.setValue("type", v as DepotFormData["type"])}>
                 <SelectTrigger><SelectValue placeholder="Sélectionner le type" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="OWNED">Interne</SelectItem>
@@ -120,8 +120,8 @@ export default function DepotCreateForm({ suggestions }: { suggestions: Array<{ 
               <div className="space-y-2">
                 <Label>Unité</Label>
                 <Select
-                  value={form.watch(`products.${index}.unit`) as any}
-                  onValueChange={(v) => form.setValue(`products.${index}.unit`, v as any)}
+                  value={form.watch(`products.${index}.unit`)}
+                  onValueChange={(v) => form.setValue(`products.${index}.unit`, v as DepotFormData["products"][number]["unit"])}
                 >
                   <SelectTrigger><SelectValue placeholder="Unité" /></SelectTrigger>
                   <SelectContent>
@@ -134,7 +134,7 @@ export default function DepotCreateForm({ suggestions }: { suggestions: Array<{ 
               <div className="space-y-2">
                 <Label>Quantité</Label>
                 <Input type="number" step="any"
-                  value={form.watch(`products.${index}.quantity`) as any}
+                  value={form.watch(`products.${index}.quantity`)}
                   onChange={(e) => form.setValue(`products.${index}.quantity`, e.target.value === "" ? 0 : Number(e.target.value))}
                 />
               </div>

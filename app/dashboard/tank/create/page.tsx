@@ -22,8 +22,10 @@ import { Progress } from "@/components/progress";
 type TankFormData = z.input<typeof CreateTankSchema>;
 
 export default function CreateTankPage() {
-  const [depots, setDepots] = useState<any[]>([]);
-  const [produits, setProduits] = useState<any[]>([]);
+  type DepotRef = { id: string; name: string };
+  type ProduitRef = { id: string; name: string };
+  const [depots, setDepots] = useState<DepotRef[]>([]);
+  const [produits, setProduits] = useState<ProduitRef[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -80,7 +82,7 @@ export default function CreateTankPage() {
         clearTimeout(timer);
         if (!isMounted) return;
         if (depotsRes?.data?.data) {
-          const list = depotsRes.data.data as any[];
+          const list = depotsRes.data.data as DepotRef[];
           if (isMounted) setDepots(list);
           if (list.length > 0) {
             const qpDepotId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('depotId') : null;
@@ -89,7 +91,7 @@ export default function CreateTankPage() {
           }
         }
         if (produitsRes?.data?.data) {
-          if (isMounted) setProduits(produitsRes.data.data as any[]);
+          if (isMounted) setProduits(produitsRes.data.data as ProduitRef[]);
         }
       } catch (error) {
         toast({ variant: "destructive", title: "Erreur", description: "Impossible de charger les données" });
@@ -116,7 +118,7 @@ export default function CreateTankPage() {
       (async () => {
         const res = await depotsAct.executeAsync();
         if (res?.data?.data) {
-          const list = res.data.data as any[];
+          const list = res.data.data as DepotRef[];
           setDepots(list);
           if (list.length > 0) setValue('depotId', list[0].id);
         }
@@ -160,7 +162,7 @@ export default function CreateTankPage() {
         });
         router.push(`/dashboard/tank`);
       } else {
-        const message = (result?.data as any)?.failure || "Erreur inconnue lors de l'enregistrement.";
+        const message = result?.data?.failure || "Erreur inconnue lors de l'enregistrement.";
         throw new Error(message);
       }
     } catch (e: unknown) {
@@ -228,7 +230,7 @@ export default function CreateTankPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {!isDepotAvailable && (
               <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 flex items-center justify-between gap-3">
-                <span>Aucun dépôt disponible. Veuillez créer un dépôt avant d'ajouter un tank.</span>
+                <span>Aucun dépôt disponible. Veuillez créer un dépôt avant d&apos;ajouter un tank.</span>
                 <Button size="sm" variant="outline" onClick={() => router.push('/dashboard/stock/depot/create')}>
                   Créer un dépôt
                 </Button>

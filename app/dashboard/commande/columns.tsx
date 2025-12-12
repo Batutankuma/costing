@@ -17,7 +17,7 @@ import Link from "next/link";
 import { useState } from "react";
 import RemoveDialog from "./delete";
 type CommandeStatus = "DRAFT" | "CONFIRMED" | "PARTIALLY_RECEIVED" | "COMPLETED" | "CANCELLED";
-type Commande = {
+export type Commande = {
   id: string;
   reference: string;
   status: CommandeStatus;
@@ -27,9 +27,12 @@ type Commande = {
   quantite: number;
   unitPrice?: number | null;
   devise?: string | null;
-  produit?: { name: string; unit?: string };
-  fournisseur?: { nom: string };
-  depot?: { name: string };
+  produit?: { name: string; unit?: string } | null;
+  fournisseur?: { nom: string } | null;
+  depot?: { name: string } | null;
+  receptions?: Array<{ quantity: number }>;
+  currentQuantity?: number;
+  unit?: string;
 };
 // useAction n'est plus nécessaire
 import { Badge } from "@/components/ui/badge";
@@ -94,7 +97,7 @@ export const columns: ColumnDef<Commande>[] = [
         size: 150,
         cell: ({ row }) => {
             const produitId = row.getValue("produitId") as string;
-            const produitName = (row.original as any).produit?.name;
+            const produitName = row.original.produit?.name;
             return <ProduitName produitId={produitId} produitName={produitName} />;
         },
     },
@@ -104,7 +107,7 @@ export const columns: ColumnDef<Commande>[] = [
         size: 150,
         cell: ({ row }) => {
             const fournisseurId = row.getValue("fournisseurId") as string;
-            const fournisseurName = (row.original as any).fournisseur?.nom;
+            const fournisseurName = row.original.fournisseur?.nom;
             return <FournisseurName fournisseurId={fournisseurId} fournisseurName={fournisseurName} />;
         },
     },
@@ -114,7 +117,7 @@ export const columns: ColumnDef<Commande>[] = [
         size: 150,
         cell: ({ row }) => {
             const depotId = row.getValue("depotId") as string;
-            const depotName = (row.original as any).depot?.name;
+            const depotName = row.original.depot?.name;
             return <DepotName depotId={depotId} depotName={depotName} />;
         },
     },

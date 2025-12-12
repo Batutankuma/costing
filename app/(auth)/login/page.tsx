@@ -34,8 +34,9 @@ export default function LoginPage() {
       await authClient.signIn.email({ email, password });
       setSuccess("Connexion réussie. Redirection...");
       setTimeout(() => router.push("/dashboard"), 700);
-    } catch (err: any) {
-      setError(err?.message || "Connexion impossible");
+    } catch (err) {
+      const error = err instanceof Error ? err.message : "Connexion impossible";
+      setError(error);
     } finally {
       setLoading(false);
     }

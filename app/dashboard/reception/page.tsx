@@ -10,7 +10,7 @@ export const revalidate = 0;
 
 export default async function Page() {
   // Récupérer les réceptions avec les relations
-  const receptions = await (prisma as any).reception.findMany({
+  const receptions = await prisma.reception.findMany({
     include: {
       commande: {
         select: {
@@ -62,7 +62,7 @@ export default async function Page() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <DataTables Element={receptions as any} />
+          <DataTables Element={receptions} />
         </CardContent>
       </Card>
     </div>

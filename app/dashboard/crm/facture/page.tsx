@@ -38,7 +38,7 @@ export default async function FacturePage() {
           <CardDescription>Chaque ligne peut être consultée, modifiée ou supprimée.</CardDescription>
         </CardHeader>
         <CardContent>
-          <FactureDataTable data={factures as any} />
+          <FactureDataTable data={factures} />
         </CardContent>
       </Card>
     </div>

@@ -39,7 +39,7 @@ export default async function ViewUserPage({ params }: { params: Promise<{ id: s
             <div>
               <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
                 <Users className="h-8 w-8 text-primary" />
-                Détails de l'Utilisateur: {user.name}
+                Détails de l&apos;Utilisateur: {user.name}
               </h1>
               <p className="text-muted-foreground">Visualisation complète de l'utilisateur</p>
             </div>
@@ -56,7 +56,7 @@ export default async function ViewUserPage({ params }: { params: Promise<{ id: s
       <Card>
         <CardHeader>
           <CardTitle>Informations Générales</CardTitle>
-          <CardDescription>Détails de l'utilisateur</CardDescription>
+          <CardDescription>Détails de l&apos;utilisateur</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

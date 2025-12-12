@@ -33,9 +33,12 @@ export default function EditCommandePage({ params }: { params: Promise<{ id: str
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [commandeId, setCommandeId] = useState<string | null>(null);
-  const [produits, setProduits] = useState<any[]>([]);
-  const [fournisseurs, setFournisseurs] = useState<any[]>([]);
-  const [depots, setDepots] = useState<any[]>([]);
+  type ProduitRef = { id: string; name: string };
+  type FournisseurRef = { id: string; nom: string };
+  type DepotRef = { id: string; name: string };
+  const [produits, setProduits] = useState<ProduitRef[]>([]);
+  const [fournisseurs, setFournisseurs] = useState<FournisseurRef[]>([]);
+  const [depots, setDepots] = useState<DepotRef[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   
   // État simplifié pour les valeurs sélectionnées
@@ -93,7 +96,7 @@ export default function EditCommandePage({ params }: { params: Promise<{ id: str
         
         // Charger les produits
         const produitsResult = await executeProduits();
-        const produitsData = (produitsResult as any)?.data?.data ?? [];
+        const produitsData = produitsResult?.data?.data ?? [];
         setProduits(produitsData || []);
 
         // Charger les fournisseurs
@@ -104,7 +107,7 @@ export default function EditCommandePage({ params }: { params: Promise<{ id: str
 
         // Charger les dépôts
         const depotsResult = await executeDepots();
-        const depotsData = (depotsResult as any)?.data?.data ?? [];
+        const depotsData = depotsResult?.data?.data ?? [];
         setDepots(depotsData || []);
       } catch (error) {
         console.error("Erreur lors du chargement des données de référence:", error);
@@ -122,30 +125,30 @@ export default function EditCommandePage({ params }: { params: Promise<{ id: str
       setErrorMessage(null);
       try {
         const result = await findByIdAction(entityId);
-        if ((result as any).success && (result as any).result) {
-          const entity = (result as any).result as any;
+        if (result.success && result.result) {
+          const entity = result.result;
           
           // Mettre à jour les valeurs du formulaire
           setValue("status", entity.status);
           setValue("reference", entity.reference);
-          setValue("produitId", entity.produitId);
-          setValue("depotId", entity.depotId);
+          setValue("produitId", entity.produitId ?? "");
+          setValue("depotId", entity.depotId ?? "");
           setValue("devise", entity.devise);
-          setValue("fournisseurId", entity.fournisseurId);
+          setValue("fournisseurId", entity.fournisseurId ?? "");
           setValue("quantite", entity.quantite);
           setValue("unitPrice", entity.unitPrice);
           
           // Mettre à jour l'état des valeurs sélectionnées
           setSelectedValues({
             status: entity.status,
-            produitId: entity.produitId,
-            depotId: entity.depotId,
-            fournisseurId: entity.fournisseurId,
-            devise: entity.devise,
+            produitId: entity.produitId ?? "",
+            depotId: entity.depotId ?? "",
+            fournisseurId: entity.fournisseurId ?? "",
+            devise: entity.devise ?? "",
             
           });
         } else {
-          const msg = (result as any).failure || "Commande introuvable.";
+          const msg = result.failure || "Commande introuvable.";
           setErrorMessage(msg);
           toast({
             variant: "destructive",
@@ -344,7 +347,7 @@ export default function EditCommandePage({ params }: { params: Promise<{ id: str
               <Select
               value={selectedValues.devise}
               onValueChange={(value: string) => {
-                setValue("devise", value as any);
+                setValue("devise", value as "XOF" | "USD" | "EUR" | "CDF" | null);
                 setSelectedValues(prev => ({ ...prev, devise: value }));
               }}
             >
@@ -374,7 +377,7 @@ export default function EditCommandePage({ params }: { params: Promise<{ id: str
               {...register("quantite", { valueAsNumber: true })} 
             />
             {errors.quantite && (
-              <p className="text-red-500 text-sm">{(errors as any).quantite.message}</p>
+              <p className="text-red-500 text-sm">{errors.quantite?.message}</p>
             )}
           </div>
 

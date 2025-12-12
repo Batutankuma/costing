@@ -4,16 +4,17 @@ import path from "path";
 
 const storePath = path.join(process.cwd(), "temp-storage.json");
 async function readStore() { try { return JSON.parse(await fs.readFile(storePath, "utf8")); } catch { return {}; } }
-async function writeStore(obj: any) { await fs.writeFile(storePath, JSON.stringify(obj, null, 2), "utf8"); }
+async function writeStore(obj: Record<string, unknown>) { await fs.writeFile(storePath, JSON.stringify(obj, null, 2), "utf8"); }
 
 export async function GET() {
-  if ((prisma as any)?.prospect) {
-    const list = await (prisma as any).prospect.findMany({ orderBy: { createdAt: "desc" } });
+  try {
+    const list = await prisma.prospect.findMany({ orderBy: { createdAt: "desc" } });
+    return Response.json(list);
+  } catch {
+    const store = await readStore();
+    const list = Array.isArray(store.prospects) ? store.prospects : [];
     return Response.json(list);
   }
-  const store = await readStore();
-  const list = Array.isArray(store.prospects) ? store.prospects : [];
-  return Response.json(list);
 }
 
 export async function POST(request: Request) {
@@ -22,8 +23,8 @@ export async function POST(request: Request) {
     if (!body?.name || String(body.name).trim().length === 0) {
       return Response.json({ error: "Nom requis" }, { status: 400 });
     }
-    if ((prisma as any)?.prospect) {
-      const created = await (prisma as any).prospect.create({
+    try {
+      const created = await prisma.prospect.create({
         data: {
           name: body.name,
           company: body.company ?? null,
@@ -36,14 +37,16 @@ export async function POST(request: Request) {
         },
       });
       return Response.json(created, { status: 201 });
+    } catch {
+      const store = await readStore();
+      const created = { id: crypto.randomUUID(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), ...body };
+      store.prospects = Array.isArray(store.prospects) ? [...store.prospects, created] : [created];
+      await writeStore(store);
+      return Response.json(created, { status: 201 });
     }
-    const store = await readStore();
-    const created = { id: crypto.randomUUID(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), ...body };
-    store.prospects = Array.isArray(store.prospects) ? [...store.prospects, created] : [created];
-    await writeStore(store);
-    return Response.json(created, { status: 201 });
-  } catch (e: any) {
-    return Response.json({ error: e?.message || "server error" }, { status: 500 });
+  } catch (e) {
+    const error = e instanceof Error ? e.message : "server error";
+    return Response.json({ error }, { status: 500 });
   }
 }
 

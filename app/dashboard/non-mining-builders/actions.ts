@@ -76,7 +76,7 @@ export const createNonMiningBuilder = actionClient
         data: {
           title: data.title,
           description: data.description ?? null,
-          unit: data.unit as any,
+          unit: data.unit,
           userId: data.userId,
           nonMiningPriceStructureId: data.nonMiningPriceStructureId ?? null,
           
@@ -98,7 +98,7 @@ export const createNonMiningBuilder = actionClient
                 escortFeesUSD: data.supplier.escortFeesUSD ?? 0,
                 bankInterestUSD: data.supplier.bankInterestUSD ?? 0,
                 sellingPriceDDUUSD: data.supplier.sellingPriceDDUUSD ?? 0,
-              } as any }
+              } }
             : undefined,
             
           customs: data.customs
@@ -174,7 +174,7 @@ export const updateNonMiningBuilder = actionClient
         data: {
           title: updateData.title,
           description: updateData.description ?? null,
-          unit: updateData.unit as any,
+          unit: updateData.unit,
           nonMiningPriceStructureId: updateData.nonMiningPriceStructureId ?? null,
           baseCosts: updateData.base ? {
             upsert: {
@@ -203,7 +203,7 @@ export const updateNonMiningBuilder = actionClient
                 escortFeesUSD: updateData.supplier.escortFeesUSD ?? 0,
                 bankInterestUSD: updateData.supplier.bankInterestUSD ?? 0,
                 sellingPriceDDUUSD: updateData.supplier.sellingPriceDDUUSD ?? 0,
-              } as any,
+              },
               update: {
                 storageHospitalityUSD: updateData.supplier.storageHospitalityUSD ?? 0,
                 anrDechargementUSD: updateData.supplier.anrDechargementUSD ?? 0,
@@ -211,7 +211,7 @@ export const updateNonMiningBuilder = actionClient
                 escortFeesUSD: updateData.supplier.escortFeesUSD ?? 0,
                 bankInterestUSD: updateData.supplier.bankInterestUSD ?? 0,
                 sellingPriceDDUUSD: updateData.supplier.sellingPriceDDUUSD ?? 0,
-              } as any,
+              },
             },
           } : undefined,
           customs: updateData.customs ? {

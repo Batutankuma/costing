@@ -24,9 +24,12 @@ import { findAllAction as findAllFournisseurs } from "@/app/dashboard/crm/fourni
 import { listDepots } from "@/app/dashboard/depots/actions";
 
 export default function CreateCommandePage() {
-  const [produits, setProduits] = useState<any[]>([]);
-  const [fournisseurs, setFournisseurs] = useState<any[]>([]);
-  const [depots, setDepots] = useState<any[]>([]);
+  type ProduitRef = { id: string; name: string };
+  type FournisseurRef = { id: string; nom: string };
+  type DepotRef = { id: string; name: string };
+  const [produits, setProduits] = useState<ProduitRef[]>([]);
+  const [fournisseurs, setFournisseurs] = useState<FournisseurRef[]>([]);
+  const [depots, setDepots] = useState<DepotRef[]>([]);
   const [loading, setLoading] = useState(true);
   // Utiliser isSubmitting depuis react-hook-form au lieu d'un état local
 
@@ -49,9 +52,9 @@ export default function CreateCommandePage() {
           executeFournisseurs(),
           executeDepots(),
         ]);
-        if ((produitsResult as any)?.data?.data) setProduits((produitsResult as any).data.data || []);
+        if (produitsResult?.data?.data) setProduits(produitsResult.data.data || []);
         if (fournisseursResult?.data?.success) setFournisseurs(fournisseursResult.data.result || []);
-        if ((depotsResult as any)?.data?.data) setDepots((depotsResult as any).data.data || []);
+        if (depotsResult?.data?.data) setDepots(depotsResult.data.data || []);
       } finally {
         setLoading(false);
       }
@@ -114,7 +117,19 @@ export default function CreateCommandePage() {
 
   console.log(errors)
   // Soumission du formulaire
-  const onSubmit = async (data: any) => {
+  type CommandeFormData = {
+    reference: string;
+    status: "DRAFT" | "CONFIRMED" | "PARTIALLY_RECEIVED" | "COMPLETED" | "CANCELLED";
+    produitId: string;
+    depotId: string;
+    fournisseurId: string;
+    quantity: number;
+    unitPrice: number;
+    devise: "XOF" | "USD" | "EUR" | "CDF";
+    typePaiement: "DIRECT" | "CREDIT";
+  };
+
+  const onSubmit = async (data: CommandeFormData) => {
     try {
       console.log("[CREATE-COMMANDE] Soumission - données du formulaire:", data);
       console.log("[CREATE-COMMANDE] Tailles chargées:", { produits: produits.length, depots: depots.length, fournisseurs: fournisseurs.length });
@@ -301,7 +316,7 @@ export default function CreateCommandePage() {
                 <SelectValue placeholder="Sélectionner un produit" />
               </SelectTrigger>
               <SelectContent>
-                      {produits.map((produit: any) => (
+                      {produits.map((produit: ProduitRef) => (
                   <SelectItem key={produit.id} value={produit.id}>
                           <div className="flex items-center gap-2">
                             <Package className="w-4 h-4" />
@@ -341,7 +356,7 @@ export default function CreateCommandePage() {
                 <SelectValue placeholder="Sélectionner un fournisseur" />
               </SelectTrigger>
               <SelectContent>
-                      {fournisseurs.map((fournisseur: any) => (
+                      {fournisseurs.map((fournisseur: FournisseurRef) => (
                   <SelectItem key={fournisseur.id} value={fournisseur.id}>
                           <div className="flex items-center gap-2">
                             <Building2 className="w-4 h-4" />
@@ -382,7 +397,7 @@ export default function CreateCommandePage() {
                 <SelectValue placeholder="Sélectionner un dépôt" />
               </SelectTrigger>
               <SelectContent>
-                    {depots.map((depot: any) => (
+                    {depots.map((depot: DepotRef) => (
                   <SelectItem key={depot.id} value={depot.id}>
                         <div className="flex items-center gap-2">
                           <Building2 className="w-4 h-4" />

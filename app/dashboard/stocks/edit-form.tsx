@@ -30,8 +30,29 @@ const stockFormSchema = CreateStockSchema.extend({
 
 type StockFormData = z.infer<typeof stockFormSchema>;
 
+type StockWithRelations = {
+  id: string;
+  date: Date | string;
+  reference: string;
+  type: 'ENTREE' | 'SORTIE';
+  quantite: number;
+  unite: string;
+  devise: string;
+  prixUnitaireAchat?: number | null;
+  prixUnitaireVente?: number | null;
+  seuilMinimum: number;
+  depotId?: string | null;
+  produitId: string;
+  fournisseurId?: string | null;
+  clientId?: string | null;
+  depot?: { id: string; name: string; type: string } | null;
+  produit?: { id: string; name: string; unit: string } | null;
+  fournisseur?: { id: string; nom: string } | null;
+  client?: { id: string; name: string } | null;
+};
+
 interface EditStockFormProps {
-  initialStock: any;
+  initialStock: StockWithRelations;
   productSuggestions: Array<{ id: string; name: string; unit: string }>;
   fournisseurSuggestions: Array<{ id: string; nom: string }>;
   clientSuggestions: Array<{ id: string; name: string }>;
@@ -427,7 +448,7 @@ export default function EditStockForm({
                   Unité <span className="text-destructive">*</span>
                 </Label>
                 <Select
-                  onValueChange={(value: any) => setValue("unite", value)}
+                  onValueChange={(value: "KG" | "G" | "L" | "ML" | "TONNE" | "PIECE" | "BOITE" | "CAISSON" | "POUCE" | "METRE" | "METRE_CARRE" | "METRE_CUBE" | "METRE_LINEAIRE") => setValue("unite", value)}
                   value={watch("unite")}
                 >
                   <SelectTrigger id="unite" className="h-10">
@@ -461,7 +482,7 @@ export default function EditStockForm({
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Select
-                    onValueChange={(value: any) => setValue("devise", value)}
+                    onValueChange={(value: "XOF" | "USD" | "EUR" | "CDF") => setValue("devise", value)}
                     value={watch("devise")}
                   >
                     <SelectTrigger id="devise" className="h-10 pl-10">

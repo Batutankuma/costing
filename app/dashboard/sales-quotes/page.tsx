@@ -19,11 +19,11 @@ export default function Page() {
     (async () => {
       setLoading(true);
       try {
-        const role = (session?.user as any)?.role as "ADMIN" | "COMMERCIAL" | undefined;
+        const role = session?.user?.role as "ADMIN" | "COMMERCIAL" | undefined;
         const userId = session?.user?.id;
-        const payload = role === "ADMIN" ? undefined : { userId };
-        const res = await listQuotes(payload as any);
-        const rows = (res as any)?.data?.result ?? [];
+        const payload = role === "ADMIN" ? undefined : userId ? { userId } : undefined;
+        const res = await listQuotes(payload);
+        const rows = res.data?.success ? res.data.result : [];
         setItems(rows);
       } catch (error) {
         console.error("Error loading quotes:", error);
@@ -31,7 +31,7 @@ export default function Page() {
         setLoading(false);
       }
     })();
-  }, [session?.user?.id, (session?.user as any)?.role]);
+  }, [session?.user?.id, session?.user?.role]);
 
   if (loading) {
     return (

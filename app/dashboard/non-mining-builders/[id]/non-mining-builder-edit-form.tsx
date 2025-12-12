@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -96,12 +96,44 @@ interface NonMiningBuilderEditFormProps {
     description: string | null;
     unit: string;
     nonMiningPriceStructureId: string | null;
-    baseCosts?: any;
-    supplierDDU?: any;
-    customs?: any;
-    levies?: any;
-    transport?: any;
-    totals?: any;
+    baseCosts?: {
+      plattsFOBUSD?: number | null;
+      truckTransportUSD?: number | null;
+      brutCFUSD?: number | null;
+      agencyCustomsUSD?: number | null;
+      acquisitionCostUSD?: number | null;
+    } | null;
+    supplierDDU?: {
+      storageHospitalityUSD?: number | null;
+      anrDechargementUSD?: number | null;
+      supplierMarginUSD?: number | null;
+      sellingPriceDDUUSD?: number | null;
+    } | null;
+    customs?: {
+      customsDutyUSD?: number | null;
+      importVATUSD?: number | null;
+      internalVATUSD?: number | null;
+      consumptionDutyUSD?: number | null;
+      subtotalUSD?: number | null;
+    } | null;
+    levies?: {
+      roadFundFonerUSD?: number | null;
+      stockSecuritySudUSD?: number | null;
+      reconstructionEffortUSD?: number | null;
+      economicInterventionUSD?: number | null;
+      totalLeviesUSD?: number | null;
+    } | null;
+    transport?: {
+      freightToMineUSD?: number | null;
+      lossesUSD?: number | null;
+      totalTransportUSD?: number | null;
+    } | null;
+    totals?: {
+      totalCustomsUSD?: number | null;
+      totalLeviesUSD?: number | null;
+      priceDDUUSD?: number | null;
+      priceDDPUSD?: number | null;
+    } | null;
   };
   priceStructures: Array<{
     id: string;
@@ -145,42 +177,42 @@ export function NonMiningBuilderEditForm({ builder, priceStructures }: NonMining
       unit: builder.unit as "USD_M3" | "USD_LITRE",
       nonMiningPriceStructureId: builder.nonMiningPriceStructureId || "",
       base: builder.baseCosts ? {
-        plattsFOBUSD: builder.baseCosts.plattsFOBUSD,
-        truckTransportUSD: builder.baseCosts.truckTransportUSD,
-        brutCFUSD: builder.baseCosts.brutCFUSD,
-        agencyCustomsUSD: builder.baseCosts.agencyCustomsUSD,
-        acquisitionCostUSD: builder.baseCosts.acquisitionCostUSD,
+        plattsFOBUSD: builder.baseCosts.plattsFOBUSD ?? 0,
+        truckTransportUSD: builder.baseCosts.truckTransportUSD ?? 0,
+        brutCFUSD: builder.baseCosts.brutCFUSD ?? 0,
+        agencyCustomsUSD: builder.baseCosts.agencyCustomsUSD ?? 0,
+        acquisitionCostUSD: builder.baseCosts.acquisitionCostUSD ?? 0,
       } : undefined,
       supplier: builder.supplierDDU ? {
-        storageHospitalityUSD: builder.supplierDDU.storageHospitalityUSD,
-        anrDechargementUSD: builder.supplierDDU.anrDechargementUSD,
-        supplierMarginUSD: builder.supplierDDU.supplierMarginUSD,
-        escortFeesUSD: builder.supplierDDU.escortFeesUSD ?? 0,
-        bankInterestUSD: builder.supplierDDU.bankInterestUSD ?? 0,
-        sellingPriceDDUUSD: builder.supplierDDU.sellingPriceDDUUSD,
+        storageHospitalityUSD: builder.supplierDDU.storageHospitalityUSD ?? 0,
+        anrDechargementUSD: builder.supplierDDU.anrDechargementUSD ?? 0,
+        supplierMarginUSD: builder.supplierDDU.supplierMarginUSD ?? 0,
+        escortFeesUSD: (builder.supplierDDU as any)?.escortFeesUSD ?? 0,
+        bankInterestUSD: (builder.supplierDDU as any)?.bankInterestUSD ?? 0,
+        sellingPriceDDUUSD: builder.supplierDDU.sellingPriceDDUUSD ?? 0,
       } : undefined,
       customs: builder.customs ? {
-        customsDutyUSD: builder.customs.customsDutyUSD,
-        importVATUSD: builder.customs.importVATUSD,
-        internalVATUSD: (builder.customs as any).internalVATUSD ?? 0,
-        consumptionDutyUSD: (builder.customs as any).consumptionDutyUSD ?? 0,
-        subtotalUSD: builder.customs.subtotalUSD,
+        customsDutyUSD: builder.customs.customsDutyUSD ?? 0,
+        importVATUSD: builder.customs.importVATUSD ?? 0,
+        internalVATUSD: (builder.customs as any)?.internalVATUSD ?? 0,
+        consumptionDutyUSD: (builder.customs as any)?.consumptionDutyUSD ?? 0,
+        subtotalUSD: builder.customs.subtotalUSD ?? 0,
       } : undefined,
       levies: builder.levies ? {
-        roadFundFonerUSD: builder.levies.fonerUSD,
-        stockSecuritySudUSD: builder.levies.molecularMarkingOrStockUSD,
-        reconstructionEffortUSD: builder.levies.reconstructionStrategicUSD,
-        economicInterventionUSD: builder.levies.economicInterventionUSD,
-        totalLeviesUSD: builder.levies.totalLeviesUSD,
+        roadFundFonerUSD: (builder.levies as any)?.fonerUSD ?? 0,
+        stockSecuritySudUSD: (builder.levies as any)?.molecularMarkingOrStockUSD ?? 0,
+        reconstructionEffortUSD: (builder.levies as any)?.reconstructionStrategicUSD ?? 0,
+        economicInterventionUSD: (builder.levies as any)?.economicInterventionUSD ?? 0,
+        totalLeviesUSD: (builder.levies as any)?.totalLeviesUSD ?? 0,
       } : undefined,
       additionalTransport: builder.transport ? {
-        freightToMineUSD: builder.transport.freightToMineUSD,
-        lossesUSD: builder.transport.lossesLitresPerTruck,
-        totalTransportUSD: builder.transport.totalTransportFinalUSD,
+        freightToMineUSD: builder.transport.freightToMineUSD ?? 0,
+        lossesUSD: (builder.transport as any)?.lossesLitresPerTruck ?? 0,
+        totalTransportUSD: (builder.transport as any)?.totalTransportFinalUSD ?? 0,
       } : undefined,
       finalPricing: builder.totals ? {
-        dduPriceUSD: builder.totals.priceDDUUSD,
-        ddpPriceUSD: builder.totals.priceDDPUSD,
+        dduPriceUSD: builder.totals.priceDDUUSD ?? 0,
+        ddpPriceUSD: builder.totals.priceDDPUSD ?? 0,
       } : undefined,
     },
   });
@@ -230,17 +262,17 @@ export function NonMiningBuilderEditForm({ builder, priceStructures }: NonMining
     const toUSD = (cdf?: number | null) => (typeof cdf === "number" && rate > 0 ? cdf / rate : 0);
 
     // Douanes
-    form.setValue("customs.customsDutyUSD", toUSD(structure.fiscality?.customsDuty) as any, { shouldDirty: true });
-    form.setValue("customs.importVATUSD", toUSD(structure.fiscality?.importVAT) as any, { shouldDirty: true });
-    form.setValue("customs.internalVATUSD", toUSD(structure.fiscality?.netVAT) as any, { shouldDirty: true });
-    form.setValue("customs.consumptionDutyUSD", toUSD(structure.fiscality?.consumptionDuty) as any, { shouldDirty: true });
+    form.setValue("customs.customsDutyUSD", toUSD(structure.fiscality?.customsDuty), { shouldDirty: true });
+    form.setValue("customs.importVATUSD", toUSD(structure.fiscality?.importVAT), { shouldDirty: true });
+    form.setValue("customs.internalVATUSD", toUSD(structure.fiscality?.netVAT), { shouldDirty: true });
+    form.setValue("customs.consumptionDutyUSD", toUSD(structure.fiscality?.consumptionDuty), { shouldDirty: true });
 
     // Redevances
-    form.setValue("levies.roadFundFonerUSD", toUSD(structure.parafiscality?.foner) as any, { shouldDirty: true });
+    form.setValue("levies.roadFundFonerUSD", toUSD(structure.parafiscality?.foner), { shouldDirty: true });
 
     // Stock de sécurité total EST+SUD
     const totalStockCDF = (structure.securityStock?.estStock || 0) + (structure.securityStock?.sudStock || 0);
-    form.setValue("levies.stockSecuritySudUSD", toUSD(totalStockCDF) as any, { shouldDirty: true });
+    form.setValue("levies.stockSecuritySudUSD", toUSD(totalStockCDF), { shouldDirty: true });
 
     toast({ title: "Valeurs appliquées", description: "Valeurs converties en USD depuis la structure non-minier" });
   };
@@ -286,37 +318,37 @@ export function NonMiningBuilderEditForm({ builder, priceStructures }: NonMining
   // Push back computed values
   // base
   React.useEffect(() => {
-    form.setValue("base.brutCFUSD", brutCF as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
-    form.setValue("base.acquisitionCostUSD", acquisition as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
-  }, [brutCF, acquisition]);
+    form.setValue("base.brutCFUSD", brutCF, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+    form.setValue("base.acquisitionCostUSD", acquisition, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+  }, [brutCF, acquisition, form]);
 
   // supplier
   React.useEffect(() => {
-    form.setValue("supplier.sellingPriceDDUUSD", ddu as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
-    form.setValue("finalPricing.dduPriceUSD", ddu as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
-  }, [ddu]);
+    form.setValue("supplier.sellingPriceDDUUSD", ddu, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+    form.setValue("finalPricing.dduPriceUSD", ddu, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+  }, [ddu, form]);
 
   // customs
   React.useEffect(() => {
-    form.setValue("customs.subtotalUSD", customsSubtotal as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
-  }, [customsSubtotal]);
+    form.setValue("customs.subtotalUSD", customsSubtotal, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+  }, [customsSubtotal, form]);
 
   // levies
   React.useEffect(() => {
-    form.setValue("levies.totalLeviesUSD", leviesTotal as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
-  }, [leviesTotal]);
+    form.setValue("levies.totalLeviesUSD", leviesTotal, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+  }, [leviesTotal, form]);
 
   // transport total
   React.useEffect(() => {
-    form.setValue("additionalTransport.totalTransportUSD", transportTotal as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
-  }, [transportTotal]);
+    form.setValue("additionalTransport.totalTransportUSD", transportTotal, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+  }, [transportTotal, form]);
 
   // ddp
   React.useEffect(() => {
-    form.setValue("finalPricing.ddpPriceUSD", ddp as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
-  }, [ddp]);
+    form.setValue("finalPricing.ddpPriceUSD", ddp, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+  }, [ddp, form]);
 
-  const onSubmit = async (data: NonMiningBuilderEditFormData) => {
+  const onSubmit: SubmitHandler<NonMiningBuilderEditFormData> = async (data) => {
     setIsLoading(true);
     try {
       await updateNonMiningBuilder(data);
@@ -364,7 +396,7 @@ export function NonMiningBuilderEditForm({ builder, priceStructures }: NonMining
               <Label htmlFor="unit">Unité de prix</Label>
               <Select
                 value={form.watch("unit")}
-                onValueChange={(value) => form.setValue("unit", value as any)}
+                onValueChange={(value) => form.setValue("unit", value as "USD_M3" | "USD_LITRE")}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une unité" />
@@ -416,7 +448,7 @@ export function NonMiningBuilderEditForm({ builder, priceStructures }: NonMining
           <CardTitle>1. Coûts de Base du Produit & Transport Initial</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><Label>Platt's/FOB</Label><Input type="number" step="any" {...form.register("base.plattsFOBUSD", { valueAsNumber: true })} /></div>
+          <div><Label>Platt&apos;s/FOB</Label><Input type="number" step="any" {...form.register("base.plattsFOBUSD", { valueAsNumber: true })} /></div>
           <div><Label>Transport (camion)</Label><Input type="number" step="any" {...form.register("base.truckTransportUSD", { valueAsNumber: true })} /></div>
           <div><Label>Brut C&F (auto)</Label><Input type="number" step="any" {...form.register("base.brutCFUSD", { valueAsNumber: true })} disabled /></div>
           <div><Label>Agency/Customs</Label><Input type="number" step="any" {...form.register("base.agencyCustomsUSD", { valueAsNumber: true })} /></div>
@@ -433,7 +465,7 @@ export function NonMiningBuilderEditForm({ builder, priceStructures }: NonMining
           <div><Label>Stockage/Hospitalité</Label><Input type="number" step="any" {...form.register("supplier.storageHospitalityUSD", { valueAsNumber: true })} /></div>
           <div><Label>ANR-Déchargement</Label><Input type="number" step="any" {...form.register("supplier.anrDechargementUSD", { valueAsNumber: true })} /></div>
           <div><Label>Marge fournisseur</Label><Input type="number" step="any" {...form.register("supplier.supplierMarginUSD", { valueAsNumber: true })} /></div>
-          <div><Label>Frais d'Escorte (USD)</Label><Input type="number" step="any" {...form.register("supplier.escortFeesUSD", { valueAsNumber: true })} /></div>
+          <div><Label>Frais d&apos;Escorte (USD)</Label><Input type="number" step="any" {...form.register("supplier.escortFeesUSD", { valueAsNumber: true })} /></div>
           <div><Label>Intérêts Ligne Banque (USD)</Label><Input type="number" step="any" {...form.register("supplier.bankInterestUSD", { valueAsNumber: true })} /></div>
           <div><Label>Prix DDU (auto)</Label><Input type="number" step="any" {...form.register("supplier.sellingPriceDDUUSD", { valueAsNumber: true })} disabled /></div>
         </CardContent>
@@ -486,7 +518,7 @@ export function NonMiningBuilderEditForm({ builder, priceStructures }: NonMining
               onValueChange={(id) => {
                 setSelectedTransportRateId(id);
                 const rate = transportRates.find((t) => t.id === id)?.rateUsdPerCbm ?? 0;
-                form.setValue("additionalTransport.freightToMineUSD", Number(rate) as any, { shouldDirty: true });
+                form.setValue("additionalTransport.freightToMineUSD", Number(rate), { shouldDirty: true });
               }}
             >
               <SelectTrigger className="h-9">

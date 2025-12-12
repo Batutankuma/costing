@@ -24,18 +24,36 @@ export default function CreateBuilderPage() {
   const isPending = status === "executing";
   const { data: session } = authClient.useSession();
   const { executeAsync: loadRefs } = useSafeAction(listPriceReferences);
-  const [refs, setRefs] = React.useState<any[]>([]);
-  const [nonMiningPrices, setNonMiningPrices] = React.useState<any[]>([]);
+  type PriceReference = {
+    id: string;
+    nomStructure?: string | null;
+    date?: string | Date | null;
+    exchangeRate?: { rate?: number | null } | null;
+    fiscality?: { customsDuty?: number | null; importVAT?: number | null } | null;
+    parafiscality?: { foner?: number | null; stockSecurity1?: number | null; stockSecurity2?: number | null; molecularMarking?: number | null; reconstructionEffort?: number | null; intervention?: number | null } | null;
+  };
+  type NonMiningPrice = {
+    id: string;
+    nomStructure?: string | null;
+    cardinale?: string | null;
+    createdAt?: string | Date | null;
+    exchangeRate?: { rate?: number | null } | null;
+    fiscality?: { customsDuty?: number | null; importVAT?: number | null; netVAT?: number | null; consumptionDuty?: number | null } | null;
+    parafiscality?: { foner?: number | null; pmfFiscal?: number | null } | null;
+    securityStock?: { estStock?: number | null; sudStock?: number | null } | null;
+  };
+  const [refs, setRefs] = React.useState<PriceReference[]>([]);
+  const [nonMiningPrices, setNonMiningPrices] = React.useState<NonMiningPrice[]>([]);
   const [selectedRefId, setSelectedRefId] = React.useState<string>("");
   const [selectedNonMiningId, setSelectedNonMiningId] = React.useState<string>("");
   const [transportRates, setTransportRates] = React.useState<Array<{ id: string; destination: string; rateUsdPerCbm: number }>>([]);
   const [selectedTransportRateId, setSelectedTransportRateId] = React.useState<string>("");
 
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<FormData>({
-    resolver: zodResolver(CreateCostBuildUpSchema as any),
+    resolver: zodResolver(CreateCostBuildUpSchema),
     defaultValues: {
       title: "",
-      unit: "USD_M3" as any,
+      unit: "USD_M3" as "USD_M3" | "USD_LITRE",
       userId: "",
     },
   });
@@ -46,14 +64,14 @@ export default function CreateBuilderPage() {
 
   React.useEffect(() => {
     if (session?.user?.id) {
-      setValue("userId", session.user.id as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+      setValue("userId", session.user.id, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
     }
   }, [session?.user?.id, setValue]);
 
   React.useEffect(() => {
     (async () => {
       const res = await loadRefs();
-      const items = (res as any)?.data?.result ?? [];
+      const items = res?.data?.result ?? [];
       setRefs(items);
     })();
   }, [loadRefs]);
@@ -88,12 +106,12 @@ export default function CreateBuilderPage() {
     })();
   }, []);
 
-  const round1 = React.useCallback((n: any) => {
+  const round1 = React.useCallback((n: number | null | undefined) => {
     const v = Number(n ?? 0);
     return Number.isFinite(v) ? Math.round(v * 10) / 10 : 0;
   }, []);
 
-  const applyFromPriceRef = React.useCallback((refItem: any) => {
+  const applyFromPriceRef = React.useCallback((refItem: PriceReference | null | undefined) => {
     if (!refItem) return;
     const rate = refItem?.exchangeRate?.rate ?? 0;
     const toUSD = (v?: number | null) => (typeof v === "number" && rate > 0 ? v / rate : undefined);
@@ -101,58 +119,58 @@ export default function CreateBuilderPage() {
     const cd = round1(toUSD(refItem?.fiscality?.customsDuty ?? undefined));
     const iv = round1(toUSD(refItem?.fiscality?.importVAT ?? undefined));
     const subtotal = round1((cd ?? 0) + (iv ?? 0));
-    setValue("customs.customsDutyUSD", cd as any);
-    setValue("customs.importVATUSD", iv as any);
-    setValue("customs.subtotalUSD", subtotal as any);
+    setValue("customs.customsDutyUSD", cd);
+    setValue("customs.importVATUSD", iv);
+    setValue("customs.subtotalUSD", subtotal);
     // Levies from parafiscality
     const pf = refItem?.parafiscality ?? {};
-    setValue("levies.fonerUSD", round1(toUSD(pf.foner)) as any);
+    setValue("levies.fonerUSD", round1(toUSD(pf.foner)));
     const combinedCDF = Number(pf.stockSecurity1 ?? 0) + Number(pf.stockSecurity2 ?? 0) + Number(pf.molecularMarking ?? 0);
     const combinedUSD = round1(toUSD(combinedCDF) ?? 0);
-    setValue("levies.molecularMarkingOrStockUSD", combinedUSD as any);
-    setValue("levies.reconstructionStrategicUSD", round1(toUSD(pf.reconstructionEffort)) as any);
-    setValue("levies.economicInterventionUSD", round1(toUSD(pf.intervention)) as any);
+    setValue("levies.molecularMarkingOrStockUSD", combinedUSD);
+    setValue("levies.reconstructionStrategicUSD", round1(toUSD(pf.reconstructionEffort)));
+    setValue("levies.economicInterventionUSD", round1(toUSD(pf.intervention)));
     const totalLevies = round1((round1(toUSD(pf.foner)) ?? 0) + combinedUSD + (round1(toUSD(pf.reconstructionEffort)) ?? 0) + (round1(toUSD(pf.intervention)) ?? 0));
-    setValue("levies.totalLeviesUSD", totalLevies as any);
+    setValue("levies.totalLeviesUSD", totalLevies);
     // Totals convenience
-    setValue("totals.totalCustomsUSD", subtotal as any);
+    setValue("totals.totalCustomsUSD", subtotal);
   }, [round1, setValue]);
 
-  const applyFromNonMiningPrice = React.useCallback((nonMiningItem: any) => {
+  const applyFromNonMiningPrice = React.useCallback((nonMiningItem: NonMiningPrice | null | undefined) => {
     if (!nonMiningItem) return;
     const rate = nonMiningItem?.exchangeRate?.rate ?? 2500;
     const toUSD = (v?: number | null) => (typeof v === "number" && rate > 0 ? v / rate : undefined);
-    
+
     // Customs from fiscality
     const cd = round1(toUSD(nonMiningItem?.fiscality?.customsDuty ?? undefined));
     const iv = round1(toUSD(nonMiningItem?.fiscality?.importVAT ?? undefined));
     const subtotal = round1((cd ?? 0) + (iv ?? 0));
-    setValue("customs.customsDutyUSD", cd as any);
-    setValue("customs.importVATUSD", iv as any);
-    setValue("customs.subtotalUSD", subtotal as any);
-    
+    setValue("customs.customsDutyUSD", cd);
+    setValue("customs.importVATUSD", iv);
+    setValue("customs.subtotalUSD", subtotal);
+
     // Levies from parafiscality
     const pf = nonMiningItem?.parafiscality ?? {};
-    setValue("levies.fonerUSD", round1(toUSD(pf.foner)) as any);
-    
+    setValue("levies.fonerUSD", round1(toUSD(pf.foner)));
+
     // Stock de sécurité (EST + SUD)
     const estStock = nonMiningItem?.securityStock?.estStock ?? 0;
     const sudStock = nonMiningItem?.securityStock?.sudStock ?? 0;
     const totalStock = round1(toUSD(estStock + sudStock) ?? 0);
-    setValue("levies.molecularMarkingOrStockUSD", totalStock as any);
-    
+    setValue("levies.molecularMarkingOrStockUSD", totalStock);
+
     // PMF Fiscal (peut être négatif)
     const pmfFiscal = nonMiningItem?.parafiscality?.pmfFiscal ?? 0;
-    setValue("levies.reconstructionStrategicUSD", round1(toUSD(pmfFiscal)) as any);
-    
+    setValue("levies.reconstructionStrategicUSD", round1(toUSD(pmfFiscal)));
+
     // Pas d'intervention économique pour non-minier
-    setValue("levies.economicInterventionUSD", 0 as any);
-    
+    setValue("levies.economicInterventionUSD", 0);
+
     const totalLevies = round1((round1(toUSD(pf.foner)) ?? 0) + totalStock + (round1(toUSD(pmfFiscal)) ?? 0));
-    setValue("levies.totalLeviesUSD", totalLevies as any);
-    
+    setValue("levies.totalLeviesUSD", totalLevies);
+
     // Totals convenience
-    setValue("totals.totalCustomsUSD", subtotal as any);
+    setValue("totals.totalCustomsUSD", subtotal);
   }, [round1, setValue]);
 
   // Auto: Brut C&F = Platt's/FOB + Transport (camion)
@@ -161,13 +179,13 @@ export default function CreateBuilderPage() {
   const agencyCustoms = watch("base.agencyCustomsUSD") || 0;
   const brutCF = useLocalPrice ? 0 : (Number(plattsFOB || 0) + Number(truckTrans || 0));
   React.useEffect(() => {
-    setValue("base.brutCFUSD", brutCF as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+    setValue("base.brutCFUSD", brutCF, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
   }, [brutCF, setValue]);
 
   // Auto: Prix de revient = Platt's/FOB + Transport (camion) + Agency/Customs
   const acquisitionCost = useLocalPrice ? Number(localAcquisitionCostUSD || 0) : (Number(plattsFOB || 0) + Number(truckTrans || 0) + Number(agencyCustoms || 0));
   React.useEffect(() => {
-    setValue("base.acquisitionCostUSD", acquisitionCost as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+    setValue("base.acquisitionCostUSD", acquisitionCost, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
   }, [acquisitionCost, setValue]);
 
   // Auto: Prix DDU = Prix de revient + Stockage/Hospitalité + ANR-Déchargement + Marge fournisseur + Frais escorte + Intérêts banque
@@ -178,7 +196,7 @@ export default function CreateBuilderPage() {
   const bankInterest = watch("supplier.bankInterestUSD") || 0;
   const priceDDU = Number(acquisitionCost || 0) + Number(storageHosp || 0) + Number(anr || 0) + Number(marginSupp || 0) + Number(escortFees || 0) + Number(bankInterest || 0);
   React.useEffect(() => {
-    setValue("supplier.sellingPriceDDUUSD", priceDDU as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+    setValue("supplier.sellingPriceDDUUSD", priceDDU, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
   }, [priceDDU, setValue]);
 
   // Customs total (auto)
@@ -187,8 +205,8 @@ export default function CreateBuilderPage() {
   const totalCustomsUSD = Number(customsDutyUSD || 0) + Number(importVATUSD || 0);
   const totalCustomsUSDRounded = round1(totalCustomsUSD);
   React.useEffect(() => {
-    setValue("customs.subtotalUSD", totalCustomsUSDRounded as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
-    setValue("totals.totalCustomsUSD", totalCustomsUSDRounded as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+    setValue("customs.subtotalUSD", totalCustomsUSDRounded, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+    setValue("totals.totalCustomsUSD", totalCustomsUSDRounded, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
   }, [totalCustomsUSDRounded, setValue]);
 
   // Levies total (auto)
@@ -200,8 +218,8 @@ export default function CreateBuilderPage() {
     .map((n) => Number(n || 0)).reduce((a, b) => a + b, 0);
   const totalLeviesUSDRounded = round1(totalLeviesUSD);
   React.useEffect(() => {
-    setValue("levies.totalLeviesUSD", totalLeviesUSDRounded as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
-    setValue("totals.totalLeviesUSD", totalLeviesUSDRounded as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+    setValue("levies.totalLeviesUSD", totalLeviesUSDRounded, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+    setValue("totals.totalLeviesUSD", totalLeviesUSDRounded, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
   }, [totalLeviesUSDRounded, setValue]);
 
   // Transport final total (auto)
@@ -210,20 +228,20 @@ export default function CreateBuilderPage() {
   const totalTransportFinalUSD = Number(freightToMineUSD || 0) + Number(lossesLitresPerTruck || 0);
   const totalTransportFinalUSDRounded = round1(totalTransportFinalUSD);
   React.useEffect(() => {
-    setValue("transport.totalTransportFinalUSD", totalTransportFinalUSDRounded as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+    setValue("transport.totalTransportFinalUSD", totalTransportFinalUSDRounded, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
   }, [totalTransportFinalUSDRounded, setValue]);
 
   // Price DDP (auto) = DDU + Douanes + Redevances + Transport final
   const priceDDPRaw = Number(priceDDU || 0) + Number(totalCustomsUSDRounded || 0) + Number(totalLeviesUSDRounded || 0) + Number(totalTransportFinalUSDRounded || 0);
   const priceDDP = round1(priceDDPRaw);
   React.useEffect(() => {
-    setValue("totals.priceDDUUSD", round1(priceDDU) as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
-    setValue("totals.priceDDPUSD", priceDDP as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+    setValue("totals.priceDDUUSD", round1(priceDDU), { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+    setValue("totals.priceDDPUSD", priceDDP, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
   }, [priceDDU, priceDDP, round1, setValue]);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: FormData) => {
     const res = await executeAsync(data);
-    if ((res as any)?.data?.success) {
+    if (res?.data?.success) {
       router.push("/dashboard/builders");
     }
   };
@@ -236,9 +254,9 @@ export default function CreateBuilderPage() {
             <h1 className="text-3xl font-bold tracking-tight">Nouveau Builder</h1>
             <p className="text-muted-foreground">Créer une nouvelle structure de coûts</p>
           </div>
-          <Button 
-            type="button" 
-            variant="outline" 
+          <Button
+            type="button"
+            variant="outline"
             onClick={() => router.back()}
             disabled={isPending}
           >
@@ -246,8 +264,8 @@ export default function CreateBuilderPage() {
           </Button>
         </div>
       </div>
-      
-      <form id="builder-create-form" onSubmit={handleSubmit(onSubmit as any)} className="grid gap-6">
+
+      <form id="builder-create-form" onSubmit={handleSubmit(onSubmit)} className="grid gap-6">
         <div className="grid md:grid-cols-2 gap-2">
           <div>
             <Label>Titre</Label>
@@ -272,18 +290,21 @@ export default function CreateBuilderPage() {
                 const id = e.target.value;
                 setSelectedRefId(id);
                 setSelectedNonMiningId(""); // Réinitialiser l'autre sélection
-                setValue("priceReferenceId", id as any);
-                setValue("nonMiningPriceStructureId", null as any);
+                setValue("priceReferenceId", id);
+                setValue("nonMiningPriceStructureId", null);
                 const found = refs.find((r) => r.id === id);
                 applyFromPriceRef(found);
               }}
             >
               <option value="">— Sélectionner structure minier —</option>
-              {refs.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.nomStructure} — {new Date(r.date).toLocaleDateString()}
-                </option>
-              ))}
+              {refs.map((r) => {
+                const displayDate = r.date ? new Date(r.date).toLocaleDateString() : "";
+                return (
+                  <option key={r.id} value={r.id}>
+                    {r.nomStructure} — {displayDate}
+                  </option>
+                );
+              })}
             </select>
           </div>
           <div>
@@ -295,18 +316,21 @@ export default function CreateBuilderPage() {
                 const id = e.target.value;
                 setSelectedNonMiningId(id);
                 setSelectedRefId(""); // Réinitialiser l'autre sélection
-                setValue("nonMiningPriceStructureId", id as any);
-                setValue("priceReferenceId", null as any);
+                setValue("nonMiningPriceStructureId", id);
+                setValue("priceReferenceId", null);
                 const found = nonMiningPrices.find((r) => r.id === id);
                 applyFromNonMiningPrice(found);
               }}
             >
               <option value="">— Sélectionner structure non-minier —</option>
-              {nonMiningPrices.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.nomStructure} — {r.cardinale} — {new Date(r.createdAt).toLocaleDateString()}
-                </option>
-              ))}
+              {nonMiningPrices.map((r) => {
+                const displayDate = r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "";
+                return (
+                  <option key={r.id} value={r.id}>
+                    {r.nomStructure} — {r.cardinale} — {displayDate}
+                  </option>
+                );
+              })}
             </select>
           </div>
         </div>
@@ -323,7 +347,7 @@ export default function CreateBuilderPage() {
           {useLocalPrice && (
             <div className="col-span-5"><Label>Prix de revient (USD)</Label><Input type="number" step="0.01" value={localAcquisitionCostUSD} onChange={(e) => setLocalAcquisitionCostUSD(Number(e.target.value || 0))} /></div>
           )}
-          <div><Label>Platt's/FOB</Label><Input type="number" step="0.01" {...register("base.plattsFOBUSD", { valueAsNumber: true })} disabled={useLocalPrice} /></div>
+          <div><Label>Platt&apos;s/FOB</Label><Input type="number" step="0.01" {...register("base.plattsFOBUSD", { valueAsNumber: true })} disabled={useLocalPrice} /></div>
           <div><Label>Transport (camion)</Label><Input type="number" step="0.01" {...register("base.truckTransportUSD", { valueAsNumber: true })} disabled={useLocalPrice} /></div>
           <div><Label>Brut C&F (auto)</Label><Input type="number" step="0.01" value={Number.isFinite(brutCF) ? brutCF : 0} disabled /></div>
           <div><Label>Agency/Customs</Label><Input type="number" step="0.01" {...register("base.agencyCustomsUSD", { valueAsNumber: true })} disabled={useLocalPrice} /></div>
@@ -338,10 +362,10 @@ export default function CreateBuilderPage() {
             <Label>Marge fournisseur</Label>
             <Input type="number" step="0.01" {...register("supplier.supplierMarginUSD", { valueAsNumber: true, min: 40 })} />
             {errors?.supplier?.supplierMarginUSD && (
-              <p className="text-red-500 text-sm">{String((errors as any).supplier?.supplierMarginUSD?.message ?? "La marge ne doit pas être inférieure à 40")}</p>
+              <p className="text-red-500 text-sm">{String(errors.supplier?.supplierMarginUSD?.message ?? "La marge ne doit pas être inférieure à 40")}</p>
             )}
           </div>
-          <div><Label>Frais d'Escorte (USD)</Label><Input type="number" step="0.01" {...register("supplier.escortFeesUSD", { valueAsNumber: true })} /></div>
+          <div><Label>Frais d&apos;Escorte (USD)</Label><Input type="number" step="0.01" {...register("supplier.escortFeesUSD", { valueAsNumber: true })} /></div>
           <div><Label>Intérêts Ligne Banque (USD)</Label><Input type="number" step="0.01" {...register("supplier.bankInterestUSD", { valueAsNumber: true })} /></div>
           <div><Label>Prix DDU (auto)</Label><Input type="number" step="0.01" value={Number.isFinite(priceDDU) ? priceDDU : 0} disabled /></div>
         </div>
@@ -372,7 +396,7 @@ export default function CreateBuilderPage() {
               onValueChange={(id) => {
                 setSelectedTransportRateId(id);
                 const rate = transportRates.find((t) => t.id === id)?.rateUsdPerCbm ?? 0;
-                setValue("transport.freightToMineUSD", Number(rate) as any, { shouldDirty: true });
+                setValue("transport.freightToMineUSD", Number(rate), { shouldDirty: true });
               }}
             >
               <SelectTrigger>

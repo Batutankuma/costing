@@ -19,7 +19,8 @@ export default function RemoveDialog({ open, setOpen, Id, nameClient }: { open: 
   if (!isMounted) return null;
 
   async function deleteElement() {
-    const { failure } = await deleteProduct({ id: Id });
+    const res = await deleteProduct({ id: Id });
+    const failure = (res as any)?.failure;
     if (!failure) {
       router.push(`/dashboard/products`);
       router.refresh();

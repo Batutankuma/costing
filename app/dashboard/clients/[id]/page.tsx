@@ -51,9 +51,9 @@ export default async function EditClientPage({ params }: { params: Promise<{ id:
           phone: client.phone ?? "", 
           address: client.address ?? "", 
           notes: client.notes ?? "", 
-          rccm: (client as any).rccm ?? "", 
-          idNat: (client as any).idNat ?? "", 
-          nif: (client as any).nif ?? "" 
+          rccm: client.rccm ?? "", 
+          idNat: client.idNat ?? "", 
+          nif: client.nif ?? "" 
         }} 
       />
     </div>

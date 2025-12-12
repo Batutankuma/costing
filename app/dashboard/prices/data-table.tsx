@@ -73,16 +73,31 @@ import { columns } from "./columns";
 import { useRouter } from "next/navigation";
 import type { PriceRow } from "./columns";
 
-export default function DataTable({ items }: { items: any[] }) {
+type PriceReferenceItem = {
+  id: string;
+  nomStructure?: string | null;
+  description?: string | null;
+  cardinale?: string | null;
+  structureSociete?: string | null;
+  createdAt?: Date | string | null;
+  updatedAt?: Date | string | null;
+  date?: Date | string | null;
+  pmfCommercialUSD?: number | null;
+  priceRefCDF?: number | null;
+  priceRefUSD?: number | null;
+  priceRefUSDPerLitre?: number | null;
+};
+
+export default function DataTable({ items }: { items: PriceReferenceItem[] }) {
   const id = useId();
   const router = useRouter();
 
   const mapped: PriceRow[] = useMemo(
     () =>
-      (items ?? []).map((it: any) => ({
+      (items ?? []).map((it: PriceReferenceItem) => ({
         id: it.id,
-        date: new Date(it.date).toLocaleDateString(),
-        nomStructure: it.nomStructure,
+        date: new Date(it.date ?? it.createdAt ?? new Date()).toLocaleDateString(),
+        nomStructure: it.nomStructure ?? "",
         pmfCommercialUSD: Number(it.pmfCommercialUSD ?? 0),
         priceRefCDF: Number(it.priceRefCDF ?? 0),
         priceRefUSD: Number(it.priceRefUSD ?? 0),

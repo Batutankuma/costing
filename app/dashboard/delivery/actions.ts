@@ -17,7 +17,7 @@ export const createAction = actionClient
   .schema(CreateDeliverySchema)
   .action(async ({ parsedInput }) => {
     try {
-      const created = await (prisma as any).delivery.create({
+      const created = await prisma.delivery.create({
         data: {
           reference: parsedInput.reference,
           deliveryDate: parsedInput.deliveryDate,
@@ -54,7 +54,7 @@ export const createAction = actionClient
 export async function findByIdAction(id: string) {
   try {
     if (!id) throw new Error("L'ID du delivery est manquant.");
-    const result = await (prisma as any).delivery.findUnique({ where: { id } });
+    const result = await prisma.delivery.findUnique({ where: { id } });
     if (!result) return { success: false, failure: "Delivery non trouvé." };
     return { success: true, result };
   } catch (error) {
@@ -70,7 +70,7 @@ export const findAllAction = actionClient
   .schema(z.void())
   .action(async () => {
     try {
-      const result = await (prisma as any).delivery.findMany({ 
+      const result = await prisma.delivery.findMany({ 
         orderBy: { createdAt: 'desc' }
       });
       return { success: true, result };
@@ -88,7 +88,7 @@ export const updateAction = actionClient
   .schema(DeliverySchema)
   .action(async ({ parsedInput }) => {
     try {
-      const result = await (prisma as any).delivery.update({
+      const result = await prisma.delivery.update({
         where: { id: parsedInput.id },
         data: {
           reference: parsedInput.reference,
@@ -129,7 +129,7 @@ export async function removeByIdAction(id: string) {
   try {
     if (!id) throw new Error("L'ID du delivery est manquant pour la suppression.");
     
-    await (prisma as any).delivery.delete({ where: { id } });
+    await prisma.delivery.delete({ where: { id } });
     revalidatePath("/dashboard/delivery");
     return { success: true, message: "Delivery supprimé avec succès." };
   } catch (error) {
@@ -147,12 +147,12 @@ export const deleteDelivery = actionClient
       const { id } = parsedInput;
       
       // Vérifier si la livraison existe
-      const existing = await (prisma as any).delivery.findUnique({ where: { id } });
+      const existing = await prisma.delivery.findUnique({ where: { id } });
       if (!existing) {
         return { failure: "Livraison introuvable." };
       }
       
-      await (prisma as any).delivery.delete({ where: { id } });
+      await prisma.delivery.delete({ where: { id } });
       revalidatePath("/dashboard/delivery");
       return { success: true };
     } catch (error) {

@@ -35,7 +35,14 @@ const ProductEditSchema = z.object({
 
 type ProductEditData = z.infer<typeof ProductEditSchema>;
 
-export default function EditProductClient({ initialProduct }: { initialProduct: any }) {
+type Product = {
+  id: string;
+  name: string;
+  unit: "KG" | "G" | "L" | "ML" | "TONNE" | "PIECE" | "BOITE" | "CAISSON" | "POUCE" | "METRE" | "METRE_CARRE" | "METRE_CUBE" | "METRE_LINEAIRE";
+  code?: string | null;
+};
+
+export default function EditProductClient({ initialProduct }: { initialProduct: Product }) {
   const router = useRouter();
   const { toast } = useToast();
   const form = useForm<ProductEditData>({
@@ -55,9 +62,13 @@ export default function EditProductClient({ initialProduct }: { initialProduct: 
   const onSubmit = async (data: ProductEditData) => {
     try {
       setSaving(true);
-      const res = await updateProduct({ id: initialProduct.id, ...data } as any);
-      if ((res as any)?.failure) {
-        toast({ title: "Erreur", description: (res as any).failure, variant: "destructive" });
+      const res = await updateProduct({ id: initialProduct.id, ...data, code: data.code ?? undefined });
+      if (res?.data?.failure) {
+        toast({ title: "Erreur", description: res?.data?.failure ?? "Erreur inconnue", variant: "destructive" });
+        return;
+      }
+      if (!res?.data?.success) {
+        toast({ title: "Erreur", description: "Impossible de mettre à jour le produit", variant: "destructive" });
         return;
       }
       toast({ title: "Succès", description: "Produit mis à jour" });
@@ -88,7 +99,7 @@ export default function EditProductClient({ initialProduct }: { initialProduct: 
             </div>
             <div className="space-y-2">
               <Label>Unité *</Label>
-              <Select value={form.watch("unit")} onValueChange={(v) => form.setValue("unit", v as any)}>
+              <Select value={form.watch("unit")} onValueChange={(v) => form.setValue("unit", v as ProductEditData["unit"])}>
                 <SelectTrigger>
                   <SelectValue placeholder="Unité" />
                 </SelectTrigger>

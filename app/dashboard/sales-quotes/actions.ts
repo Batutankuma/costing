@@ -51,9 +51,9 @@ export const createQuote = actionClient
     }
     // Try to link client if schema supports it; ignore if unknown
     try {
-      const cid = (parsedInput as any).clientId as string | undefined;
+      const cid = parsedInput.clientId;
       if (cid) {
-        await (prisma as any).salesQuote.update({ where: { id: q.id }, data: { client: { connect: { id: cid } } } });
+        await prisma.salesQuote.update({ where: { id: q.id }, data: { clientId: cid } });
       }
     } catch {}
     revalidatePath("/dashboard/sales-quotes");
@@ -65,7 +65,7 @@ export const listQuotes = actionClient
   .action(async ({ parsedInput }) => {
     const where = parsedInput?.userId ? { userId: parsedInput.userId } : {};
     const items = await prisma.salesQuote.findMany({
-      where: where as any,
+      where,
       include: { costBuildUp: { include: { totals: true, transport: true, supplierDDU: true } }, user: true, client: true },
       orderBy: { createdAt: "desc" },
     });
@@ -108,7 +108,7 @@ const UpdateQuoteSchema = z.object({
 export const updateQuote = actionClient
   .schema(UpdateQuoteSchema)
   .action(async ({ parsedInput }) => {
-    const { id, ...data } = parsedInput as any;
+    const { id, ...data } = parsedInput;
     const updated = await prisma.salesQuote.update({
       where: { id },
       data: {
@@ -125,8 +125,8 @@ export const updateQuote = actionClient
         totalDDUUSD: data.totalDDUUSD ?? undefined,
         totalDDPUSD: data.totalDDPUSD ?? undefined,
         // Re-lier le Cost Build Up si demandé
-        ...(data.costBuildUpId ? { costBuildUp: { connect: { id: data.costBuildUpId } } } : {}),
-      } as any,
+        ...(data.costBuildUpId ? { costBuildUpId: data.costBuildUpId } : {}),
+      },
     });
     revalidatePath("/dashboard/sales-quotes");
     revalidatePath(`/dashboard/sales-quotes/${id}`);

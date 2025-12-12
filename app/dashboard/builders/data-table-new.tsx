@@ -70,10 +70,30 @@ import ExportExcel from "@/components/exportExcel";
 import { useRouter } from "next/navigation";
 import { deleteBuilder } from "./actions";
 
-export default function DataTable({ items }: { items: any[] }) {
+type BuilderItem = {
+  id: string;
+  date: Date | string;
+  title: string;
+  unit: string;
+  description?: string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  priceReference?: {
+    nomStructure: string;
+  } | null;
+  nonMiningPriceStructure?: {
+    nomStructure: string;
+  } | null;
+  totals?: {
+    priceDDUUSD?: number | null;
+    priceDDPUSD?: number | null;
+  } | null;
+};
+
+export default function DataTable({ items }: { items: BuilderItem[] }) {
     const id = useId();
 
-    const mapped: BuilderWithRelations[] = useMemo(() => (items ?? []).map((it: any) => ({
+    const mapped: BuilderWithRelations[] = useMemo(() => (items ?? []).map((it: BuilderItem) => ({
         id: it.id,
         date: new Date(it.date),
         title: it.title,

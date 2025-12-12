@@ -12,6 +12,15 @@ type RoutePageProps = {
   params?: Promise<{ id: string }>;
 };
 
+type BreakdownRow = {
+  label: string;
+  client: number;
+  threshold: number;
+  proposal: number;
+  mag: number;
+  afterMag: number;
+};
+
 export default async function KinshasaCostingViewPage(props: RoutePageProps) {
   const resolved = props.params ? await props.params : null;
   if (!resolved?.id) {
@@ -23,10 +32,14 @@ export default async function KinshasaCostingViewPage(props: RoutePageProps) {
     notFound();
   }
 
-  const cdfRows = Array.isArray(costing.cdfBreakdown) ? (costing.cdfBreakdown as any[]) : [];
-  const usdRows = Array.isArray(costing.usdBreakdown) ? (costing.usdBreakdown as any[]) : [];
+  const cdfRows: BreakdownRow[] = Array.isArray(costing.cdfBreakdown) 
+    ? (costing.cdfBreakdown as unknown as BreakdownRow[]) 
+    : [];
+  const usdRows: BreakdownRow[] = Array.isArray(costing.usdBreakdown) 
+    ? (costing.usdBreakdown as unknown as BreakdownRow[]) 
+    : [];
 
-  const renderTable = (rows: any[], title: string) => (
+  const renderTable = (rows: BreakdownRow[], title: string) => (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">

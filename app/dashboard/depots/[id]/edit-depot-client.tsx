@@ -41,12 +41,13 @@ export default function EditDepotClient({ depotId }: { depotId: string }) {
   const onSubmit = async (data: DepotEditData) => {
     try {
       setSaving(true);
-      const res = await updateDepot({ id: depotId, ...data } as any);
-      if ((res as any)?.success) {
+      const res = await updateDepot({ id: depotId, ...data });
+      if (res?.data?.success) {
         toast({ title: "Succès", description: "Dépôt mis à jour" });
         router.push(`/dashboard/depots/views/${depotId}`);
       } else {
-        toast({ title: "Erreur", description: (res as any)?.failure ?? "Mise à jour impossible", variant: "destructive" });
+        const failureMsg = (res as any)?.data?.failure;
+        toast({ title: "Erreur", description: failureMsg ?? "Mise à jour impossible", variant: "destructive" });
       }
     } finally {
       setSaving(false);
@@ -88,7 +89,7 @@ export default function EditDepotClient({ depotId }: { depotId: string }) {
               </div>
               <div className="space-y-2">
                 <Label>Type</Label>
-                <Select value={form.watch("type")} onValueChange={(v) => form.setValue("type", v as any)}>
+                <Select value={form.watch("type")} onValueChange={(v) => form.setValue("type", v as DepotEditData["type"])}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner le type" />
                   </SelectTrigger>
@@ -144,14 +145,24 @@ function LinkedProductsEditor({ depotId }: { depotId: string }) {
     (async () => {
       const depot = await getDepotFull(depotId);
       const products = await getProducts();
-      const initial = (depot?.products ?? []).map((dp: any) => ({
+      type DepotProductWithProduct = {
+        productId: string;
+        product?: { name: string; unit: string } | null;
+        quantity: number;
+      };
+      type ProductRef = {
+        id: string;
+        name: string;
+        unit: string;
+      };
+      const initial = (depot?.products ?? []).map((dp: DepotProductWithProduct) => ({
         productId: dp.productId,
         name: dp.product?.name ?? "",
         unit: dp.product?.unit ?? "",
         quantity: dp.quantity ?? 0,
       }));
       setRows(initial);
-      setCatalog((products ?? []).map((p: any) => ({ id: p.id, name: p.name, unit: p.unit })));
+      setCatalog((products ?? []).map((p: ProductRef) => ({ id: p.id, name: p.name, unit: p.unit })));
       setLoading(false);
     })();
   }, [depotId]);
@@ -166,9 +177,10 @@ function LinkedProductsEditor({ depotId }: { depotId: string }) {
     setSaving(true);
     try {
       const valid = rows.filter((r) => r.productId);
-      const res = await updateDepotProducts({ depotId, items: valid } as any);
-      if ((res as any)?.success) toast({ title: "Succès", description: "Produits mis à jour" });
-      else toast({ title: "Erreur", description: (res as any)?.failure ?? "Mise à jour impossible", variant: "destructive" });
+      const res = await updateDepotProducts({ depotId, items: valid });
+      const failureMsg = (res as any)?.data?.failure;
+      if (res?.data?.success) toast({ title: "Succès", description: "Produits mis à jour" });
+      else toast({ title: "Erreur", description: failureMsg ?? "Mise à jour impossible", variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -223,7 +235,7 @@ function LinkedProductsEditor({ depotId }: { depotId: string }) {
                   <Input
                     type="number"
                     step="any"
-                    value={r.quantity as any}
+                    value={r.quantity}
                     onChange={(e) => updateRow(i, { quantity: e.target.value === "" ? 0 : Number(e.target.value) })}
                   />
                 </td>

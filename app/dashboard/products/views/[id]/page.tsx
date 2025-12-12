@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 export default async function ViewProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const response = await getProductById({ id });
+  const failure = (response as any)?.failure;
 
-  if (response.failure || !response.data) {
+  if (!response || "failure" in response || !response.data) {
     return (
       <div className="p-6 space-y-4 max-w-xl mx-auto">
         <div className="text-destructive bg-destructive/10 p-4 rounded-md">
@@ -23,7 +24,14 @@ export default async function ViewProductPage({ params }: { params: Promise<{ id
     );
   }
 
-  const product = response.data;
+  const product = (response as any).data as {
+    id: string;
+    code: string | null;
+    name: string;
+    unit: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">

@@ -22,14 +22,14 @@ export default function DeleteFactureButton({ id, invoiceNumber, children }: { i
   const handleDelete = () => {
     startTransition(async () => {
       const result = await removeFactureAction({ id });
-      if ((result as any)?.data?.success) {
+      if (result?.data?.success) {
         toast({ title: "Facture supprimée", description: `La facture ${invoiceNumber} a été supprimée.` });
         window.location.reload();
       } else {
         toast({
           variant: "destructive",
           title: "Erreur",
-          description: (result as any)?.data?.failure || "Impossible de supprimer la facture.",
+          description: result?.data?.failure || "Impossible de supprimer la facture.",
         });
       }
     });

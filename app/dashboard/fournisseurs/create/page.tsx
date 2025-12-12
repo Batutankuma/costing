@@ -35,11 +35,11 @@ export default function CreateFournisseurPage() {
   const onSubmit = async (data: FournisseurFormData) => {
     try {
       const result = await createFournisseur(data);
-      if (result.data?.failure) {
+      if (!result || result?.data?.failure) {
         toast({ 
           variant: "destructive",
           title: "Erreur", 
-          description: result.data.failure 
+          description: result?.data?.failure ?? "Mise à jour échouée"
         });
         return;
       }

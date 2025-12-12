@@ -24,7 +24,7 @@ import { Info, AlertTriangle, CheckCircle, Save, List, Package } from "lucide-re
 
 // Import des actions pour récupérer les données
 import { findAllAction as findAllCommandes } from "@/app/dashboard/commande/actions";
-import { findAllAction as findAllProduits } from "@/app/dashboard/products/actions";
+import { listProducts } from "@/app/dashboard/products/actions";
 import { findAllAction as findAllTanks } from "@/app/dashboard/tank/actions";
 
 export default function EditReceptionPage() {
@@ -41,7 +41,6 @@ export default function EditReceptionPage() {
 
   // Hooks pour les actions
   const { executeAsync: executeCommandes } = useAction(findAllCommandes);
-  const { executeAsync: executeProduits } = useAction(findAllProduits);
   const { executeAsync: executeTanks } = useAction(findAllTanks);
 
 
@@ -116,16 +115,15 @@ export default function EditReceptionPage() {
         // Charger les commandes
         const commandesResult = await executeCommandes();
         if (commandesResult?.data?.success && commandesResult.data.result) {
-          const confirmedCommandes = ((commandesResult.data.result || []) as any[])
-            .filter((c: any) => c.status === "CONFIRMED" || c.status === "PARTIALLY_RECEIVED") as Commande[];
+          const confirmedCommandes = (commandesResult.data.result || [])
+            .filter((c: Commande) => c.status === "CONFIRMED" || c.status === "PARTIALLY_RECEIVED");
           setCommandes(confirmedCommandes);
         }
 
         // Charger les produits
-        const produitsResult = await executeProduits();
-        if (produitsResult?.data?.success && produitsResult.data.result) {
-          setProduits(produitsResult.data.result || []);
-        }
+        const produitsResult = await listProducts();
+        const produitsData = produitsResult?.data?.data ?? [];
+        setProduits(produitsData || []);
 
         // Charger les tanks
         const tanksResult = await executeTanks();
@@ -147,7 +145,7 @@ export default function EditReceptionPage() {
     if (receptionId) {
       loadData();
     }
-  }, [receptionId, executeCommandes, executeProduits, executeTanks, setValue, toast]);
+  }, [receptionId, executeCommandes, executeTanks, setValue, toast]);
 
   // Mettre à jour la référence quand une commande est sélectionnée
   useEffect(() => {

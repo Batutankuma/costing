@@ -12,10 +12,39 @@ interface NonMiningBuilderEditPageProps {
 async function NonMiningBuilderEditPage({ params }: NonMiningBuilderEditPageProps) {
   const { id } = await params;
   
-  const [builder, priceStructures] = await Promise.all([
+  const [builder, rawPriceStructures] = await Promise.all([
     getNonMiningBuilderById(id),
     getNonMiningPriceStructures(),
   ]);
+
+  const priceStructures = (rawPriceStructures ?? []).map((s: any) => ({
+    id: s.id,
+    nomStructure: s.nomStructure,
+    exchangeRate: {
+      rate: s.exchangeRate?.rate ?? 0,
+      deviseBase: s.exchangeRate?.deviseBase ?? "",
+      deviseTarget: s.exchangeRate?.deviseTarget ?? "",
+    },
+    fiscality: s.fiscality
+      ? {
+          customsDuty: s.fiscality.customsDuty ?? 0,
+          importVAT: s.fiscality.importVAT ?? 0,
+          netVAT: s.fiscality.netVAT ?? 0,
+          consumptionDuty: s.fiscality.consumptionDuty ?? 0,
+        }
+      : undefined,
+    parafiscality: s.parafiscality
+      ? {
+          foner: s.parafiscality.foner ?? 0,
+        }
+      : undefined,
+    securityStock: s.securityStock
+      ? {
+          estStock: s.securityStock.estStock ?? 0,
+          sudStock: s.securityStock.sudStock ?? 0,
+        }
+      : undefined,
+  }));
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">

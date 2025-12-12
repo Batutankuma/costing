@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Truck } from "lucide-react";
+import type { TransportRateWithRelations } from "./columns";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -12,7 +13,7 @@ export default async function Page() {
   // Récupérer les tarifs de transport
   const transportRates = await prisma.transportRate.findMany({
     orderBy: { destination: 'asc' }
-  });
+  }) as TransportRateWithRelations[];
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -41,7 +42,7 @@ export default async function Page() {
           <CardDescription>Visualisez et gérez tous vos tarifs de transport (USD/CBM)</CardDescription>
         </CardHeader>
         <CardContent>
-          <DataTables Element={transportRates as any} />
+          <DataTables Element={transportRates} />
         </CardContent>
       </Card>
     </div>

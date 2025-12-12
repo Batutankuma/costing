@@ -5,7 +5,7 @@ import Client from "../price-edit-form";
 export default async function EditPricePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const res = await findByIdAction(id);
-  const item = (res as any)?.result;
+  const item = res.result;
 
   if (!item) {
     return (

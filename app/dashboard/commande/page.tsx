@@ -60,8 +60,8 @@ export default async function Page() {
       <div className="p-6">
         <div className="text-center">
           <h1 className="text-2xl font-semibold text-red-600 mb-4">Erreur inattendue</h1>
-          <p className="text-gray-600">Une erreur inattendue s'est produite lors du chargement de la page.</p>
-          <p className="text-sm text-gray-500 mt-2">Veuillez réessayer ou contacter l'administrateur.</p>
+          <p className="text-gray-600">Une erreur inattendue s&apos;est produite lors du chargement de la page.</p>
+          <p className="text-sm text-gray-500 mt-2">Veuillez réessayer ou contacter l&apos;administrateur.</p>
         </div>
       </div>
     );

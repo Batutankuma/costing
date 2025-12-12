@@ -30,8 +30,8 @@ export default function CreateProspectPage() {
   const isPending = status === "executing";
 
   const onSubmit = async (data: FormData) => {
-    const res = await executeAsync(data as any);
-    if ((res as any)?.data?.success) router.push("/dashboard/prospects");
+    const res = await executeAsync(data);
+    if (res.data?.success) router.push("/dashboard/prospects");
   };
 
   return (

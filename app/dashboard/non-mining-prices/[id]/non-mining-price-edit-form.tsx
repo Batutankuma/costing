@@ -215,7 +215,7 @@ export function NonMiningPriceEditForm({ priceStructure }: NonMiningPriceEditFor
                 <Label htmlFor="cardinale">Zone géographique</Label>
                 <Select
                   value={form.watch("cardinale")}
-                  onValueChange={(value) => form.setValue("cardinale", value as any)}
+                  onValueChange={(value) => form.setValue("cardinale", value as "SUD" | "NORD" | "EST" | "OUEST")}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner une zone" />
@@ -504,7 +504,7 @@ export function NonMiningPriceEditForm({ priceStructure }: NonMiningPriceEditFor
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="importVAT">TVA à l'importation</Label>
+                <Label htmlFor="importVAT">TVA à l&apos;importation</Label>
                 <Input
                   id="importVAT"
                   type="number"
@@ -517,7 +517,7 @@ export function NonMiningPriceEditForm({ priceStructure }: NonMiningPriceEditFor
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="netVAT">TVA nette à l'intérieur</Label>
+                <Label htmlFor="netVAT">TVA nette à l&apos;intérieur</Label>
                 <Input
                   id="netVAT"
                   type="number"

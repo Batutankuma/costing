@@ -106,24 +106,24 @@ export default function CreateReceptionPage() {
 
         // Commandes
         if (cmdRes.status === "fulfilled") {
-          const r = cmdRes.value as any;
+          const r = cmdRes.value;
           if (r?.data?.success && r.data.result) {
-            const available = ((r.data.result || []) as any[])
-              .filter((c: any) => c.status === "CONFIRMED" || c.status === "PARTIALLY_RECEIVED") as CommandeLite[];
+            const available = (r.data.result || [])
+              .filter((c: CommandeLite) => c.status === "CONFIRMED" || c.status === "PARTIALLY_RECEIVED");
             setCommandes(available);
           }
         }
 
         // Produits
         if (prodRes.status === "fulfilled") {
-          const r: any = prodRes.value;
+          const r = prodRes.value;
           const produitsData = r?.data?.data ?? [];
           setProduits(produitsData || []);
         }
 
         // Tanks
         if (tankRes.status === "fulfilled") {
-          const r: any = tankRes.value;
+          const r = tankRes.value;
           if (r?.data?.success && r.data.result) {
             setTanks(r.data.result || []);
           }
@@ -153,7 +153,7 @@ export default function CreateReceptionPage() {
           setSelectedCommande(commande);
           setValue("reference", commande.reference || "");
           setValue("produitId", commande.produitId || "");
-          setValue("unit", (commande.unit as any) || "L");
+          setValue("unit", (commande.unit || "L") as "KG" | "G" | "L" | "ML" | "TONNE" | "PIECE" | "BOITE" | "CAISSON" | "POUCE" | "METRE" | "METRE_CARRE" | "METRE_CUBE" | "METRE_LINEAIRE");
         }
       }
     }
@@ -167,7 +167,7 @@ export default function CreateReceptionPage() {
         setSelectedCommande(commande);
         setValue("reference", commande.reference || "");
         setValue("produitId", commande.produitId || "");
-        setValue("unit", (commande.unit as any) || "L");
+        setValue("unit", (commande.unit as "KG" | "G" | "L" | "ML" | "TONNE" | "PIECE" | "BOITE" | "CAISSON" | "POUCE" | "METRE" | "METRE_CARRE" | "METRE_CUBE" | "METRE_LINEAIRE" | undefined) || "L");
         clearErrors("quantity");
         setQuantityError("");
         setShowCommandeSelector(false);
@@ -176,8 +176,9 @@ export default function CreateReceptionPage() {
         (async () => {
           try {
             const depotsResult = await executeDepots();
-            const depots = (depotsResult as any)?.data?.data ?? [];
-            const depot = depots.find((d: any) => d.id === commande.depotId);
+            const depots = depotsResult?.data?.data ?? [];
+            type DepotRef = { id: string; type?: string };
+            const depot = depots.find((d: DepotRef) => d.id === commande.depotId);
             const isInternal = depot?.type === 'OWNED';
             setIsInternalDepot(isInternal ?? null);
             if (isInternal === false) {
@@ -202,7 +203,7 @@ export default function CreateReceptionPage() {
       if (quantity > remainingQuantity) {
         const errorMsg = `Quantité trop élevée. Il ne reste que ${remainingQuantity} ${(selectedCommande.unit || 'unités')} à recevoir sur cette commande.`;
         setQuantityError(errorMsg);
-        setError("quantity", { message: errorMsg } as any);
+        setError("quantity", { message: errorMsg, type: "manual" });
       } else {
         setQuantityError("");
         clearErrors("quantity");
@@ -213,7 +214,7 @@ export default function CreateReceptionPage() {
   const router = useRouter();
   const { executeAsync, isExecuting: isPending } = useAction(createAction);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: z.infer<typeof CreateReceptionSchema>) => {
     // Validation finale avant soumission
     if (selectedCommande && data.quantity > (selectedCommande.currentQuantity ?? 0)) {
       toast({
@@ -233,8 +234,8 @@ export default function CreateReceptionPage() {
       // ✅ RAFRAÎCHIR LES DONNÉES après la création
       const commandesResult = await executeCommandes();
       if (commandesResult?.data?.success && commandesResult.data.result) {
-        const availableCommandes = ((commandesResult.data.result || []) as any[])
-          .filter((c: any) => c.status === "CONFIRMED" || c.status === "PARTIALLY_RECEIVED") as CommandeLite[];
+        const availableCommandes = (commandesResult.data.result || [])
+          .filter((c: CommandeLite) => c.status === "CONFIRMED" || c.status === "PARTIALLY_RECEIVED");
         setCommandes(availableCommandes);
         
         if (selectedCommande) {
@@ -262,7 +263,7 @@ export default function CreateReceptionPage() {
     setSelectedCommande(commande);
     setValue("reference", commande.reference || "");
     setValue("produitId", commande.produitId || "");
-    setValue("unit", (commande.unit as any) || "L");
+    setValue("unit", (commande.unit as "KG" | "G" | "L" | "ML" | "TONNE" | "PIECE" | "BOITE" | "CAISSON" | "POUCE" | "METRE" | "METRE_CARRE" | "METRE_CUBE" | "METRE_LINEAIRE" | undefined) || "L");
     setShowCommandeSelector(false);
   };
 
@@ -321,7 +322,7 @@ export default function CreateReceptionPage() {
               readOnly
               className="bg-gray-50"
             />
-            {errors.reference && <p className="text-red-500 text-sm">{errors.reference.message as any}</p>}
+            {errors.reference && <p className="text-red-500 text-sm">{errors.reference.message}</p>}
             <p className="text-xs text-gray-500 mt-1">
               La référence est automatiquement remplie à partir de la commande sélectionnée
             </p>
@@ -337,7 +338,7 @@ export default function CreateReceptionPage() {
                 setValueAs: (value) => new Date(value)
               })} 
             />
-            {errors.receptionDate && <p className="text-red-500 text-sm">{errors.receptionDate.message as any}</p>}
+            {errors.receptionDate && <p className="text-red-500 text-sm">{errors.receptionDate.message}</p>}
           </div>
 
           <div>
@@ -356,7 +357,7 @@ export default function CreateReceptionPage() {
                 {quantityError}
               </div>
             )}
-            {errors.quantity && !quantityError && <p className="text-red-500 text-sm">{errors.quantity.message as any}</p>}
+            {errors.quantity && !quantityError && <p className="text-red-500 text-sm">{errors.quantity.message}</p>}
             {selectedCommande && !quantityError && (
               <p className="text-xs text-green-600 mt-1">
                 ✓ Quantité valide - Il reste {(selectedCommande.currentQuantity ?? 0)} {selectedCommande.unit || 'unités'} à recevoir
@@ -366,7 +367,7 @@ export default function CreateReceptionPage() {
 
           <div>
             <Label htmlFor="unit">Unité <span className="text-red-500">*</span></Label>
-            <Select onValueChange={(value) => setValue("unit", value as any)} defaultValue="L">
+            <Select onValueChange={(value) => setValue("unit", value as "KG" | "G" | "L" | "ML" | "TONNE" | "PIECE" | "BOITE" | "CAISSON" | "POUCE" | "METRE" | "METRE_CARRE" | "METRE_CUBE" | "METRE_LINEAIRE")} defaultValue="L">
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner une unité" />
               </SelectTrigger>
@@ -386,7 +387,7 @@ export default function CreateReceptionPage() {
                 <SelectItem value="METRE_LINEAIRE">Mètre linéaire</SelectItem>
               </SelectContent>
             </Select>
-            {errors.unit && <p className="text-red-500 text-sm">{errors.unit.message as any}</p>}
+            {errors.unit && <p className="text-red-500 text-sm">{errors.unit.message}</p>}
           </div>
 
           <div className="relative">
@@ -478,7 +479,7 @@ export default function CreateReceptionPage() {
                 </div>
               </div>
             )}
-            {errors.commandeId && <p className="text-red-500 text-sm mt-1">{(errors as any).commandeId.message}</p>}
+            {errors.commandeId && <p className="text-red-500 text-sm mt-1">{errors.commandeId.message}</p>}
             <p className="text-xs text-gray-500 mt-1">Cliquez pour sélectionner une commande disponible</p>
           </div>
 
@@ -494,7 +495,7 @@ export default function CreateReceptionPage() {
                 ))}
               </SelectContent>
             </Select>
-            {errors.produitId && <p className="text-red-500 text-sm">{(errors as any).produitId.message}</p>}
+            {errors.produitId && <p className="text-red-500 text-sm">{errors.produitId.message}</p>}
           </div>
 
           {isInternalDepot ? (
@@ -510,7 +511,7 @@ export default function CreateReceptionPage() {
                   ))}
                 </SelectContent>
               </Select>
-              {errors.tankId && <p className="text-red-500 text-sm">{(errors as any).tankId.message}</p>}
+              {errors.tankId && <p className="text-red-500 text-sm">{errors.tankId.message}</p>}
               <p className="text-xs text-gray-500 mt-1">Le Tank est requis pour un dépôt interne.</p>
             </div>
           ) : (

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Home, FileText, Users, Settings, Truck } from "lucide-react";
 
-type Item = { href: string; label: string; icon: React.ComponentType<any> };
+type Item = { href: string; label: string; icon: React.ComponentType<{ className?: string }> };
 
 const items: Item[] = [
   { href: "/dashboard", label: "Accueil", icon: Home },

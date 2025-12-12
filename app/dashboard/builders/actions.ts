@@ -16,8 +16,7 @@ export const createBuilder = actionClient
     const created = await prisma.costBuildUp.create({
       data: {
         title: data.title,
-        description: (data as any).description ?? null,
-        unit: data.unit as any,
+        unit: data.unit,
         userId: data.userId,
         priceReferenceId: data.priceReferenceId ?? null,
         nonMiningPriceStructureId: data.nonMiningPriceStructureId ?? null,
@@ -38,7 +37,7 @@ export const createBuilder = actionClient
               escortFeesUSD: data.supplier.escortFeesUSD ?? 0,
               bankInterestUSD: data.supplier.bankInterestUSD ?? 0,
               sellingPriceDDUUSD: data.supplier.sellingPriceDDUUSD ?? 0,
-            } as any }
+            } }
           : undefined,
         customs: data.customs
           ? { create: {
@@ -100,14 +99,13 @@ export async function findBuilderById(id: string) {
 export const updateBuilder = actionClient
   .schema(UpdateCostBuildUpSchema)
   .action(async ({ parsedInput }) => {
-    const id = (parsedInput as any).id as string;
+    const id = parsedInput.id;
     const c = parsedInput;
     const updated = await prisma.costBuildUp.update({
       where: { id },
       data: {
         title: c.title ?? undefined,
-        description: (c as any).description ?? undefined,
-        unit: c.unit as any,
+        unit: c.unit,
         priceReferenceId: c.priceReferenceId ?? undefined,
         nonMiningPriceStructureId: c.nonMiningPriceStructureId ?? undefined,
         baseCosts: c.base ? {
@@ -137,7 +135,7 @@ export const updateBuilder = actionClient
               escortFeesUSD: c.supplier.escortFeesUSD ?? 0,
               bankInterestUSD: c.supplier.bankInterestUSD ?? 0,
               sellingPriceDDUUSD: c.supplier.sellingPriceDDUUSD ?? 0,
-            } as any,
+            },
             update: {
               storageHospitalityUSD: c.supplier.storageHospitalityUSD ?? 0,
               anrDechargementUSD: c.supplier.anrDechargementUSD ?? 0,
@@ -145,7 +143,7 @@ export const updateBuilder = actionClient
               escortFeesUSD: c.supplier.escortFeesUSD ?? 0,
               bankInterestUSD: c.supplier.bankInterestUSD ?? 0,
               sellingPriceDDUUSD: c.supplier.sellingPriceDDUUSD ?? 0,
-            } as any,
+            },
           },
         } : undefined,
         customs: c.customs ? {

@@ -47,9 +47,14 @@ export default function UserEditForm({ initial }: { initial: UserInitial }) {
     setError(null);
     const result = await execReset({ id: initial.id });
     if (result?.data?.success) {
-      const pwd = (result.data.success as any).password as string;
-      setMessage(`Nouveau mot de passe: ${pwd}`);
-      try { await navigator.clipboard.writeText(pwd); } catch {}
+      type SuccessResult = { password?: string };
+      const pwd = (result.data.success as SuccessResult).password;
+      if (pwd) {
+        setMessage(`Nouveau mot de passe: ${pwd}`);
+        try { await navigator.clipboard.writeText(pwd); } catch {}
+      } else {
+        setMessage("Mot de passe réinitialisé (aucun mot de passe généré)");
+      }
     } else {
       setError(result?.data?.failure || "Réinitialisation échouée.");
     }
@@ -84,7 +89,7 @@ export default function UserEditForm({ initial }: { initial: UserInitial }) {
           </div>
           <div className="space-y-2">
             <Label>Rôle</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as any)}>
+            <Select value={role} onValueChange={(v) => setRole(v as "ADMIN" | "COMMERCIAL")}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Choisir un rôle" />
               </SelectTrigger>

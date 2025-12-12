@@ -13,7 +13,7 @@ export default async function EditProductPage({
   }
 
   const result = await getProductById({ id: resolved.id });
-  const product = (result as any)?.data;
+  const product = result?.data?.data;
   if (!product) {
     notFound();
   }

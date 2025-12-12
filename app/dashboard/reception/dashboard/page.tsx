@@ -28,7 +28,7 @@ export default function ReceptionDashboardPage() {
         // Charger les commandes
         const commandesResult = await executeCommandes();
         if (commandesResult?.data?.success && commandesResult.data.result) {
-          setCommandes((commandesResult.data.result as any[]) || []);
+          setCommandes(commandesResult.data.result || []);
           console.log(`✅ ${commandesResult.data.result.length} commandes chargées`);
         }
 
@@ -52,7 +52,7 @@ export default function ReceptionDashboardPage() {
           // Recharger les données
           const commandesResult = await executeCommandes();
           if (commandesResult?.data?.success && commandesResult.data.result) {
-            setCommandes((commandesResult.data.result as any[]) || []);
+            setCommandes(commandesResult.data.result || []);
           }
 
 

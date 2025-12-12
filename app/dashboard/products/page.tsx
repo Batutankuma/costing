@@ -43,7 +43,7 @@ export default async function Page() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <DataTables Element={products as any} />
+          <DataTables Element={products} />
         </CardContent>
       </Card>
     </div>

@@ -140,7 +140,7 @@ export function SummaryTable({ data }: SummaryTableProps) {
                 <td className="p-2 text-right text-sm">{formatCurrency(distribution.socirFees / rate, "USD")}</td>
               </tr>
               <tr>
-                <td className="p-2 pl-4 text-sm text-muted-foreground">Charges d'exploitation SEP, St.Sécurité et Stratég.</td>
+                <td className="p-2 pl-4 text-sm text-muted-foreground">Charges d&apos;exploitation SEP, St.Sécurité et Stratég.</td>
                 <td className="p-2 text-right text-sm">{formatCurrency(distribution.sepSecurityCharges)}</td>
                 <td className="p-2 text-right text-sm">{formatCurrency(distribution.sepSecurityCharges / rate, "USD")}</td>
               </tr>
@@ -155,7 +155,7 @@ export function SummaryTable({ data }: SummaryTableProps) {
                 <td className="p-2 text-right text-sm">{formatCurrency(distribution.lerexcomPetroleum / rate, "USD")}</td>
               </tr>
               <tr>
-                <td className="p-2 pl-4 text-sm text-muted-foreground">Charges d'exploitation Soc Com</td>
+                <td className="p-2 pl-4 text-sm text-muted-foreground">Charges d&apos;exploitation Soc Com</td>
                 <td className="p-2 text-right text-sm">{formatCurrency(distribution.socComCharges)}</td>
                 <td className="p-2 text-right text-sm">{formatCurrency(distribution.socComCharges / rate, "USD")}</td>
               </tr>
@@ -216,7 +216,7 @@ export function SummaryTable({ data }: SummaryTableProps) {
                 </td>
               </tr>
               <tr>
-                <td className="p-2">TVA à l'importation</td>
+                <td className="p-2">TVA à l&apos;importation</td>
                 <td className="p-2 text-right">{formatCurrency(fisc.importVAT)}</td>
                 <td className="p-2 text-right">{formatCurrency(fisc.importVAT / rate, "USD")}</td>
               </tr>
@@ -229,7 +229,7 @@ export function SummaryTable({ data }: SummaryTableProps) {
               </tr>
 
               <tr>
-                <td className="p-2">TVA nette à l'intérieur</td>
+                <td className="p-2">TVA nette à l&apos;intérieur</td>
                 <td className="p-2 text-right">{formatCurrency(fisc.netVAT)}</td>
                 <td className="p-2 text-right">{formatCurrency(fisc.netVAT / rate, "USD")}</td>
               </tr>

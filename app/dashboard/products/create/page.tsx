@@ -32,9 +32,9 @@ export default function CreateProductPage() {
   const onSubmit = async (data: ProductFormData) => {
     try {
       setSaving(true);
-      const res = await createProduct(data as any);
-      if ((res as any)?.failure) {
-        toast({ title: "Erreur", description: (res as any).failure, variant: "destructive" });
+      const res = await createProduct(data);
+      if (res?.data?.failure) {
+        toast({ title: "Erreur", description: res.data.failure ?? "Erreur inconnue", variant: "destructive" });
         return;
       }
       toast({ title: "Succès", description: "Produit créé" });
@@ -65,7 +65,7 @@ export default function CreateProductPage() {
             </div>
             <div className="space-y-2">
               <Label>Unité *</Label>
-              <Select value={form.watch("unit")} onValueChange={(v) => form.setValue("unit", v as any)}>
+              <Select value={form.watch("unit")} onValueChange={(v) => form.setValue("unit", v as ProductFormData["unit"])}>
                 <SelectTrigger><SelectValue placeholder="Unité" /></SelectTrigger>
                 <SelectContent>
                   {["KG","G","L","ML","TONNE","PIECE","BOITE","CAISSON","POUCE","METRE","METRE_CARRE","METRE_CUBE","METRE_LINEAIRE"].map((u) => (

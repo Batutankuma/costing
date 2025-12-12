@@ -33,7 +33,28 @@ import { listDepots } from "@/app/dashboard/depots/actions";
 import { findAllAction as findAllTanks } from "@/app/dashboard/tank/actions";
 import { listProducts } from "@/app/dashboard/products/actions";
 
-// type DeliveryForm = z.infer<typeof DeliverySchema>;
+type Client = {
+  id: string;
+  nom?: string | null;
+  name?: string | null;
+  company?: string | null;
+};
+
+type Depot = {
+  id: string;
+  name: string;
+};
+
+type Tank = {
+  id: string;
+  name: string;
+  produitId?: string | null;
+};
+
+type Produit = {
+  id: string;
+  nom: string;
+};
 
 export default function EditDeliveryPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -61,7 +82,8 @@ export default function EditDeliveryPage() {
     formState: { errors, isSubmitting },
   } = useForm<z.infer<typeof EditDeliverySchema>>({
     resolver: zodResolver(EditDeliverySchema),
-    defaultValues: {
+    defaultValues: async () => ({
+      id: "",
       deliveryDate: new Date(),
       note: "",
       clientId: "",
@@ -79,7 +101,7 @@ export default function EditDeliveryPage() {
       typeAircraft: "",
       flightNumber: "",
       linkDoc: "",
-    },
+    }),
   });
 
   const tankId = watch("tankId");
@@ -102,22 +124,28 @@ export default function EditDeliveryPage() {
         
         // Charger les clients
         const clientsResult = await getClients();
-        setClients((clientsResult as any[]) || []);
+        const mappedClients = (clientsResult || []).map((c: any) => ({
+          id: c.id,
+          nom: c.nom ?? c.name ?? c.company ?? "",
+          name: c.name,
+          company: c.company,
+        }));
+        setClients(mappedClients);
 
         // Charger les dépôts
         const depotsResult = await executeDepots();
-        const depotsData = (depotsResult as any)?.data ?? (depotsResult as any)?.result ?? [];
+        const depotsData = depotsResult?.data?.data ?? [];
         setDepots(depotsData || []);
 
         // Charger les tanks
         const tanksResult = await executeTanks();
-        const tanksData = (tanksResult as any)?.data ?? (tanksResult as any)?.result ?? [];
+        const tanksData = tanksResult?.data?.success ? tanksResult.data.result : [];
         setTanks(tanksData || []);
 
         // Charger les produits
         const produitsResult = await executeProduits();
-        const produitsData = (produitsResult as any)?.data ?? (produitsResult as any)?.result ?? [];
-        setProduits(produitsData || []);
+        const produitsData = produitsResult?.data?.data ?? [];
+        setProduits((produitsData || []).map(p => ({ id: p.id, nom: p.name })));
       } catch (error) {
         console.error("Erreur lors du chargement des données:", error);
         toast({
@@ -131,7 +159,7 @@ export default function EditDeliveryPage() {
     };
 
     loadData();
-  }, [executeClients, executeDepots, executeTanks, executeProduits, toast]);
+  }, [executeDepots, executeTanks, executeProduits, toast]);
 
   // Charger les données du delivery
   useEffect(() => {
@@ -150,8 +178,8 @@ export default function EditDeliveryPage() {
           setValue("depotId", entity.depotId || "");
           setValue("tankId", entity.tankId || "");
           setValue("produitId", entity.produitId || "");
-          setValue("quantity", (entity as any).quantity || 0);
-          setValue("unit", (entity as any).unit || "L");
+          setValue("quantity", entity.quantity || 0);
+          setValue("unit", entity.unit || "L");
           setValue("openingEter", entity.openingEter || 0);
           setValue("closingEter", entity.closingEter || 0);
           setValue("timeStart", entity.timeStart || "");
@@ -194,14 +222,14 @@ export default function EditDeliveryPage() {
     try {
       const result = await updateAction({
         id: params.id as string,
-        deliveryDate: (data as any).deliveryDate,
+        deliveryDate: data.deliveryDate,
         note: data.note,
         clientId: data.clientId,
         depotId: data.depotId,
         tankId: data.tankId,
         produitId: data.produitId,
-        quantity: (data as any).quantity,
-        unit: (data as any).unit,
+        quantity: data.quantity,
+        unit: data.unit,
         openingEter: data.openingEter,
         closingEter: data.closingEter,
         timeStart: data.timeStart,
@@ -280,7 +308,7 @@ export default function EditDeliveryPage() {
                   type="date" 
                   {...register("deliveryDate", { valueAsDate: true })} 
                 />
-                {(errors as any).deliveryDate && <p className="text-red-500 text-sm">{(errors as any).deliveryDate.message}</p>}
+                {errors.deliveryDate && <p className="text-red-500 text-sm">{errors.deliveryDate.message}</p>}
               </div>
               <div>
                 <Label htmlFor="note">Note <span className="text-red-500">*</span></Label>
@@ -302,7 +330,7 @@ export default function EditDeliveryPage() {
                   {...register("quantity", { valueAsNumber: true })} 
                   placeholder="Ex: 1.2345" 
                 />
-                {(errors as any).quantity && <p className="text-red-500 text-sm">{(errors as any).quantity.message}</p>}
+                {errors.quantity && <p className="text-red-500 text-sm">{errors.quantity.message}</p>}
               </div>
               <div>
                 <Label htmlFor="unit">Unité <span className="text-red-500">*</span></Label>
@@ -311,7 +339,7 @@ export default function EditDeliveryPage() {
                   {...register("unit")} 
                   placeholder="Ex: L, M3" 
                 />
-                {(errors as any).unit && <p className="text-red-500 text-sm">{(errors as any).unit.message}</p>}
+                {errors.unit && <p className="text-red-500 text-sm">{errors.unit.message}</p>}
               </div>
             </div>
           </CardContent>

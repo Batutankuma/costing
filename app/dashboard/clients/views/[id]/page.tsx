@@ -91,15 +91,15 @@ export default async function ViewClientPage({ params }: { params: Promise<{ id:
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label className="text-sm font-medium text-muted-foreground">RCCM</Label>
-              <p className="text-lg">{(client as any).rccm ?? "N/A"}</p>
+              <p className="text-lg">{client.rccm ?? "N/A"}</p>
             </div>
             <div>
               <Label className="text-sm font-medium text-muted-foreground">ID NAT</Label>
-              <p className="text-lg">{(client as any).idNat ?? "N/A"}</p>
+              <p className="text-lg">{client.idNat ?? "N/A"}</p>
             </div>
             <div>
               <Label className="text-sm font-medium text-muted-foreground">NIF</Label>
-              <p className="text-lg">{(client as any).nif ?? "N/A"}</p>
+              <p className="text-lg">{client.nif ?? "N/A"}</p>
             </div>
             <div>
               <Label className="text-sm font-medium text-muted-foreground">Statut</Label>

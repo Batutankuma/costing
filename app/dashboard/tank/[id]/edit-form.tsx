@@ -107,7 +107,7 @@ export default function EditTankForm({ tank }: EditFormProps) {
           Modifier le tank
         </CardTitle>
         <CardDescription>
-          Modifiez les informations du tank. Les champs marqués d'un * sont obligatoires.
+          Modifiez les informations du tank. Les champs marqués d&apos;un * sont obligatoires.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -179,7 +179,7 @@ export default function EditTankForm({ tank }: EditFormProps) {
               onValueChange={(value: TankFormData['unit']) => setValue("unit", value)}
             >
               <SelectTrigger className={errors.unit ? "border-red-500" : ""}>
-                <SelectValue placeholder="Sélectionnez l'unité" />
+                <SelectValue placeholder="Sélectionnez l&apos;unité" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="L">Litre (L)</SelectItem>
@@ -212,7 +212,7 @@ export default function EditTankForm({ tank }: EditFormProps) {
               <p className="text-sm text-red-500">{errors.depotId.message}</p>
             )}
             <p className="text-sm text-muted-foreground">
-              Entrez l'ID du dépôt où se trouve ce tank
+              Entrez l&apos;ID du dépôt où se trouve ce tank
             </p>
           </div>
 
@@ -229,7 +229,7 @@ export default function EditTankForm({ tank }: EditFormProps) {
               <p className="text-sm text-red-500">{errors.produitId.message}</p>
             )}
             <p className="text-sm text-muted-foreground">
-              Laissez vide si aucun produit n'est assigné
+              Laissez vide si aucun produit n&apos;est assigné
             </p>
           </div>
 

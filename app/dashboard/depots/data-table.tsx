@@ -67,12 +67,19 @@ import {
 } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { columns } from "./columns";
-import { Depot } from "@/models/mvc";
 import ExportExcel from "@/components/exportExcel";
 import { useRouter } from "next/navigation";
 
 
-export default function DataTables({ Element }: { Element: Depot[] }) {
+type DepotWithProducts = {
+  id: string;
+  name: string;
+  type: "OWNED" | "EXTERNAL";
+  location?: string | null;
+  products?: Array<{ id: string; quantity: number; product?: { name: string; unit: string } }>;
+};
+
+export default function DataTables({ Element }: { Element: DepotWithProducts[] }) {
     const id = useId();
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -82,7 +89,7 @@ export default function DataTables({ Element }: { Element: Depot[] }) {
 
     const [sorting, setSorting] = useState<SortingState>([{ id: "name", desc: false, },]);
 
-    const [data, setData] = useState<Depot[]>([]);
+    const [data, setData] = useState<DepotWithProducts[]>([]);
     useEffect(() => { 
         setData(Element); 
     }, [Element]);

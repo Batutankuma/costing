@@ -30,39 +30,39 @@ async function readStore() {
   }
 }
 
-async function writeStore(obj: any) {
+async function writeStore(obj: Record<string, unknown>) {
   await fs.writeFile(storePath, JSON.stringify(obj, null, 2), "utf8");
 }
 
 export async function GET() {
   // If Prisma client has the delegate, use DB
-  if ((prisma as any)?.transportRate) {
-    const list = await (prisma as any).transportRate.findMany({ orderBy: { destination: "asc" } });
+  try {
+    const list = await prisma.transportRate.findMany({ orderBy: { destination: "asc" } });
+    return Response.json(list);
+  } catch {
+    // Fallback to file store
+    const store = await readStore();
+    if (!Array.isArray(store.transportRates) || store.transportRates.length === 0) {
+      store.transportRates = defaults.map((d) => ({ id: crypto.randomUUID(), ...d }));
+      await writeStore(store);
+    }
+    const list = [...store.transportRates].sort((a: { destination: string }, b: { destination: string }) => a.destination.localeCompare(b.destination));
     return Response.json(list);
   }
-
-  // Fallback to file store
-  const store = await readStore();
-  if (!Array.isArray(store.transportRates) || store.transportRates.length === 0) {
-    store.transportRates = defaults.map((d) => ({ id: crypto.randomUUID(), ...d }));
-    await writeStore(store);
-  }
-  const list = [...store.transportRates].sort((a: any, b: any) => a.destination.localeCompare(b.destination));
-  return Response.json(list);
 }
 
 export async function POST(request: Request) {
   const body = await request.json();
-  if ((prisma as any)?.transportRate) {
-    const created = await (prisma as any).transportRate.create({ data: { destination: body.destination, rateUsdPerCbm: Number(body.rateUsdPerCbm) } });
+  try {
+    const created = await prisma.transportRate.create({ data: { destination: body.destination, rateUsdPerCbm: Number(body.rateUsdPerCbm) } });
+    return Response.json(created, { status: 201 });
+  } catch {
+    const store = await readStore();
+    const created = { id: crypto.randomUUID(), destination: body.destination, rateUsdPerCbm: Number(body.rateUsdPerCbm) };
+    store.transportRates = Array.isArray(store.transportRates) ? [...store.transportRates, created] : [created];
+    await writeStore(store);
     return Response.json(created, { status: 201 });
   }
-
-  const store = await readStore();
-  const created = { id: crypto.randomUUID(), destination: body.destination, rateUsdPerCbm: Number(body.rateUsdPerCbm) };
-  store.transportRates = Array.isArray(store.transportRates) ? [...store.transportRates, created] : [created];
-  await writeStore(store);
-  return Response.json(created, { status: 201 });
 }
 
 

@@ -7,11 +7,19 @@ import { createBuilder, updateBuilder, listBuilders, findBuilderById, removeBuil
 
 export { createBuilder, updateBuilder, findBuilderById as getKalemieBuilderById, removeBuilderById as deleteKalemieBuilder };
 
+type BuilderItem = {
+  title?: string | null;
+  description?: string | null;
+};
+
 export async function listKalemieBuilders() {
   const res = await listBuilders();
-  const items = (res as any)?.data?.result ?? [];
+  if (!res?.data?.result) {
+    return { success: true, result: [] } as const;
+  }
+  const items = res.data.result;
   // Filtrer par titre/description contenant Kalemie ou le tag #kalemie
-  const filtered = (items ?? []).filter((it: any) => {
+  const filtered = (items ?? []).filter((it: BuilderItem) => {
     const t = `${it?.title ?? ""} ${it?.description ?? ""}`.toLowerCase();
     return t.includes("kalemie") || t.includes("#kalemie");
   });

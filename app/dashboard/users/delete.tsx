@@ -63,7 +63,7 @@ export default function RemoveDialog({
         </div>
 
         <div className="space-y-4">
-          <Label htmlFor="userName">Nom de l'utilisateur</Label>
+          <Label htmlFor="userName">Nom de l&apos;utilisateur</Label>
           <Input
             id="userName"
             type="text"

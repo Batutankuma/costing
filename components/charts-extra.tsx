@@ -1,7 +1,13 @@
+type TooltipPayloadItem = {
+  dataKey?: string;
+  value?: number;
+  [key: string]: unknown;
+};
+
 interface CustomTooltipContentProps {
   active?: boolean;
-  payload?: any[];
-  label?: any;
+  payload?: TooltipPayloadItem[];
+  label?: string | number;
   colorMap?: Record<string, string>;
   labelMap?: Record<string, string>;
   // Optional array to define display order

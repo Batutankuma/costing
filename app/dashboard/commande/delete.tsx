@@ -26,7 +26,7 @@ export default function RemoveDialog({ open, setOpen, Id, nameClient }: { open: 
       setIsDeleting(true);
       const result = await removeByIdAction(Id);
       
-      if ((result as any).success) {
+      if (result.success) {
         toast({
           title: "Succès",
           description: "Commande supprimée avec succès"
@@ -37,7 +37,7 @@ export default function RemoveDialog({ open, setOpen, Id, nameClient }: { open: 
         toast({
           variant: "destructive",
           title: "Erreur",
-          description: (result as any).failure || "Erreur lors de la suppression"
+          description: result.failure || "Erreur lors de la suppression"
         });
       }
     } catch (error) {

@@ -58,7 +58,7 @@ export const createClient = actionClient
   .action(async ({ parsedInput }) => {
     try {
       const created = await prisma.client.create({
-        data: parsedInput as any,
+        data: parsedInput,
       });
       revalidatePath("/dashboard/clients");
       return { success: created };
@@ -80,7 +80,7 @@ export const updateClient = actionClient
       
       const result = await prisma.client.update({
         where: { id },
-        data: data as any,
+        data,
       });
       revalidatePath("/dashboard/clients");
       revalidatePath(`/dashboard/clients/${id}`);

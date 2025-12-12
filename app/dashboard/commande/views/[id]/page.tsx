@@ -24,7 +24,17 @@ const PrintButton = () => {
   );
 };
 
-type CommandeData = z.infer<typeof CommandeSchema>;
+type CommandeData = z.infer<typeof CommandeSchema> & {
+  Produit?: { nom: string };
+  Depot?: { name: string };
+  Fournisseur?: { nom: string };
+  currentQuantity?: number;
+  quantite?: number;
+  quantity?: number;
+  typePaiement?: string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+};
 
 export default function ViewCommandePage() {
   const [commandeId, setCommandeId] = useState<string | null>(null);
@@ -53,11 +63,11 @@ export default function ViewCommandePage() {
       setError(null);
       try {
         const result = await findByIdAction(commandeId!);
-        if ((result as any).success && (result as any).result) {
-          setCommande((result as any).result as CommandeData); 
-        } else if ((result as any).failure) {
-          setError((result as any).failure);
-          toast({ variant: "destructive", title: "Error", description: (result as any).failure });
+        if (result.success && result.result) {
+          setCommande(result.result as CommandeData); 
+        } else if (result.failure) {
+          setError(result.failure);
+          toast({ variant: "destructive", title: "Error", description: result.failure });
         } else {
           setError("Commande not found.");
           toast({ variant: "destructive", title: "Error", description: "Commande not found." });
@@ -134,17 +144,17 @@ export default function ViewCommandePage() {
 
             <div>
               <Label htmlFor="produitId">Produit</Label>
-              <p className="text-lg">{(commande as any).Produit?.nom ?? (commande as any).produitId}</p>
+              <p className="text-lg">{commande.Produit?.nom ?? commande.produitId}</p>
             </div>
 
             <div>
               <Label htmlFor="depotId">Dépôt</Label>
-              <p className="text-lg">{(commande as any).Depot?.name ?? (commande as any).depotId}</p>
+              <p className="text-lg">{commande.Depot?.name ?? commande.depotId}</p>
             </div>
 
             <div>
               <Label htmlFor="fournisseurId">Fournisseur</Label>
-              <p className="text-lg">{(commande as any).Fournisseur?.nom ?? (commande as any).fournisseurId}</p>
+              <p className="text-lg">{commande.Fournisseur?.nom ?? commande.fournisseurId}</p>
             </div>
 
             <div>
@@ -154,13 +164,13 @@ export default function ViewCommandePage() {
 
             <div>
               <Label htmlFor="currentQuantity">Quantité Actuelle</Label>
-              <p id="currentQuantity" className="text-lg">{(commande as any).currentQuantity}</p>
+              <p id="currentQuantity" className="text-lg">{commande.currentQuantity ?? "N/A"}</p>
             </div>
 
             <div>
               <Label htmlFor="quantity">Quantité Totale</Label>
               <p id="quantity" className="text-lg">
-                {(commande as any).quantite ?? (commande as any).quantity ?? "N/A"}
+                {commande.quantite ?? commande.quantity ?? "N/A"}
               </p>
             </div>
 
@@ -172,14 +182,14 @@ export default function ViewCommandePage() {
             <div>
               <Label htmlFor="typePaiement">Type de Paiement</Label>
               <p id="typePaiement" className="text-lg">
-                {((commande as any).typePaiement ?? "").toUpperCase() === "DIRECT" ? "Direct" : "Crédit"}
+                {(commande.typePaiement ?? "").toUpperCase() === "DIRECT" ? "Direct" : "Crédit"}
               </p>
             </div>
 
             <div className="md:col-span-2">
               <Label>Date de Création</Label>
               <p className="text-sm text-gray-600">
-                { (commande as any).createdAt ? new Date((commande as any).createdAt).toLocaleDateString('fr-FR', {
+                { commande.createdAt ? new Date(commande.createdAt).toLocaleDateString('fr-FR', {
                   year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
                 }) : "N/A"}
               </p>
@@ -188,7 +198,7 @@ export default function ViewCommandePage() {
             <div className="md:col-span-2">
               <Label>Dernière Mise à Jour</Label>
               <p className="text-sm text-gray-600">
-                { (commande as any).updatedAt ? new Date((commande as any).updatedAt).toLocaleDateString('fr-FR', {
+                { commande.updatedAt ? new Date(commande.updatedAt).toLocaleDateString('fr-FR', {
                   year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
                 }) : "N/A"}
               </p>

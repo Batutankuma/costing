@@ -27,7 +27,7 @@ function applyTheme(theme: Theme) {
 export default function SettingsPage() {
   const router = useRouter();
   const { data: session } = authClient.useSession();
-  const role = (session?.user as any)?.role as "ADMIN" | "COMMERCIAL" | undefined;
+  const role = session?.user?.role as "ADMIN" | "COMMERCIAL" | undefined;
   const [theme, setTheme] = useState<Theme>("system");
   const [language, setLanguage] = useState<Language>("fr");
   const [saving, setSaving] = useState(false);
@@ -102,7 +102,7 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Thème</CardTitle>
-            <CardDescription>Choisissez l'apparence de l'interface.</CardDescription>
+            <CardDescription>Choisissez l&apos;apparence de l&apos;interface.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -124,7 +124,7 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Langue</CardTitle>
-            <CardDescription>Sélectionnez la langue de l'application.</CardDescription>
+            <CardDescription>Sélectionnez la langue de l&apos;application.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">

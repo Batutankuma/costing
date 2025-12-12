@@ -36,7 +36,7 @@ export type ClientWithRelations = {
     owner?: {
         id: string;
         name: string;
-    };
+    } | null;
 };
 
 // La fonction de filtre utilise des champs disponibles avec relations

@@ -124,7 +124,7 @@ export const BuildUpTotalsSchema = z.object({
 
 export const CreateCostBuildUpSchema = z.object({
   title: z.string().min(1),
-  unit: z.enum(["USD_M3", "USD_LITRE"]).default("USD_M3"),
+  unit: z.enum(["USD_M3", "USD_LITRE"]),
   userId: z.string().min(1),
   priceReferenceId: z.string().optional().nullable(),
   nonMiningPriceStructureId: z.string().optional().nullable(),
@@ -408,6 +408,9 @@ export const CreateDeliverySchema = z.object({
   typeAircraft: z.string().optional().nullable(),
   flightNumber: z.string().optional().nullable(),
   note: z.string().optional().nullable(),
+  timeStart: z.string().optional().nullable(),
+  timeEnd: z.string().optional().nullable(),
+  linkDoc: z.string().optional().nullable(),
   clientId: z.string().optional().nullable(),
   depotId: z.string().optional().nullable(),
   produitId: z.string().optional().nullable(),

@@ -151,7 +151,7 @@ async function recalculateAllCMP(depotId: string | null | undefined, produitId: 
           stockQuantiteFinal: stockQuantite,
           stockValeurFinal: stockValeur,
           stockPrixUnitaireFinal: stockPrixUnitaire,
-        } as any,
+        },
       });
     } else if (movement.type === 'SORTIE') {
       // Sortie : utiliser le prix unitaire du stock actuel
@@ -171,7 +171,7 @@ async function recalculateAllCMP(depotId: string | null | undefined, produitId: 
             stockQuantiteFinal: stockQuantite,
             stockValeurFinal: stockValeur,
             stockPrixUnitaireFinal: stockPrixUnitaire,
-          } as any,
+          },
         });
       }
     }
@@ -213,17 +213,17 @@ export const createAction = actionClient
         date: parsedInput.date,
         reference: parsedInput.reference,
         depotId: parsedInput.depotId || null,
-        type: parsedInput.type as any,
+        type: parsedInput.type,
         fournisseurId: parsedInput.fournisseurId || null,
         clientId: parsedInput.clientId || null,
         produitId: parsedInput.produitId,
         quantite: parsedInput.quantite,
         prixUnitaireVente: null, // Non utilisé dans le système de stock
         prixUnitaireAchat: parsedInput.type === 'ENTREE' ? parsedInput.prixUnitaireAchat : (cmpHint?.operationPrixUnitaire ?? null),
-        unite: parsedInput.unite as any,
-        devise: parsedInput.devise as any,
+        unite: parsedInput.unite,
+        devise: parsedInput.devise,
         seuilMinimum: parsedInput.seuilMinimum,
-        accountId: (parsedInput as any).user ?? (await prisma.account.findFirst({ select: { id: true } }))?.id ?? undefined,
+        accountId: (await prisma.account.findFirst({ select: { id: true } }))?.id ?? undefined,
         // Champs calculés CMP
         valeurEntree: parsedInput.type === 'ENTREE' ? (cmpHint?.operationValeur ?? null) : null,
         valeurSortie: parsedInput.type === 'SORTIE' ? (cmpHint?.operationValeur ?? null) : null,
@@ -233,7 +233,7 @@ export const createAction = actionClient
       };
       
      
-      const result = await prisma.stock.create({ data: stockData as any });
+      const result = await prisma.stock.create({ data: stockData });
       
       revalidatePath("/dashboard/stocks");
       
@@ -312,7 +312,7 @@ export const updateAction = actionClient
       const { id, ...updateData } = parsedInput; // Destructurer pour exclure l'ID
       
       // Mettre à jour le mouvement
-      const result = await prisma.stock.update({ where: { id }, data: updateData as any });
+      const result = await prisma.stock.update({ where: { id }, data: updateData });
       
       // Recalculer tous les CMP pour ce dépôt/produit (y compris le mouvement modifié et tous les suivants)
       await recalculateAllCMP(existingStock.depotId, existingStock.produitId);

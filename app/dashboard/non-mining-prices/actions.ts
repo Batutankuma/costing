@@ -250,7 +250,16 @@ export async function updateNonMiningPriceStructure(data: z.infer<typeof UpdateN
     const pmfUSD = pmfCDF / rate;
 
     // Distribution
-    const d = updateData.distributionCosts as any;
+    type DistributionCostsInput = {
+      ogefrem?: number;
+      socirFees?: number;
+      sepSecurityCharges?: number;
+      additionalCapacitySPSA?: number;
+      lerexcomPetroleum?: number;
+      socComCharges?: number;
+      socComMargin?: number;
+    };
+    const d = updateData.distributionCosts as DistributionCostsInput | undefined;
     const dist = {
       ogefrem: d?.ogefrem ?? existing.distributionCosts?.ogefrem ?? 0,
       socirFees: d?.socirFees ?? existing.distributionCosts?.socirFees ?? 0,
@@ -260,21 +269,36 @@ export async function updateNonMiningPriceStructure(data: z.infer<typeof UpdateN
       socComCharges: d?.socComCharges ?? existing.distributionCosts?.socComCharges ?? 0,
       socComMargin: d?.socComMargin ?? existing.distributionCosts?.socComMargin ?? 0,
     };
-    const totalDistribution = Object.values(dist).reduce((a: number, b: any) => a + (Number(b) || 0), 0);
+    const totalDistribution = Object.values(dist).reduce((a: number, b: number | null | undefined) => a + (Number(b) || 0), 0);
 
     // Stock sécurité (unique total)
-    const s = updateData.securityStock as any;
+    type SecurityStockInput = {
+      estStock?: number;
+      sudStock?: number;
+    };
+    const s = updateData.securityStock as SecurityStockInput | undefined;
     const estStock = s?.estStock ?? existing.securityStock?.estStock ?? 0;
     const sudStock = s?.sudStock ?? existing.securityStock?.sudStock ?? 0;
     const totalSecurity = (estStock || 0) + (sudStock || 0);
 
     // Parafiscalité
-    const p = updateData.parafiscality as any;
+    type ParafiscalityInput = {
+      foner?: number;
+      pmfFiscal?: number;
+    };
+    const p = updateData.parafiscality as ParafiscalityInput | undefined;
     const foner = p?.foner ?? existing.parafiscality?.foner ?? 0;
     const pmfFiscal = p?.pmfFiscal ?? existing.parafiscality?.pmfFiscal ?? 0;
 
     // Fiscalité
-    const f = updateData.fiscality as any;
+    type FiscalityInput = {
+      customsDuty?: number;
+      consumptionDuty?: number;
+      importVAT?: number;
+      netVAT?: number;
+      venteVAT?: number;
+    };
+    const f = updateData.fiscality as FiscalityInput | undefined;
     const customsDuty = f?.customsDuty ?? existing.fiscality?.customsDuty ?? 0;
     const consumptionDuty = f?.consumptionDuty ?? existing.fiscality?.consumptionDuty ?? 0;
     const importVAT = f?.importVAT ?? existing.fiscality?.importVAT ?? 0;

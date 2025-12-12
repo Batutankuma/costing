@@ -30,7 +30,9 @@ export const createClient = () => {
           const chain = {
             select: (_cols?: string) => {
               const result = { data: [] as unknown[], error: null as unknown };
-              const obj: any = {
+              const obj: {
+                single: () => Promise<{ data: unknown; error: unknown }>;
+              } = {
                 single: () => Promise.resolve({ data: { id: 'mock-id' } as unknown, error: null as unknown }),
                 then: (resolve: (v: typeof result) => unknown) => resolve(result),
               };
@@ -42,7 +44,10 @@ export const createClient = () => {
         },
         update: (_values: Record<string, unknown>) => {
           const result = { data: [] as unknown[], error: null as unknown };
-          const chain: any = {
+          const chain: {
+            eq: (column: string, value: unknown) => typeof chain;
+            select: (cols?: string) => { single: () => Promise<{ data: unknown; error: unknown }> };
+          } = {
             eq: (_column: string, _value: unknown) => chain,
             select: (_cols?: string) => ({
               single: () => Promise.resolve({ data: {} as unknown, error: null as unknown }),
@@ -53,9 +58,12 @@ export const createClient = () => {
         },
         delete: () => {
           const result = { data: [] as unknown[], error: null as unknown };
-          const chain: any = {
+          const chain: {
+            eq: (column: string, value: unknown) => typeof chain;
+            then: (resolve: (v: typeof result) => unknown) => Promise<unknown>;
+          } = {
             eq: (_column: string, _value: unknown) => chain,
-            then: (resolve: (v: typeof result) => unknown) => resolve(result),
+            then: (resolve: (v: typeof result) => unknown) => Promise.resolve(resolve(result)),
           };
           return chain;
         },
@@ -71,7 +79,7 @@ export const createClient = () => {
           error: null
         };
       },
-      createBucket: async (bucketName: string, options?: any) => {
+      createBucket: async (bucketName: string, options?: Record<string, unknown>) => {
         // Mock bucket creation
         return {
           data: { id: 'mock-bucket-id', name: bucketName, public: options?.public || false },
@@ -84,7 +92,7 @@ export const createClient = () => {
           upload: async (
             path: string,
             file: Blob | ArrayBuffer | Uint8Array | Buffer | File,
-            options?: any
+            options?: Record<string, unknown>
           ): Promise<{
             data: { path: string; fullPath: string };
             error: { message: string } | null;

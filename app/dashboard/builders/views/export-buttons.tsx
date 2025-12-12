@@ -2,7 +2,45 @@
 
 import { Button } from "@/components/ui/button";
 
-export default function ExportButtons({ item }: { item: any }) {
+type BuilderItem = {
+  date: Date | string;
+  title?: string | null;
+  baseCosts?: {
+    plattsFOBUSD?: number | null;
+    truckTransportUSD?: number | null;
+    brutCFUSD?: number | null;
+    agencyCustomsUSD?: number | null;
+    acquisitionCostUSD?: number | null;
+  } | null;
+  supplierDDU?: {
+    storageHospitalityUSD?: number | null;
+    anrDechargementUSD?: number | null;
+    supplierMarginUSD?: number | null;
+    sellingPriceDDUUSD?: number | null;
+  } | null;
+  customs?: {
+    customsDutyUSD?: number | null;
+    importVATUSD?: number | null;
+    subtotalUSD?: number | null;
+  } | null;
+  levies?: {
+    fonerUSD?: number | null;
+    molecularMarkingOrStockUSD?: number | null;
+    reconstructionStrategicUSD?: number | null;
+    economicInterventionUSD?: number | null;
+    totalLeviesUSD?: number | null;
+  } | null;
+  transport?: {
+    freightToMineUSD?: number | null;
+    lossesLitresPerTruck?: number | null;
+    totalTransportFinalUSD?: number | null;
+  } | null;
+  totals?: {
+    priceDDPUSD?: number | null;
+  } | null;
+};
+
+export default function ExportButtons({ item }: { item: BuilderItem }) {
   function numberFr(n?: number | null) {
     if (typeof n !== "number") return "-";
     return n.toLocaleString("fr-FR", { maximumFractionDigits: 1 });
@@ -42,7 +80,7 @@ export default function ExportButtons({ item }: { item: any }) {
               <tr><td>Agency/Trade Sec/Customs</td><td class=\"right\">${numberFr(item.baseCosts?.agencyCustomsUSD)}</td></tr>
               <tr class=\"section\"><td>A. Prix de revient</td><td class=\"right\">${numberFr(item.baseCosts?.acquisitionCostUSD)}</td></tr>
 
-              <tr class=\"section\"><td>COÛTS & MARGE DU FOURNISSEUR POUR L'OFFRE DDU</td><td></td></tr>
+              <tr class=\"section\"><td>COÛTS & MARGE DU FOURNISSEUR POUR L&apos;OFFRE DDU</td><td></td></tr>
               <tr><td>Frais stockage/hospitality</td><td class=\"right\">${numberFr(item.supplierDDU?.storageHospitalityUSD)}</td></tr>
               <tr><td>ANR-Déchargement</td><td class=\"right\">${numberFr(item.supplierDDU?.anrDechargementUSD)}</td></tr>
               <tr><td>Marge du Fournisseur</td><td class=\"right\">${numberFr(item.supplierDDU?.supplierMarginUSD)}</td></tr>

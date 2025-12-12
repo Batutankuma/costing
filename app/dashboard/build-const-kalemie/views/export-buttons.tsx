@@ -2,7 +2,35 @@
 
 import { Button } from "@/components/ui/button";
 
-export default function KalemieExportButtons({ item }: { item: any }) {
+type KalemieBuilderItem = {
+  date?: Date | string | null;
+  title?: string | null;
+  baseCosts?: {
+    plattsFOBUSD?: number | null;
+    truckTransportUSD?: number | null;
+    brutCFUSD?: number | null;
+    agencyCustomsUSD?: number | null;
+    acquisitionCostUSD?: number | null;
+  } | null;
+  supplierDDU?: {
+    storageHospitalityUSD?: number | null;
+    anrDechargementUSD?: number | null;
+    supplierMarginUSD?: number | null;
+  } | null;
+  customs?: {
+    customsDutyUSD?: number | null;
+    importVATUSD?: number | null;
+  } | null;
+  levies?: {
+    totalLeviesUSD?: number | null;
+  } | null;
+  transport?: {
+    freightToMineUSD?: number | null;
+    lossesLitresPerTruck?: number | null;
+  } | null;
+};
+
+export default function KalemieExportButtons({ item }: { item: KalemieBuilderItem }) {
   function numberFr(n?: number | null) {
     if (typeof n !== "number") return "-";
     return n.toLocaleString("fr-FR", { maximumFractionDigits: 1 });

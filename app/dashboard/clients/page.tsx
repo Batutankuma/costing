@@ -47,7 +47,7 @@ export default async function Page() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <DataTables Element={clients as any} />
+          <DataTables Element={clients} />
         </CardContent>
       </Card>
     </div>

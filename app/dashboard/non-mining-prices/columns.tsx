@@ -222,7 +222,7 @@ export const columns: ColumnDef<NonMiningPriceStructure>[] = [
             <DropdownMenuItem
               onClick={() => navigator.clipboard.writeText(priceStructure.id)}
             >
-              Copier l'ID
+              Copier l&apos;ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>

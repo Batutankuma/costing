@@ -14,17 +14,63 @@ import { useRouter } from "next/navigation";
 
 type FormData = z.infer<typeof UpdateCostBuildUpSchema>;
 
-export default function BuilderEditForm({ item }: { item: any }) {
+type CostBuildUpItem = {
+  id: string;
+  title: string;
+  unit?: "USD_M3" | "USD_LITRE" | null;
+  priceReferenceId?: string | null;
+  baseCosts?: {
+    plattsFOBUSD?: number | null;
+    truckTransportUSD?: number | null;
+    brutCFUSD?: number | null;
+    agencyCustomsUSD?: number | null;
+    acquisitionCostUSD?: number | null;
+  } | null;
+  supplierDDU?: {
+    storageHospitalityUSD?: number | null;
+    anrDechargementUSD?: number | null;
+    supplierMarginUSD?: number | null;
+    escortFeesUSD?: number | null;
+    bankInterestUSD?: number | null;
+    sellingPriceDDUUSD?: number | null;
+  } | null;
+  customs?: {
+    customsDutyUSD?: number | null;
+    importVATUSD?: number | null;
+    subtotalUSD?: number | null;
+  } | null;
+  levies?: {
+    fonerUSD?: number | null;
+    molecularMarkingOrStockUSD?: number | null;
+    reconstructionStrategicUSD?: number | null;
+    economicInterventionUSD?: number | null;
+    totalDutiesAndVATUSD?: number | null;
+    totalLeviesUSD?: number | null;
+  } | null;
+  transport?: {
+    freightToMineUSD?: number | null;
+    lossesLitresPerTruck?: number | null;
+    totalTransportFinalUSD?: number | null;
+  } | null;
+  totals?: {
+    totalCustomsUSD?: number | null;
+    totalLeviesUSD?: number | null;
+    priceDDUUSD?: number | null;
+    priceDDPUSD?: number | null;
+  } | null;
+};
+
+export default function BuilderEditForm({ item }: { item: CostBuildUpItem }) {
   const router = useRouter();
   const { executeAsync, status } = useAction(updateBuilder);
   const isPending = status === "executing";
 
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<FormData>({
-    resolver: zodResolver(UpdateCostBuildUpSchema as any),
+    resolver: zodResolver(UpdateCostBuildUpSchema),
     defaultValues: {
       id: item.id,
       title: item.title,
-      unit: item.unit,
+      unit: (item.unit as FormData["unit"]) ?? "USD_M3",
       priceReferenceId: item.priceReferenceId ?? undefined,
       base: {
         plattsFOBUSD: item.baseCosts?.plattsFOBUSD ?? 0,
@@ -37,8 +83,8 @@ export default function BuilderEditForm({ item }: { item: any }) {
         storageHospitalityUSD: item.supplierDDU?.storageHospitalityUSD ?? 0,
         anrDechargementUSD: item.supplierDDU?.anrDechargementUSD ?? 0,
         supplierMarginUSD: item.supplierDDU?.supplierMarginUSD ?? 0,
-        escortFeesUSD: (item.supplierDDU as any)?.escortFeesUSD ?? 0,
-        bankInterestUSD: (item.supplierDDU as any)?.bankInterestUSD ?? 0,
+        escortFeesUSD: item.supplierDDU?.escortFeesUSD ?? 0,
+        bankInterestUSD: item.supplierDDU?.bankInterestUSD ?? 0,
         sellingPriceDDUUSD: item.supplierDDU?.sellingPriceDDUUSD ?? 0,
       },
       customs: {
@@ -73,9 +119,9 @@ export default function BuilderEditForm({ item }: { item: any }) {
   const truckTrans = watch("base.truckTransportUSD") || 0;
   const agencyCustoms = watch("base.agencyCustomsUSD") || 0;
   const brutCF = Number(plattsFOB || 0) + Number(truckTrans || 0);
-  React.useEffect(() => { setValue("base.brutCFUSD", brutCF as any, { shouldDirty: false }); }, [brutCF, setValue]);
+  React.useEffect(() => { setValue("base.brutCFUSD", brutCF, { shouldDirty: false }); }, [brutCF, setValue]);
   const acquisitionCost = Number(plattsFOB || 0) + Number(truckTrans || 0) + Number(agencyCustoms || 0);
-  React.useEffect(() => { setValue("base.acquisitionCostUSD", acquisitionCost as any, { shouldDirty: false }); }, [acquisitionCost, setValue]);
+  React.useEffect(() => { setValue("base.acquisitionCostUSD", acquisitionCost, { shouldDirty: false }); }, [acquisitionCost, setValue]);
 
   const storageHosp = watch("supplier.storageHospitalityUSD") || 0;
   const anr = watch("supplier.anrDechargementUSD") || 0;
@@ -83,46 +129,46 @@ export default function BuilderEditForm({ item }: { item: any }) {
   const escortFees = watch("supplier.escortFeesUSD") || 0;
   const bankInterest = watch("supplier.bankInterestUSD") || 0;
   const priceDDU = Number(acquisitionCost || 0) + Number(storageHosp || 0) + Number(anr || 0) + Number(marginSupp || 0) + Number(escortFees || 0) + Number(bankInterest || 0);
-  React.useEffect(() => { setValue("supplier.sellingPriceDDUUSD", priceDDU as any, { shouldDirty: false }); }, [priceDDU, setValue]);
+  React.useEffect(() => { setValue("supplier.sellingPriceDDUUSD", priceDDU, { shouldDirty: false }); }, [priceDDU, setValue]);
 
   const customsDutyUSD = watch("customs.customsDutyUSD") || 0;
   const importVATUSD = watch("customs.importVATUSD") || 0;
   const totalCustomsUSD = Number(customsDutyUSD || 0) + Number(importVATUSD || 0);
-  React.useEffect(() => { setValue("customs.subtotalUSD", totalCustomsUSD as any, { shouldDirty: false }); setValue("totals.totalCustomsUSD", totalCustomsUSD as any, { shouldDirty: false }); }, [totalCustomsUSD, setValue]);
+  React.useEffect(() => { setValue("customs.subtotalUSD", totalCustomsUSD, { shouldDirty: false }); setValue("totals.totalCustomsUSD", totalCustomsUSD, { shouldDirty: false }); }, [totalCustomsUSD, setValue]);
 
   const fonerUSD = watch("levies.fonerUSD") || 0;
   const molecularOrStockUSD = watch("levies.molecularMarkingOrStockUSD") || 0;
   const reconstructionUSD = watch("levies.reconstructionStrategicUSD") || 0;
   const interventionUSD = watch("levies.economicInterventionUSD") || 0;
   const totalLeviesUSD = [fonerUSD, molecularOrStockUSD, reconstructionUSD, interventionUSD].map((n) => Number(n || 0)).reduce((a, b) => a + b, 0);
-  React.useEffect(() => { setValue("levies.totalLeviesUSD", totalLeviesUSD as any, { shouldDirty: false }); setValue("totals.totalLeviesUSD", totalLeviesUSD as any, { shouldDirty: false }); }, [totalLeviesUSD, setValue]);
+  React.useEffect(() => { setValue("levies.totalLeviesUSD", totalLeviesUSD, { shouldDirty: false }); setValue("totals.totalLeviesUSD", totalLeviesUSD, { shouldDirty: false }); }, [totalLeviesUSD, setValue]);
 
   const freightToMineUSD = watch("transport.freightToMineUSD") || 0;
   const lossesLitresPerTruck = watch("transport.lossesLitresPerTruck") || 0;
   const totalTransportFinalUSD = Number(freightToMineUSD || 0) + Number(lossesLitresPerTruck || 0);
-  React.useEffect(() => { setValue("transport.totalTransportFinalUSD", totalTransportFinalUSD as any, { shouldDirty: false }); }, [totalTransportFinalUSD, setValue]);
+  React.useEffect(() => { setValue("transport.totalTransportFinalUSD", totalTransportFinalUSD, { shouldDirty: false }); }, [totalTransportFinalUSD, setValue]);
 
   const priceDDP = Number(priceDDU || 0) + Number(totalCustomsUSD || 0) + Number(totalLeviesUSD || 0) + Number(totalTransportFinalUSD || 0);
-  React.useEffect(() => { setValue("totals.priceDDUUSD", priceDDU as any, { shouldDirty: false }); setValue("totals.priceDDPUSD", priceDDP as any, { shouldDirty: false }); }, [priceDDU, priceDDP, setValue]);
+  React.useEffect(() => { setValue("totals.priceDDUUSD", priceDDU, { shouldDirty: false }); setValue("totals.priceDDPUSD", priceDDP, { shouldDirty: false }); }, [priceDDU, priceDDP, setValue]);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: FormData) => {
     const res = await executeAsync(data);
-    if ((res as any)?.data?.success) {
+    if (res?.data?.success) {
       router.push("/dashboard/builders");
     }
   };
 
   return (
-    <form id="builder-edit-form" onSubmit={handleSubmit(onSubmit as any)} className="grid gap-6 pb-24">
+    <form id="builder-edit-form" onSubmit={handleSubmit(onSubmit)} className="grid gap-6 pb-24">
       <div className="grid md:grid-cols-2 gap-2">
         <div>
           <Label>Titre</Label>
           <Input {...register("title")} />
-          {errors.title && <p className="text-red-500 text-sm">{String((errors as any).title?.message)}</p>}
+          {errors.title && <p className="text-red-500 text-sm">{String(errors.title?.message)}</p>}
         </div>
         <div>
           <Label>Unité</Label>
-          <select className="h-9 w-full rounded-md border border-border bg-background px-3" defaultValue={item.unit} {...register("unit")}>
+          <select className="h-9 w-full rounded-md border border-border bg-background px-3" {...register("unit")}>
             <option value="USD_M3">USD / M3</option>
             <option value="USD_LITRE">USD / Litre</option>
           </select>
@@ -143,7 +189,7 @@ export default function BuilderEditForm({ item }: { item: any }) {
         <div><Label>Stockage/Hospitalité</Label><Input type="number" step="0.01" {...register("supplier.storageHospitalityUSD", { valueAsNumber: true })} /></div>
         <div><Label>ANR-Déchargement</Label><Input type="number" step="0.01" {...register("supplier.anrDechargementUSD", { valueAsNumber: true })} /></div>
         <div><Label>Marge fournisseur</Label><Input type="number" step="0.01" {...register("supplier.supplierMarginUSD", { valueAsNumber: true })} /></div>
-        <div><Label>Frais d'Escorte (USD)</Label><Input type="number" step="0.01" {...register("supplier.escortFeesUSD", { valueAsNumber: true })} /></div>
+        <div><Label>Frais d&apos;Escorte (USD)</Label><Input type="number" step="0.01" {...register("supplier.escortFeesUSD", { valueAsNumber: true })} /></div>
         <div><Label>Intérêts Ligne Banque (USD)</Label><Input type="number" step="0.01" {...register("supplier.bankInterestUSD", { valueAsNumber: true })} /></div>
         <div><Label>Prix DDU (auto)</Label><Input type="number" step="0.01" value={Number.isFinite(priceDDU) ? priceDDU : 0} disabled /></div>
       </div>

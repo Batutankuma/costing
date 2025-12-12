@@ -88,7 +88,7 @@ export async function NonMiningBuilderView({ id }: NonMiningBuilderViewProps) {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex justify-between">
-                <span>Platt's or FOB:</span>
+                <span>Platt&apos;s or FOB:</span>
                 <span className="font-medium">{formatCurrency(builder.baseCosts.plattsFOBUSD)}</span>
               </div>
               <div className="flex justify-between">
@@ -106,7 +106,7 @@ export async function NonMiningBuilderView({ id }: NonMiningBuilderViewProps) {
             </div>
             <Separator />
             <div className="flex justify-between text-lg font-semibold">
-              <span>Prix de revient (Coût d'acquisition):</span>
+              <span>Prix de revient (Coût d&apos;acquisition):</span>
               <span className="text-primary">{formatCurrency(builder.baseCosts.acquisitionCostUSD)}</span>
             </div>
           </CardContent>
@@ -117,7 +117,7 @@ export async function NonMiningBuilderView({ id }: NonMiningBuilderViewProps) {
       {builder.supplierDDU && (
         <Card>
           <CardHeader>
-            <CardTitle>2. Coûts et Marge du Fournisseur pour l'Offre DDU</CardTitle>
+            <CardTitle>2. Coûts et Marge du Fournisseur pour l&apos;Offre DDU</CardTitle>
             <CardDescription>
               Coûts supplémentaires du fournisseur pour la livraison DDU
             </CardDescription>
@@ -137,12 +137,12 @@ export async function NonMiningBuilderView({ id }: NonMiningBuilderViewProps) {
                 <span className="font-medium">{formatCurrency(builder.supplierDDU.supplierMarginUSD)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Frais d'Escorte:</span>
-                <span className="font-medium">{formatCurrency((builder.supplierDDU as any).escortFeesUSD ?? 0)}</span>
+                <span>Frais d&apos;Escorte:</span>
+                <span className="font-medium">{formatCurrency(builder.supplierDDU.escortFeesUSD ?? 0)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Intérêts Ligne Banque:</span>
-                <span className="font-medium">{formatCurrency((builder.supplierDDU as any).bankInterestUSD ?? 0)}</span>
+                <span className="font-medium">{formatCurrency(builder.supplierDDU.bankInterestUSD ?? 0)}</span>
               </div>
             </div>
             <Separator />
@@ -232,7 +232,7 @@ export async function NonMiningBuilderView({ id }: NonMiningBuilderViewProps) {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex justify-between">
-                <span>Freight to Mine from L'shi:</span>
+                <span>Freight to Mine from L&apos;shi:</span>
                 <span className="font-medium">{formatCurrency(builder.transport.freightToMineUSD || 0)}</span>
               </div>
               <div className="flex justify-between">

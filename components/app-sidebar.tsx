@@ -100,7 +100,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: session } = authClient.useSession();
   const [role, setRole] = React.useState<"ADMIN" | "COMMERCIAL" | undefined>(undefined);
   React.useEffect(() => {
-    const current = (session?.user as any)?.role as "ADMIN" | "COMMERCIAL" | undefined;
+    const current = session?.user?.role as "ADMIN" | "COMMERCIAL" | undefined;
     if (current) {
       setRole(current);
       return;

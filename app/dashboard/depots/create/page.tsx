@@ -4,9 +4,15 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
+type ProductRef = {
+  id: string;
+  name: string;
+  unit: string;
+};
+
 export default async function CreateDepotPage() {
   const products = await getProducts();
-  const suggestions = (products ?? []).map((p: any) => ({ id: p.id, name: p.name, unit: p.unit }));
+  const suggestions = (products ?? []).map((p: ProductRef) => ({ id: p.id, name: p.name, unit: p.unit }));
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">

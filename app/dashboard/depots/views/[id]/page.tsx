@@ -74,7 +74,7 @@ export default async function DepotViewPage({ params }: Props) {
                     <td className="py-6 px-3 text-center text-muted-foreground" colSpan={3}>Aucun produit lié</td>
                   </tr>
                 )}
-                {(depot?.products ?? []).map((dp: any) => (
+                {(depot?.products ?? []).map((dp: { id: string; product?: { name?: string | null; unit?: string | null } | null; quantity?: number | null }) => (
                   <tr key={dp.id} className="border-b last:border-0">
                     <td className="py-2 px-3">{dp.product?.name}</td>
                     <td className="py-2 px-3">{dp.product?.unit}</td>

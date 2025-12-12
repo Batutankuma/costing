@@ -13,19 +13,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2 } from "lucide-react";
 import { findFactureById, updateFactureAction } from "../actions";
-import { ManualFactureSchema, ManualFacture } from "@/models/mvc";
+import { CreateManualFactureSchema, ManualFacture } from "@/models/mvc";
 import { useAction } from "next-safe-action/hooks";
 import { format } from "date-fns";
 
-const FormSchema = ManualFactureSchema.omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  subtotal: true,
-  taxAmount: true,
-  total: true,
-}).extend({
-  invoiceDate: z.date(),
+const FormSchema = CreateManualFactureSchema.extend({
+  dueInDays: z.number(),
+  currency: z.string(),
+  taxRate: z.number(),
+  otherFees: z.number(),
 });
 
 type FormData = z.infer<typeof FormSchema>;
@@ -41,7 +37,7 @@ export default function EditFactureClient({ factureId }: EditFactureClientProps)
   const [factureMeta, setFactureMeta] = useState<ManualFacture | null>(null);
 
   const form = useForm<FormData>({
-    resolver: zodResolver(FormSchema) as any,
+    resolver: zodResolver(FormSchema),
     defaultValues: {
       invoiceNumber: "",
       invoiceDate: new Date(),
@@ -110,15 +106,15 @@ export default function EditFactureClient({ factureId }: EditFactureClientProps)
       invoiceDate: data.invoiceDate,
       updatedAt: new Date(),
     };
-    const result = await executeAsync(payload as any);
-    if ((result as any)?.data?.success) {
+    const result = await executeAsync(payload);
+    if (result?.data?.success) {
       toast({ title: "Facture mise à jour" });
       router.push("/dashboard/crm/facture");
     } else {
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: (result as any)?.data?.failure || "Mise à jour impossible.",
+        description: result?.data?.failure || "Mise à jour impossible.",
       });
     }
   };

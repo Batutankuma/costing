@@ -50,7 +50,7 @@ export default function QuoteEditForm({ initial }: { initial: Quote }) {
         const r = await fetch("/api/clients", { cache: "no-store" });
         if (r.ok) {
           const data = await r.json();
-          setClients(Array.isArray(data) ? data.map((c: any) => ({ id: c.id, name: c.name })) : []);
+          setClients(Array.isArray(data) ? data.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name })) : []);
         }
       } catch { setClients([]); }
     })();
@@ -59,8 +59,8 @@ export default function QuoteEditForm({ initial }: { initial: Quote }) {
   useEffect(() => {
     (async () => {
       const res = await listBuilders();
-      const items = (res as any)?.data?.result ?? [];
-      setBuilders(items.map((b: any) => ({ id: b.id, title: b.title })));
+      const items = res.data?.success ? res.data.result : [];
+      setBuilders(items.map((b: { id: string; title: string }) => ({ id: b.id, title: b.title })));
     })();
   }, []);
 
@@ -72,7 +72,7 @@ export default function QuoteEditForm({ initial }: { initial: Quote }) {
           const list = await res.json();
           setTransportRates(Array.isArray(list) ? list : []);
           // Try preselect by matching current freight value
-          const match = Array.isArray(list) ? list.find((t: any) => Number(t.rateUsdPerCbm) === Number(initial.freightToMineUSD || 0)) : undefined;
+          const match = Array.isArray(list) ? list.find((t: { rateUsdPerCbm: number }) => Number(t.rateUsdPerCbm) === Number(initial.freightToMineUSD || 0)) : undefined;
           if (match?.id) setSelectedTransportRateId(match.id);
         }
       } catch { setTransportRates([]); }
@@ -87,9 +87,9 @@ export default function QuoteEditForm({ initial }: { initial: Quote }) {
       if (!builderId) return;
       try {
         const r = await computeBasePrices(builderId);
-        if ((r as any)?.success) {
-          setBaseDDUUSD(Number((r as any).result?.baseDDUUSD || 0));
-          setBaseDDPUSD(Number((r as any).result?.baseDDPUSD || 0));
+        if (r.data?.success && r.data.result) {
+          setBaseDDUUSD(Number(r.data.result.baseDDUUSD || 0));
+          setBaseDDPUSD(Number(r.data.result.baseDDPUSD || 0));
         }
       } catch {}
     })();
@@ -108,7 +108,7 @@ export default function QuoteEditForm({ initial }: { initial: Quote }) {
       proformaNumber: proformaNumber || null,
       tvaApplicable,
       tvaAmount: Number(tvaAmount || 0),
-    } as any);
+    });
   };
 
   return (

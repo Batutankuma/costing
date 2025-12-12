@@ -100,36 +100,36 @@ export default function CreateKalemieBuildConstPage() {
 
   // Répercuter les calculs dans le form state (comme les autres builders)
   React.useEffect(() => {
-    form.setValue("userId", (session?.user as any)?.id ?? "temp-user-id", { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+    form.setValue("userId", session?.user?.id ?? "temp-user-id", { shouldDirty: false, shouldTouch: false, shouldValidate: false });
   }, [session?.user?.id]);
 
   React.useEffect(() => {
-    form.setValue("base.brutCFUSD", brutCF as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
-  }, [brutCF]);
+    form.setValue("base.brutCFUSD", brutCF, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+  }, [brutCF, form]);
 
   React.useEffect(() => {
-    form.setValue("base.acquisitionCostUSD", acquisition as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
-  }, [acquisition]);
+    form.setValue("base.acquisitionCostUSD", acquisition, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+  }, [acquisition, form]);
 
   React.useEffect(() => {
-    form.setValue("supplier.sellingPriceDDUUSD", dduWithLosses as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
-  }, [dduWithLosses]);
+    form.setValue("supplier.sellingPriceDDUUSD", dduWithLosses, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+  }, [dduWithLosses, form]);
 
   React.useEffect(() => {
-    form.setValue("customs.subtotalUSD", customsSubtotal as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
-  }, [customsSubtotal]);
+    form.setValue("customs.subtotalUSD", customsSubtotal, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+  }, [customsSubtotal, form]);
 
   React.useEffect(() => {
-    form.setValue("transport.totalTransportFinalUSD", transportTotal as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
-  }, [transportTotal]);
+    form.setValue("transport.totalTransportFinalUSD", transportTotal, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+  }, [transportTotal, form]);
 
   React.useEffect(() => {
-    form.setValue("levies.totalLeviesUSD", watchLeviesTotal as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
-  }, [watchLeviesTotal]);
+    form.setValue("levies.totalLeviesUSD", watchLeviesTotal, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+  }, [watchLeviesTotal, form]);
 
   React.useEffect(() => {
-    form.setValue("totals.priceDDUUSD", dduWithLosses as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
-    form.setValue("totals.priceDDPUSD", ddp as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+    form.setValue("totals.priceDDUUSD", dduWithLosses, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+    form.setValue("totals.priceDDPUSD", ddp, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
   }, [dduWithLosses, ddp]);
 
   // Charger les tarifs de transport (Freight to Mine) depuis l'API
@@ -154,9 +154,16 @@ export default function CreateKalemieBuildConstPage() {
   const onSubmit = async (data: FormData) => {
     // Data validée via zodResolver
     await createBuilder({
-      ...data,
       title: `${data.title || "Kalemie - Minier"} #kalemie`,
-    } as any);
+      unit: data.unit,
+      userId: data.userId,
+      base: data.base,
+      supplier: data.supplier,
+      customs: data.customs,
+      levies: data.levies,
+      transport: data.transport,
+      totals: data.totals,
+    });
     router.push("/dashboard/build-const-kalemie");
   };
 
@@ -172,14 +179,14 @@ export default function CreateKalemieBuildConstPage() {
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div><Label>Titre</Label><Input {...form.register("title")} /></div>
             <div><Label>FOB Dar</Label><Input type="number" step="any" {...form.register("base.plattsFOBUSD", { valueAsNumber: true })} /></div>
-            <div><Label>Transport camion jusqu'à Kigoma</Label><Input type="number" step="any" {...form.register("base.truckTransportUSD", { valueAsNumber: true })} /></div>
+            <div><Label>Transport camion jusqu&apos;à Kigoma</Label><Input type="number" step="any" {...form.register("base.truckTransportUSD", { valueAsNumber: true })} /></div>
             <div><Label>Expenses Lac Tanganyika</Label><Input type="number" step="any" {...form.register("base.agencyCustomsUSD", { valueAsNumber: true })} /></div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>A. Prix de revient (Coût d'acquisition sans premiers frais)</CardTitle>
+            <CardTitle>A. Prix de revient (Coût d&apos;acquisition sans premiers frais)</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div><Label>Brut C&F (auto)</Label><Input type="number" disabled value={Number.isFinite(brutCF) ? brutCF : 0} /></div>
@@ -189,7 +196,7 @@ export default function CreateKalemieBuildConstPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>COÛTS & MARGE DU FOURNISSEUR POUR L'OFFRE DDU</CardTitle>
+            <CardTitle>COÛTS & MARGE DU FOURNISSEUR POUR L&apos;OFFRE DDU</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div><Label>Frais stock./hospitality</Label><Input type="number" step="any" {...form.register("supplier.storageHospitalityUSD", { valueAsNumber: true })} /></div>
@@ -240,7 +247,7 @@ export default function CreateKalemieBuildConstPage() {
                 onValueChange={(id) => {
                   setSelectedTransportRateId(id);
                   const rate = transportRates.find((t) => t.id === id)?.rateUsdPerCbm ?? 0;
-                  form.setValue("transport.freightToMineUSD", Number(rate) as any, { shouldDirty: true });
+                  form.setValue("transport.freightToMineUSD", Number(rate), { shouldDirty: true });
                 }}
               >
                 <SelectTrigger>

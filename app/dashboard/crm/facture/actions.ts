@@ -7,14 +7,7 @@ import { handlePrismaError } from "@/middlewares/message_error";
 import { CreateManualFactureSchema, ManualFactureSchema } from "@/models/mvc";
 import { z } from "zod";
 
-const ManualFactureLineSchema = z.object({
-  description: z.string(),
-  unit: z.string(),
-  quantity: z.number(),
-  unitPrice: z.number(),
-});
-
-type ManualFactureLineInput = z.infer<typeof ManualFactureLineSchema>;
+// ManualFactureLineSchema est utilisé uniquement comme type, pas besoin de le définir ici
 
 type ManualFactureWithLines = z.infer<typeof ManualFactureSchema>;
 
@@ -25,10 +18,39 @@ function computeTotals(input: z.infer<typeof CreateManualFactureSchema>) {
   return { subtotal, taxAmount, total };
 }
 
-function mapFacture(facture: any): ManualFactureWithLines {
+type PrismaFactureLine = {
+  description: string;
+  unit: string;
+  quantity: number | string;
+  unitPrice: number | string;
+};
+
+type PrismaFacture = {
+  id: string;
+  invoiceNumber: string;
+  invoiceDate: Date;
+  vendorName: string;
+  vendorAddress: string | null;
+  vendorTaxNumber: string | null;
+  clientName: string;
+  clientAddress: string | null;
+  clientTaxNumber: string | null;
+  purchaseOrder: string | null;
+  dueInDays: number;
+  currency: string;
+  notes: string | null;
+  taxRate: number;
+  otherFees: number;
+  subtotal: number;
+  taxAmount: number;
+  total: number;
+  lines?: PrismaFactureLine[];
+};
+
+function mapFacture(facture: PrismaFacture): ManualFactureWithLines {
   return ManualFactureSchema.parse({
     ...facture,
-    lines: (facture.lines ?? []).map((line: any) => ({
+    lines: (facture.lines ?? []).map((line: PrismaFactureLine) => ({
       description: line.description,
       unit: line.unit,
       quantity: Number(line.quantity),
@@ -85,6 +107,40 @@ export const createFactureAction = actionClient
       if (error instanceof z.ZodError) {
         return { failure: error.errors.map((err) => err.message).join(", ") };
       }
+      return { failure: handlePrismaError(error) };
+    }
+  });
+
+export const getNextInvoiceNumberAction = actionClient
+  .schema(z.void())
+  .action(async () => {
+    try {
+      const now = new Date();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const year = now.toLocaleDateString("fr-FR", { year: "2-digit" });
+
+      const lastFacture = await prisma.manualFacture.findFirst({
+        where: {
+          invoiceNumber: {
+            endsWith: `-${month}/${year}`,
+          },
+        },
+        select: { invoiceNumber: true },
+        orderBy: { createdAt: "desc" },
+      });
+
+      let nextIndex = 1;
+      if (lastFacture?.invoiceNumber) {
+        const [prefix] = lastFacture.invoiceNumber.split("-");
+        const parsed = parseInt(prefix, 10);
+        if (!isNaN(parsed) && parsed > 0) {
+          nextIndex = parsed + 1;
+        }
+      }
+
+      const invoiceNumber = `${nextIndex}-${month}/${year}`;
+      return { success: invoiceNumber };
+    } catch (error) {
       return { failure: handlePrismaError(error) };
     }
   });

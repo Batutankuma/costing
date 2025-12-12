@@ -41,7 +41,8 @@ function CommandeInfo({ commandeId }: { commandeId: string }) {
             try {
                 const result = await executeCommandes();
                 if (result?.data?.success && result.data.result) {
-                    const commande = (result.data.result as any[]).find((c: any) => c.id === commandeId);
+                    type CommandeRef = { id: string; reference: string; quantite: number };
+                    const commande = (result.data.result as CommandeRef[]).find((c) => c.id === commandeId);
                     if (commande) {
                         setCommandeInfo({
                             reference: commande.reference,
@@ -91,7 +92,8 @@ function ProduitName({ produitId }: { produitId: string }) {
         const loadProduit = async () => {
             try {
                 const result = await executeProduits();
-                const produits = (result as any)?.data?.data as Array<{ id: string; name: string }> | undefined;
+                type ProduitRef = { id: string; name: string };
+                const produits = result?.data?.data as ProduitRef[] | undefined;
                 if (produits) {
                     const produit = produits.find((p) => p.id === produitId);
                     setProduitName(produit?.name || produitId);
@@ -119,7 +121,8 @@ function TankName({ tankId }: { tankId: string | null }) {
             try {
                 const result = await executeTanks();
                 if (result?.data?.success && result.data.result) {
-                    const tank = (result.data.result as any[]).find((t: any) => t.id === tankId);
+                    type TankRef = { id: string; name: string };
+                    const tank = (result.data.result as TankRef[]).find((t) => t.id === tankId);
                     setTankName(tank?.name || "Aucun tank");
                 }
             } catch (error) {

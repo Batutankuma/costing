@@ -13,115 +13,29 @@ import {
 import { Button } from "@/components/ui/button";
 import { Ellipsis } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import RemoveDialog from "./delete";
-import { useAction } from "next-safe-action/hooks";
 import { Badge } from "@/components/ui/badge";
-import { getClients } from "@/app/dashboard/clients/actions";
-import { listDepots } from "@/app/dashboard/depots/actions";
-import { findAllAction as findAllTanks } from "@/app/dashboard/tank/actions";
-import { listProducts } from "@/app/dashboard/products/actions";
 import { Delivery } from "@/models/mvc";
 
-// Local minimal reference types to avoid depending on missing exports
-type ClientRef = { id: string; nom?: string };
-type DepotRef = { id: string; name?: string };
-type TankRef = { id: string; name?: string };
-type ProduitRef = { id: string; nom?: string };
+// Type étendu pour inclure les relations chargées depuis Prisma
+export type DeliveryWithRelations = Delivery & {
+  client?: { id: string; nom?: string | null; name?: string | null; company?: string | null } | null;
+  depot?: { id: string; name: string } | null;
+  produit?: { id: string; name: string; nom?: string } | null;
+  tank?: { id: string; name: string } | null;
+};
 
-// Composants pour afficher les noms des relations
-function ClientName({ clientId }: { clientId: string }) {
-  const [clientName, setClientName] = useState<string>("");
-
-  useEffect(() => {
-    const loadClient = async () => {
-      try {
-        const items = await getClients();
-        const client = (items as ClientRef[]).find((c) => c.id === clientId);
-        if (client) setClientName(client.nom || "");
-      } catch (error) {
-        console.error("Erreur lors du chargement du client:", error);
-      }
-    };
-
-    if (clientId) {
-      loadClient();
-    }
-  }, [clientId]);
-
-  return <span>{clientName || clientId}</span>;
+// Fonction utilitaire pour obtenir le nom du client
+function getClientName(client: DeliveryWithRelations['client']): string {
+  if (!client) return "-";
+  return client.nom || client.name || client.company || "-";
 }
 
-function DepotName({ depotId }: { depotId: string }) {
-  const [depotName, setDepotName] = useState<string>("");
-  const { executeAsync } = useAction(listDepots);
-
-  useEffect(() => {
-    const loadDepot = async () => {
-      try {
-        const result = await executeAsync();
-        const depots: DepotRef[] = ((result as any)?.data?.data ?? []) as DepotRef[];
-        const depot = depots.find((d) => d.id === depotId);
-        if (depot) setDepotName(depot.name || "");
-      } catch (error) {
-        console.error("Erreur lors du chargement du dépôt:", error);
-      }
-    };
-
-    if (depotId) {
-      loadDepot();
-    }
-  }, [depotId, executeAsync]);
-
-  return <span>{depotName || depotId}</span>;
-}
-
-function TankName({ tankId }: { tankId: string }) {
-  const [tankName, setTankName] = useState<string>("");
-  const { executeAsync } = useAction(findAllTanks);
-
-  useEffect(() => {
-    const loadTank = async () => {
-      try {
-        const result = await executeAsync();
-        const tanks: TankRef[] = ((result as any)?.data?.result ?? (result as any)?.data?.data ?? []) as TankRef[];
-        const tank = tanks.find((t) => t.id === tankId);
-        if (tank) setTankName(tank.name || "");
-      } catch (error) {
-        console.error("Erreur lors du chargement du tank:", error);
-      }
-    };
-
-    if (tankId) {
-      loadTank();
-    }
-  }, [tankId, executeAsync]);
-
-  return <span>{tankName || tankId}</span>;
-}
-
-function ProduitName({ produitId }: { produitId: string }) {
-  const [produitName, setProduitName] = useState<string>("");
-  const { executeAsync } = useAction(listProducts);
-
-  useEffect(() => {
-    const loadProduit = async () => {
-      try {
-        const result = await executeAsync();
-        const produits: ProduitRef[] = ((result as any)?.data?.data ?? (result as any)?.data?.result ?? []) as ProduitRef[];
-        const produit = produits.find((p) => p.id === produitId);
-        if (produit) setProduitName(produit.nom || "");
-      } catch (error) {
-        console.error("Erreur lors du chargement du produit:", error);
-      }
-    };
-
-    if (produitId) {
-      loadProduit();
-    }
-  }, [produitId, executeAsync]);
-
-  return <span>{produitName || produitId}</span>;
+// Fonction utilitaire pour obtenir le nom du produit
+function getProduitName(produit: DeliveryWithRelations['produit']): string {
+  if (!produit) return "-";
+  return produit.nom || produit.name || "-";
 }
 
 // Fonction pour obtenir la couleur du badge de paiement
@@ -149,7 +63,7 @@ function getPaiementText(paiement: string) {
 }
 
 // La définition des colonnes est mise à jour
-export const columns: ColumnDef<Delivery>[] = [
+export const columns: ColumnDef<DeliveryWithRelations>[] = [
     {
         id: "select",
         header: ({ table }) => (
@@ -171,16 +85,13 @@ export const columns: ColumnDef<Delivery>[] = [
         enableHiding: false,
     },
     {
-        header: "Note",
-        accessorKey: "note",
-        cell: ({ row }) => <div className="font-medium">{row.getValue("note")}</div>,
-        size: 120,
-        filterFn: (row, columnId, filterValue) => {
-            const searchableRowContent = `${row.original.note} ${row.original.typeAircraft ?? ''} ${row.original.flightNumber ?? ''}`.toLowerCase();
-            const searchTerm = (filterValue ?? "").toLowerCase();
-            return searchableRowContent.includes(searchTerm);
+        header: "Référence",
+        accessorKey: "reference",
+        cell: ({ row }) => {
+            const reference = row.getValue("reference") as string | null;
+            return <div className="font-medium">{reference || "-"}</div>;
         },
-        enableHiding: false,
+        size: 120,
     },
     {
         header: "Date",
@@ -195,9 +106,8 @@ export const columns: ColumnDef<Delivery>[] = [
         header: "Client",
         accessorKey: "clientId",
         cell: ({ row }) => {
-            const original = row.original as Delivery;
-            const clientId = original.clientId || "";
-            return <ClientName clientId={clientId} />;
+            const original = row.original as DeliveryWithRelations;
+            return <span>{getClientName(original.client)}</span>;
         },
         size: 120,
     },
@@ -205,9 +115,17 @@ export const columns: ColumnDef<Delivery>[] = [
         header: "Dépôt",
         accessorKey: "depotId",
         cell: ({ row }) => {
-            const original = row.original as Delivery;
-            const depotId = original.depotId || "";
-            return <DepotName depotId={depotId} />;
+            const original = row.original as DeliveryWithRelations;
+            return <span>{original.depot?.name || "-"}</span>;
+        },
+        size: 120,
+    },
+    {
+        header: "Produit",
+        accessorKey: "produitId",
+        cell: ({ row }) => {
+            const original = row.original as DeliveryWithRelations;
+            return <span>{getProduitName(original.produit)}</span>;
         },
         size: 120,
     },
@@ -215,65 +133,44 @@ export const columns: ColumnDef<Delivery>[] = [
         header: "Tank",
         accessorKey: "tankId",
         cell: ({ row }) => {
-            const original = row.original as Delivery;
-            const tankId = original.tankId || "";
-            return <TankName tankId={tankId} />;
+            const original = row.original as DeliveryWithRelations;
+            return <span>{original.tank?.name || "-"}</span>;
         },
         size: 100,
     },
     {
-        header: "Produit",
-        accessorKey: "produitId",
+        header: "Quantité",
+        accessorKey: "quantity",
         cell: ({ row }) => {
-            const original = row.original as Delivery;
-            const produitId = original.produitId || "";
-            return <ProduitName produitId={produitId} />;
-        },
-        size: 120,
-    },
-    {
-        header: "Type avion",
-        accessorKey: "typeAircraft",
-        cell: ({ row }) => {
-            const original = row.original as Delivery;
-            const typeAircraft = original.typeAircraft || "-";
-            return <span>{typeAircraft}</span>;
-        },
-        size: 120,
-    },
-    {
-        header: "Vol",
-        accessorKey: "flightNumber",
-        cell: ({ row }) => {
-            const original = row.original as Delivery;
-            const flightNumber = original.flightNumber || "-";
-            return <span>{flightNumber}</span>;
+            const original = row.original as DeliveryWithRelations;
+            const quantity = original.quantity || 0;
+            const unit = original.unit || "";
+            return <span>{quantity.toFixed(2)} {unit}</span>;
         },
         size: 100,
     },
-    // Horaires retiré: champs non présents dans le schéma actuel
     {
         header: "Compteurs",
         cell: ({ row }) => {
-            const original = row.original as Delivery;
+            const original = row.original as DeliveryWithRelations;
             const openingEter = original.openingEter || 0;
             const closingEter = original.closingEter || 0;
             const difference = closingEter - openingEter;
             return (
                 <div className="text-xs">
-                    <div>Ouverture: {openingEter}</div>
-                    <div>Fermeture: {closingEter}</div>
+                    <div>Ouv: {openingEter}</div>
+                    <div>Ferm: {closingEter}</div>
                     <div className="font-medium text-blue-600">Diff: {difference}</div>
                 </div>
             );
         },
-        size: 120,
+        size: 100,
     },
     {
         header: "Prix unitaire",
         accessorKey: "prixUnitaire",
         cell: ({ row }) => {
-            const original = row.original as Delivery;
+            const original = row.original as DeliveryWithRelations;
             const prix = original.prixUnitaire || 0;
             return <span>{prix ? `${prix.toFixed(2)} USD` : "-"}</span>;
         },
@@ -283,7 +180,7 @@ export const columns: ColumnDef<Delivery>[] = [
         header: "Paiement",
         accessorKey: "paiement",
         cell: ({ row }) => {
-            const original = row.original as Delivery;
+            const original = row.original as DeliveryWithRelations;
             const paiement = original.paiement || "CREDIT";
             return (
                 <Badge className={getPaiementColor(paiement)}>
@@ -292,6 +189,41 @@ export const columns: ColumnDef<Delivery>[] = [
             );
         },
         size: 100,
+    },
+    {
+        header: "Type avion",
+        accessorKey: "typeAircraft",
+        cell: ({ row }) => {
+            const original = row.original as DeliveryWithRelations;
+            const typeAircraft = original.typeAircraft || "-";
+            return <span>{typeAircraft}</span>;
+        },
+        size: 120,
+    },
+    {
+        header: "Vol",
+        accessorKey: "flightNumber",
+        cell: ({ row }) => {
+            const original = row.original as DeliveryWithRelations;
+            const flightNumber = original.flightNumber || "-";
+            return <span>{flightNumber}</span>;
+        },
+        size: 100,
+    },
+    {
+        header: "Note",
+        accessorKey: "note",
+        cell: ({ row }) => {
+            const note = row.getValue("note") as string | null;
+            return <div className="max-w-xs truncate" title={note || undefined}>{note || "-"}</div>;
+        },
+        size: 150,
+        filterFn: (row, columnId, filterValue) => {
+            const searchableRowContent = `${row.original.note} ${row.original.reference} ${row.original.typeAircraft ?? ''} ${row.original.flightNumber ?? ''}`.toLowerCase();
+            const searchTerm = (filterValue ?? "").toLowerCase();
+            return searchableRowContent.includes(searchTerm);
+        },
+        enableHiding: true,
     },
     // Colonne Document retirée: champ non présent dans le schéma actuel
     {
@@ -303,7 +235,7 @@ export const columns: ColumnDef<Delivery>[] = [
     },
 ];
 
-function RowActions({ row }: { row: Row<Delivery> }) {
+function RowActions({ row }: { row: Row<DeliveryWithRelations> }) {
     const [openRemoveDialog, setOpenRemoveDialog] = useState(false);
     return (
         <DropdownMenu>

@@ -18,7 +18,7 @@ export const createPriceReference = actionClient
       const rateValue = parsedInput.rate;
       if (!rateValue || rateValue <= 0) return { failure: "Taux de change requis" };
 
-      const pmfUSD = (parsedInput as any).pmfCommercialUSD ?? (parsedInput.pmfCommercialCDF! / rateValue);
+      const pmfUSD = parsedInput.pmfCommercialUSD ?? (parsedInput.pmfCommercialCDF! / rateValue);
       const pmfCDF = toCDF(pmfUSD, rateValue);
 
       const logisticsTotal = parsedInput.logistics.warehouseFee;
@@ -174,13 +174,21 @@ export const updatePriceReference = actionClient
       const margin = (marginPercent / 100) * pmfCDF;
       const commercialTotal = soc + margin;
 
-      const para = parsedInput.parafiscality ?? {} as any;
-      const p1 = para.stockSecurity1 ?? current.parafiscality?.stockSecurity1 ?? 0;
-      const p2 = para.stockSecurity2 ?? current.parafiscality?.stockSecurity2 ?? 0;
-      const pm = para.molecularMarking ?? current.parafiscality?.molecularMarking ?? 0;
-      const pf = para.foner ?? current.parafiscality?.foner ?? 0;
-      const pr = para.reconstructionEffort ?? current.parafiscality?.reconstructionEffort ?? 0;
-      const pi = para.intervention ?? current.parafiscality?.intervention ?? 0;
+      type ParafiscalityInput = {
+        stockSecurity1?: number;
+        stockSecurity2?: number;
+        molecularMarking?: number;
+        foner?: number;
+        reconstructionEffort?: number;
+        intervention?: number;
+      };
+      const para = parsedInput.parafiscality as ParafiscalityInput | undefined;
+      const p1 = para?.stockSecurity1 ?? current.parafiscality?.stockSecurity1 ?? 0;
+      const p2 = para?.stockSecurity2 ?? current.parafiscality?.stockSecurity2 ?? 0;
+      const pm = para?.molecularMarking ?? current.parafiscality?.molecularMarking ?? 0;
+      const pf = para?.foner ?? current.parafiscality?.foner ?? 0;
+      const pr = para?.reconstructionEffort ?? current.parafiscality?.reconstructionEffort ?? 0;
+      const pi = para?.intervention ?? current.parafiscality?.intervention ?? 0;
       const paraTotal = p1 + p2 + pm + pf + pr + pi;
 
       const fis2 = parsedInput.fiscality?.total2 ?? current.fiscality?.total2 ?? 0;

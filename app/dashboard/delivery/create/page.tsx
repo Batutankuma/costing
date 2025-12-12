@@ -53,29 +53,40 @@ export default function CreateDeliveryPage() {
 
   // Charger les données de référence
   useEffect(() => {
+    let isMounted = true;
+    
     const loadData = async () => {
       try {
         setLoading(true);
         
         // Charger les clients
         const clientsResult = await getClients();
-        setClients((clientsResult as any[]) || []);
+        if (!isMounted) return;
+        const mappedClients = (clientsResult || []).map((c: any) => ({
+          id: c.id,
+          nom: c.nom ?? c.name ?? c.company ?? "Sans nom",
+        }));
+        setClients(mappedClients);
 
         // Charger les dépôts
         const depotsResult = await executeDepots();
-        const depotsData = (depotsResult as any)?.data ?? (depotsResult as any)?.result ?? [];
+        if (!isMounted) return;
+        const depotsData = depotsResult?.data?.data ?? [];
         setDepots(depotsData || []);
 
         // Charger les tanks
         const tanksResult = await executeTanks();
-        const tanksData = (tanksResult as any)?.data ?? (tanksResult as any)?.result ?? [];
+        if (!isMounted) return;
+        const tanksData = tanksResult?.data?.success ? tanksResult.data.result : [];
         setTanks(tanksData || []);
 
         // Charger les produits
         const produitsResult = await executeProduits();
-        const produitsData = (produitsResult as any)?.data ?? (produitsResult as any)?.result ?? [];
+        if (!isMounted) return;
+        const produitsData = produitsResult?.data?.data ?? [];
         setProduits(produitsData || []);
       } catch (error) {
+        if (!isMounted) return;
         console.error("Erreur lors du chargement des données:", error);
         toast({
           variant: "destructive",
@@ -83,12 +94,19 @@ export default function CreateDeliveryPage() {
           description: "Impossible de charger les données"
         });
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadData();
-  }, [executeDepots, executeTanks, executeProduits, toast]);
+
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Charger une seule fois au montage
 
   const { 
     register, 
@@ -99,6 +117,7 @@ export default function CreateDeliveryPage() {
   } = useForm({
     resolver: zodResolver(CreateDeliverySchema),
     defaultValues: {
+      reference: "",
       deliveryDate: new Date(),
       note: "",
       clientId: "",
@@ -107,11 +126,11 @@ export default function CreateDeliveryPage() {
       produitId: "",
       quantity: 0,
       unit: "L",
-      openingEter: 0,
-      closingEter: 0,
+      openingEter: null,
+      closingEter: null,
       timeStart: "",
       timeEnd: "",
-      prixUnitaire: 0,
+      prixUnitaire: null,
       paiement: "DIRECT",
       typeAircraft: "",
       flightNumber: "",
@@ -120,6 +139,18 @@ export default function CreateDeliveryPage() {
   });
 
   const tankId = watch("tankId");
+  const depotId = watch("depotId");
+  const openingEter = watch("openingEter");
+  const closingEter = watch("closingEter");
+
+  // Filtrer les tanks selon le dépôt sélectionné
+  const filteredTanks = depotId 
+    ? tanks.filter(tank => {
+        // Si le tank a une relation avec le dépôt, filtrer
+        // Pour l'instant, on affiche tous les tanks si pas de relation
+        return true;
+      })
+    : tanks;
 
   // Récupérer le produit automatiquement selon le tank
   useEffect(() => {
@@ -130,6 +161,16 @@ export default function CreateDeliveryPage() {
       }
     }
   }, [tankId, tanks, setValue]);
+
+  // Calculer automatiquement la quantité à partir des compteurs
+  useEffect(() => {
+    if (openingEter !== null && closingEter !== null && openingEter !== undefined && closingEter !== undefined) {
+      const difference = closingEter - openingEter;
+      if (difference > 0) {
+        setValue("quantity", difference, { shouldValidate: false });
+      }
+    }
+  }, [openingEter, closingEter, setValue]);
 
   const router = useRouter();
   const { executeAsync, isExecuting: isPending } = useAction(createAction);
@@ -203,12 +244,21 @@ export default function CreateDeliveryPage() {
         <Card>
           <CardHeader>
             <CardTitle>Informations Générales</CardTitle>
-            <CardDescription>Date, quantité, unité et note</CardDescription>
+            <CardDescription>Référence, date et note de livraison</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="deliveryDate">Date <span className="text-red-500">*</span></Label>
+                <Label htmlFor="reference">Référence</Label>
+                <Input 
+                  id="reference" 
+                  {...register("reference")} 
+                  placeholder="Référence de la livraison (optionnel)" 
+                />
+                {errors.reference && <p className="text-red-500 text-sm">{errors.reference.message as string}</p>}
+              </div>
+              <div>
+                <Label htmlFor="deliveryDate">Date de livraison <span className="text-red-500">*</span></Label>
                 <Input 
                   id="deliveryDate" 
                   type="date" 
@@ -217,35 +267,13 @@ export default function CreateDeliveryPage() {
                 {errors.deliveryDate && <p className="text-red-500 text-sm">{errors.deliveryDate.message as string}</p>}
               </div>
               <div>
-                <Label htmlFor="note">Note <span className="text-red-500">*</span></Label>
+                <Label htmlFor="note">Note</Label>
                 <Input 
                   id="note" 
                   {...register("note")} 
-                  placeholder="Numéro de note de livraison" 
+                  placeholder="Note de livraison (optionnel)" 
                 />
                 {errors.note && <p className="text-red-500 text-sm">{errors.note.message as string}</p>}
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="quantity">Quantité <span className="text-red-500">*</span></Label>
-                <Input 
-                  id="quantity" 
-                  type="number"
-                  step="0.0001"
-                  {...register("quantity", { valueAsNumber: true })} 
-                  placeholder="Ex: 1.2345" 
-                />
-                {errors.quantity && <p className="text-red-500 text-sm">{errors.quantity.message as string}</p>}
-              </div>
-              <div>
-                <Label htmlFor="unit">Unité <span className="text-red-500">*</span></Label>
-                <Input 
-                  id="unit" 
-                  {...register("unit")} 
-                  placeholder="Ex: L, M3" 
-                />
-                {errors.unit && <p className="text-red-500 text-sm">{errors.unit.message as string}</p>}
               </div>
             </div>
           </CardContent>
@@ -254,16 +282,16 @@ export default function CreateDeliveryPage() {
         {/* Sélection des entités */}
         <Card>
           <CardHeader>
-            <CardTitle>Sélection</CardTitle>
-            <CardDescription>Client, dépôt, tank et produit</CardDescription>
+            <CardTitle>Relations</CardTitle>
+            <CardDescription>Client, dépôt, tank et produit associés</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="clientId">Client <span className="text-red-500">*</span></Label>
+                <Label htmlFor="clientId">Client</Label>
                 <Select onValueChange={(value) => setValue("clientId", value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un client" />
+                    <SelectValue placeholder="Sélectionner un client (optionnel)" />
                   </SelectTrigger>
                   <SelectContent>
                     {clients.map((client) => (
@@ -277,10 +305,14 @@ export default function CreateDeliveryPage() {
               </div>
 
               <div>
-                <Label htmlFor="depotId">Dépôt <span className="text-red-500">*</span></Label>
-                <Select onValueChange={(value) => setValue("depotId", value)}>
+                <Label htmlFor="depotId">Dépôt</Label>
+                <Select onValueChange={(value) => {
+                  setValue("depotId", value);
+                  // Réinitialiser le tank si le dépôt change
+                  setValue("tankId", "");
+                }}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un dépôt" />
+                    <SelectValue placeholder="Sélectionner un dépôt (optionnel)" />
                   </SelectTrigger>
                   <SelectContent>
                     {depots.map((depot) => (
@@ -294,13 +326,16 @@ export default function CreateDeliveryPage() {
               </div>
 
               <div>
-                <Label htmlFor="tankId">Tank <span className="text-red-500">*</span></Label>
-                <Select onValueChange={(value) => setValue("tankId", value)}>
+                <Label htmlFor="tankId">Tank</Label>
+                <Select 
+                  onValueChange={(value) => setValue("tankId", value)}
+                  disabled={!depotId && depots.length > 0}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un tank" />
+                    <SelectValue placeholder={depotId ? "Sélectionner un tank (optionnel)" : "Sélectionnez d'abord un dépôt"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {tanks.map((tank) => (
+                    {filteredTanks.map((tank) => (
                       <SelectItem key={tank.id} value={tank.id}>
                         {tank.name}
                       </SelectItem>
@@ -308,13 +343,21 @@ export default function CreateDeliveryPage() {
                   </SelectContent>
                 </Select>
                 {errors.tankId && <p className="text-red-500 text-sm">{errors.tankId.message as string}</p>}
+                {tankId && tanks.find(t => t.id === tankId)?.produitId && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Produit associé au tank sélectionné automatiquement
+                  </p>
+                )}
               </div>
 
               <div>
-                <Label htmlFor="produitId">Produit <span className="text-red-500">*</span></Label>
-                <Select onValueChange={(value) => setValue("produitId", value)}>
+                <Label htmlFor="produitId">Produit</Label>
+                <Select 
+                  onValueChange={(value) => setValue("produitId", value)}
+                  value={watch("produitId") || undefined}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un produit" />
+                    <SelectValue placeholder="Sélectionner un produit (optionnel)" />
                   </SelectTrigger>
                   <SelectContent>
                     {produits.map((produit) => (
@@ -330,19 +373,69 @@ export default function CreateDeliveryPage() {
           </CardContent>
         </Card>
 
-        {/* Mesures */}
+        {/* Quantité et unité */}
         <Card>
           <CardHeader>
-            <CardTitle>Mesures</CardTitle>
-            <CardDescription>Compteurs et horaires</CardDescription>
+            <CardTitle>Quantité et Unité</CardTitle>
+            <CardDescription>Quantité livrée et unité de mesure</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="openingEter">Compteur d&apos;ouverture <span className="text-red-500">*</span></Label>
+                <Label htmlFor="quantity">Quantité <span className="text-red-500">*</span></Label>
+                <Input 
+                  id="quantity" 
+                  type="number"
+                  step="0.0001"
+                  {...register("quantity", { valueAsNumber: true })} 
+                  placeholder="Ex: 1.2345"
+                  readOnly={openingEter !== null && closingEter !== null && openingEter !== undefined && closingEter !== undefined}
+                  className={openingEter !== null && closingEter !== null && openingEter !== undefined && closingEter !== undefined ? "bg-muted" : ""}
+                />
+                {openingEter !== null && closingEter !== null && openingEter !== undefined && closingEter !== undefined && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Calculé automatiquement à partir des compteurs
+                  </p>
+                )}
+                {errors.quantity && <p className="text-red-500 text-sm">{errors.quantity.message as string}</p>}
+              </div>
+              <div>
+                <Label htmlFor="unit">Unité <span className="text-red-500">*</span></Label>
+                <Select 
+                  onValueChange={(value) => setValue("unit", value)} 
+                  value={watch("unit") || "L"}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner une unité" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="L">Litre (L)</SelectItem>
+                    <SelectItem value="M3">Mètre cube (M³)</SelectItem>
+                    <SelectItem value="KG">Kilogramme (KG)</SelectItem>
+                    <SelectItem value="G">Gramme (G)</SelectItem>
+                    <SelectItem value="TONNE">Tonne</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.unit && <p className="text-red-500 text-sm">{errors.unit.message as string}</p>}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Mesures */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Compteurs et Horaires</CardTitle>
+            <CardDescription>Compteurs d&apos;ouverture/fermeture et horaires de livraison</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="openingEter">Compteur d&apos;ouverture</Label>
                 <Input 
                   id="openingEter" 
                   type="number" 
+                  step="0.01"
                   {...register("openingEter", { valueAsNumber: true })} 
                   placeholder="Ex: 1000" 
                 />
@@ -350,18 +443,24 @@ export default function CreateDeliveryPage() {
               </div>
 
               <div>
-                <Label htmlFor="closingEter">Compteur de fermeture <span className="text-red-500">*</span></Label>
+                <Label htmlFor="closingEter">Compteur de fermeture</Label>
                 <Input 
                   id="closingEter" 
                   type="number" 
+                  step="0.01"
                   {...register("closingEter", { valueAsNumber: true })} 
                   placeholder="Ex: 1200" 
                 />
                 {errors.closingEter && <p className="text-red-500 text-sm">{errors.closingEter.message as string}</p>}
+                {openingEter !== null && closingEter !== null && openingEter !== undefined && closingEter !== undefined && (
+                  <p className="text-xs text-blue-600 mt-1 font-medium">
+                    Différence: {(closingEter - openingEter).toFixed(2)}
+                  </p>
+                )}
               </div>
 
               <div>
-                <Label htmlFor="timeStart">Heure de début <span className="text-red-500">*</span></Label>
+                <Label htmlFor="timeStart">Heure de début</Label>
                 <Input 
                   id="timeStart" 
                   type="time" 
@@ -371,7 +470,7 @@ export default function CreateDeliveryPage() {
               </div>
 
               <div>
-                <Label htmlFor="timeEnd">Heure de fin <span className="text-red-500">*</span></Label>
+                <Label htmlFor="timeEnd">Heure de fin</Label>
                 <Input 
                   id="timeEnd" 
                   type="time" 
@@ -386,13 +485,13 @@ export default function CreateDeliveryPage() {
         {/* Paiement et détails */}
         <Card>
           <CardHeader>
-            <CardTitle>Paiement et Détails</CardTitle>
-            <CardDescription>Prix, type de paiement et informations aviation</CardDescription>
+            <CardTitle>Paiement et Prix</CardTitle>
+            <CardDescription>Prix unitaire et type de paiement</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="prixUnitaire">Prix unitaire <span className="text-red-500">*</span></Label>
+                <Label htmlFor="prixUnitaire">Prix unitaire (USD)</Label>
                 <Input 
                   id="prixUnitaire" 
                   type="number" 
@@ -404,7 +503,7 @@ export default function CreateDeliveryPage() {
               </div>
 
               <div>
-                <Label htmlFor="paiement">Type de paiement <span className="text-red-500">*</span></Label>
+                <Label htmlFor="paiement">Type de paiement</Label>
                 <Select onValueChange={(value) => setValue("paiement", value as "DIRECT" | "CREDIT")} defaultValue="DIRECT">
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un type de paiement" />
@@ -416,23 +515,34 @@ export default function CreateDeliveryPage() {
                 </Select>
                 {errors.paiement && <p className="text-red-500 text-sm">{errors.paiement.message as string}</p>}
               </div>
+            </div>
+          </CardContent>
+        </Card>
 
+        {/* Informations aviation */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Informations Aviation</CardTitle>
+            <CardDescription>Type d&apos;avion et numéro de vol</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="typeAircraft">Type d&apos;avion <span className="text-red-500">*</span></Label>
+                <Label htmlFor="typeAircraft">Type d&apos;avion</Label>
                 <Input 
                   id="typeAircraft" 
                   {...register("typeAircraft")} 
-                  placeholder="Ex: Boeing 737"
+                  placeholder="Ex: Boeing 737, Airbus A320"
                 />
                 {errors.typeAircraft && <p className="text-red-500 text-sm">{errors.typeAircraft.message as string}</p>}
               </div>
 
               <div>
-                <Label htmlFor="flightNumber">Numéro de vol <span className="text-red-500">*</span></Label>
+                <Label htmlFor="flightNumber">Numéro de vol</Label>
                 <Input 
                   id="flightNumber" 
                   {...register("flightNumber")} 
-                  placeholder="Ex: AF1234"
+                  placeholder="Ex: AF1234, SN456"
                 />
                 {errors.flightNumber && <p className="text-red-500 text-sm">{errors.flightNumber.message as string}</p>}
               </div>

@@ -55,7 +55,7 @@ export function DeleteNonMiningPrice({ id, nomStructure }: DeleteNonMiningPriceP
           <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
           <AlertDialogDescription>
             Cette action ne peut pas être annulée. Cela supprimera définitivement la structure de prix{" "}
-            <span className="font-semibold">"{nomStructure}"</span> et toutes ses données associées.
+            <span className="font-semibold">&quot;{nomStructure}&quot;</span> et toutes ses données associées.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

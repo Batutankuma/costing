@@ -45,17 +45,21 @@ export default async function EditStockPage({ params }: { params: Promise<{ id: 
           </div>
         </div>
         <div className="text-destructive bg-destructive/10 p-4 rounded-md">
-          <p className="font-medium">Le stock demandé n'a pas été trouvé.</p>
+          <p className="font-medium">Le stock demandé n&apos;a pas été trouvé.</p>
         </div>
       </div>
     );
   }
 
   // Préparer les données pour le formulaire
-  const productSuggestions = products.map((p: any) => ({ id: p.id, name: p.name, unit: p.unit }));
-  const fournisseurSuggestions = fournisseurs.map((f: any) => ({ id: f.id, nom: f.nom }));
-  const clientSuggestions = clients.map((c: any) => ({ id: c.id, name: c.name }));
-  const depotSuggestions = depots.map((d: any) => ({ id: d.id, name: d.name }));
+  type ProductRef = { id: string; name: string; unit: string };
+  type FournisseurRef = { id: string; nom: string };
+  type ClientRef = { id: string; name: string };
+  type DepotRef = { id: string; name: string };
+  const productSuggestions = products.map((p: ProductRef) => ({ id: p.id, name: p.name, unit: p.unit }));
+  const fournisseurSuggestions = fournisseurs.map((f: FournisseurRef) => ({ id: f.id, nom: f.nom }));
+  const clientSuggestions = clients.map((c: ClientRef) => ({ id: c.id, name: c.name }));
+  const depotSuggestions = depots.map((d: DepotRef) => ({ id: d.id, name: d.name }));
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -72,7 +76,7 @@ export default async function EditStockPage({ params }: { params: Promise<{ id: 
               <Package className="h-8 w-8 text-primary" />
               Modifier le Mouvement de Stock
             </h1>
-            <p className="text-muted-foreground">Modifier les informations d'une entrée ou sortie de stock</p>
+            <p className="text-muted-foreground">Modifier les informations d&apos;une entrée ou sortie de stock</p>
           </div>
         </div>
       </div>

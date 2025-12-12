@@ -9,8 +9,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+type NonMiningPriceItem = {
+  id: string;
+  nomStructure?: string | null;
+  createdAt?: Date | string | null;
+  [key: string]: unknown;
+};
+
 interface ExportButtonsProps {
-  data: any[];
+  data: NonMiningPriceItem[];
   filename?: string;
 }
 

@@ -55,7 +55,7 @@ export const createProspect = actionClient
   .action(async ({ parsedInput }) => {
     try {
       const created = await prisma.prospect.create({
-        data: parsedInput as any,
+        data: parsedInput,
       });
       revalidatePath("/dashboard/prospects");
       return { success: created };
@@ -77,7 +77,7 @@ export const updateProspect = actionClient
       
       const result = await prisma.prospect.update({
         where: { id },
-        data: data as any,
+        data,
       });
       revalidatePath("/dashboard/prospects");
       revalidatePath(`/dashboard/prospects/${id}`);

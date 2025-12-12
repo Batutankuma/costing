@@ -92,7 +92,11 @@ interface NonMiningBuilderCreateFormProps {
       sudStock: number;
     };
   }>;
-  miningPriceRefs?: Array<any>;
+  miningPriceRefs?: Array<{
+    id: string;
+    title?: string | null;
+    description?: string | null;
+  }>;
 }
 
 export function NonMiningBuilderCreateForm({ priceStructures }: NonMiningBuilderCreateFormProps) {
@@ -336,7 +340,7 @@ export function NonMiningBuilderCreateForm({ priceStructures }: NonMiningBuilder
               <Label htmlFor="unit">Unité de prix</Label>
               <Select
                 value={form.watch("unit")}
-                onValueChange={(value) => form.setValue("unit", value as any)}
+                onValueChange={(value) => form.setValue("unit", value as "USD_M3" | "USD_LITRE")}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une unité" />
@@ -398,7 +402,7 @@ export function NonMiningBuilderCreateForm({ priceStructures }: NonMiningBuilder
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="plattsFOBUSD">Platt's or FOB (USD)</Label>
+              <Label htmlFor="plattsFOBUSD">Platt&apos;s or FOB (USD)</Label>
               <Input
                 id="plattsFOBUSD"
                 type="number"
@@ -439,7 +443,7 @@ export function NonMiningBuilderCreateForm({ priceStructures }: NonMiningBuilder
               <span className="font-medium">{formatCurrency(brutCFUSD)}</span>
             </div>
             <div className="flex justify-between font-semibold text-lg border-t pt-2">
-              <span>Prix de revient (Coût d'acquisition):</span>
+              <span>Prix de revient (Coût d&apos;acquisition):</span>
               <span>{formatCurrency(acquisitionCostUSD)}</span>
             </div>
           </div>
@@ -449,7 +453,7 @@ export function NonMiningBuilderCreateForm({ priceStructures }: NonMiningBuilder
       {/* Coûts fournisseur DDU */}
       <Card>
         <CardHeader>
-          <CardTitle>2. Coûts et Marge du Fournisseur pour l'Offre DDU</CardTitle>
+          <CardTitle>2. Coûts et Marge du Fournisseur pour l&apos;Offre DDU</CardTitle>
           <CardDescription>
             Coûts supplémentaires du fournisseur pour la livraison DDU
           </CardDescription>
@@ -498,7 +502,7 @@ export function NonMiningBuilderCreateForm({ priceStructures }: NonMiningBuilder
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="escortFeesUSD">Frais d'Escorte (USD)</Label>
+              <Label htmlFor="escortFeesUSD">Frais d&apos;Escorte (USD)</Label>
               <Input
                 id="escortFeesUSD"
                 type="number"
@@ -691,13 +695,13 @@ export function NonMiningBuilderCreateForm({ priceStructures }: NonMiningBuilder
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="freightToMineUSD">Freight to Mine from L'shi (USD)</Label>
+              <Label htmlFor="freightToMineUSD">Freight to Mine from L&apos;shi (USD)</Label>
               <Select
-                value={(selectedTransportRateId as any) || ""}
+                value={selectedTransportRateId || ""}
                 onValueChange={(id) => {
-                  setSelectedTransportRateId(id as string);
+                  setSelectedTransportRateId(id);
                   const rate = transportRates.find((t) => t.id === id)?.rateUsdPerCbm ?? 0;
-                  form.setValue("freightToMineUSD", Number(rate) as any, { shouldDirty: true });
+                  form.setValue("freightToMineUSD", Number(rate), { shouldDirty: true });
                 }}
               >
                 <SelectTrigger>

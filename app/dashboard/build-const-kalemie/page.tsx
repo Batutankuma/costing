@@ -10,7 +10,7 @@ export const revalidate = 0;
 
 export default async function KalemieBuildersPage() {
   const res = await listKalemieBuilders();
-  const items = (res as any)?.result ?? [];
+  const items = res.result ?? [];
 
   return (
     <div className="p-6 max-w-7xl mx-auto">

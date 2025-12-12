@@ -118,8 +118,11 @@ export const findAllAction = actionClient
       });
       
       // Calculer currentQuantity pour chaque commande
-      const resultWithCurrentQuantity = result.map((commande: any) => {
-        const totalReceived = commande.receptions?.reduce((sum: number, r: any) => sum + (r.quantity || 0), 0) || 0;
+      type CommandeWithReceptions = typeof result[0] & {
+        receptions?: Array<{ quantity: number }>;
+      };
+      const resultWithCurrentQuantity = result.map((commande: CommandeWithReceptions) => {
+        const totalReceived = commande.receptions?.reduce((sum: number, r: { quantity: number }) => sum + (r.quantity || 0), 0) || 0;
         const currentQuantity = Math.max(0, commande.quantite - totalReceived);
         return {
           ...commande,
@@ -145,12 +148,9 @@ export const updateAction = actionClient
     try {
       const { id, ...updateData } = parsedInput; // Destructurer pour exclure l'ID
 
-      // Exclure les champs qui ne doivent pas être mis à jour
-      const { user, ...cleanUpdateData } = updateData as any;
-
       const result = await prisma.commande.update({
         where: { id },
-        data: cleanUpdateData,
+        data: updateData,
         include: {
           produit: { select: { name: true } },
           depot: { select: { name: true } },

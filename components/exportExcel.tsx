@@ -3,7 +3,7 @@
 import { Button } from "./button";
 import { Download } from "lucide-react";
 
-interface ExportExcelProps<T = any> {
+interface ExportExcelProps<T = Record<string, unknown>> {
   data: T[];
   filename: string;
   mapRow?: (row: T) => Record<string, unknown>;
@@ -12,7 +12,7 @@ interface ExportExcelProps<T = any> {
   customHtml?: string; // If provided, export as styled Excel (HTML table)
 }
 
-export default function ExportExcel<T = any>({ data, filename, mapRow, className, customCsv, customHtml }: ExportExcelProps<T>) {
+export default function ExportExcel<T = Record<string, unknown>>({ data, filename, mapRow, className, customCsv, customHtml }: ExportExcelProps<T>) {
   const exportFile = () => {
     if (customHtml) {
       const blob = new Blob([`\ufeff${customHtml}`], { type: "application/vnd.ms-excel;charset=utf-8;" });

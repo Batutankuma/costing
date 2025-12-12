@@ -3,6 +3,7 @@
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import Image from "next/image";
 import { CreateManualFactureSchema } from "@/models/mvc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -13,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useAction } from "next-safe-action/hooks";
-import { createFactureAction } from "../actions";
+import { createFactureAction, getNextInvoiceNumberAction } from "../actions";
 import { Plus, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -72,6 +73,7 @@ export default function CreateFacturePage() {
   const router = useRouter();
   const { toast } = useToast();
   const { executeAsync, status } = useAction(createFactureAction);
+  const { executeAsync: getNextInvoiceNumber } = useAction(getNextInvoiceNumberAction);
   const [clients, setClients] = useState<Client[]>([]);
   const [clientId, setClientId] = useState<string>("");
   const [printMode, setPrintMode] = useState<boolean>(false);
@@ -120,16 +122,24 @@ export default function CreateFacturePage() {
     })();
   }, []);
 
-  // Générer le numéro de facture automatiquement
+  // Générer le numéro de facture automatiquement (X-MM/YY, ex: 1-12/25)
   useEffect(() => {
-    const mm = new Date().toLocaleDateString("fr-FR", { month: "2-digit" }).slice(0, 2);
-    const yy = new Date().toLocaleDateString("fr-FR", { year: "2-digit" });
-    const currentNumber = form.watch("invoiceNumber");
-    if (!currentNumber) {
-      // Format: 01-MM/YY (ex: 01-25/15)
-      form.setValue("invoiceNumber", `01-${mm}/${yy}`);
-    }
-  }, [form]);
+    (async () => {
+      const currentNumber = form.watch("invoiceNumber");
+      if (currentNumber) return;
+      try {
+        const result = await getNextInvoiceNumber();
+        const nextNumber = result?.data?.success as string | undefined;
+        if (nextNumber) {
+          form.setValue("invoiceNumber", nextNumber);
+        }
+      } catch {
+        const mm = new Date().toLocaleDateString("fr-FR", { month: "2-digit" }).slice(0, 2);
+        const yy = new Date().toLocaleDateString("fr-FR", { year: "2-digit" });
+        form.setValue("invoiceNumber", `1-${mm}/${yy}`);
+      }
+    })();
+  }, [form, getNextInvoiceNumber]);
 
   // Synchroniser deliveryNotes avec les lignes
   useEffect(() => {
@@ -208,7 +218,7 @@ export default function CreateFacturePage() {
       return { head: (q === 1 && base === 1000 ? "mille" : numberToWordsFR(q) + " " + lbl), rest: r };
     };
     if (n === 0) return units[0];
-    let parts: string[] = [];
+    const parts: string[] = [];
     let rest = n;
     const milliards = scale(rest, 1_000_000_000, "milliard", "milliards");
     if (milliards.head) parts.push(milliards.head);
@@ -234,8 +244,8 @@ export default function CreateFacturePage() {
   };
 
   const onSubmit = async (data: FormData) => {
-    const result = await executeAsync(data as any);
-    if ((result as any)?.data?.success) {
+    const result = await executeAsync(data);
+    if (result?.data?.success) {
       toast({ title: "Facture créée", description: "La facture a été enregistrée." });
       if (printMode) {
         setTimeout(() => {
@@ -248,7 +258,7 @@ export default function CreateFacturePage() {
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: (result as any)?.data?.failure || "Une erreur est survenue",
+        description: result?.data?.failure || "Une erreur est survenue",
       });
     }
   };
@@ -553,7 +563,7 @@ export default function CreateFacturePage() {
       <div className="facture-print" style={{ fontFamily: "Arial, sans-serif", fontSize: "11px", lineHeight: "1.4", color: "#000", width: "100%", padding: "0", boxSizing: "border-box" }}>
         {/* En-tête avec image */}
         <div style={{ width: "100%", marginBottom: "20px" }}>
-          <img src="/assets/tete.png" alt="En-tête AAGS" style={{ width: "100%", height: "auto", display: "block" }} />
+          <Image src="/assets/tete.png" alt="En-tête AAGS" width={800} height={200} style={{ width: "100%", height: "auto", display: "block" }} />
         </div>
 
         {/* Contenu principal avec padding */}
@@ -662,7 +672,7 @@ export default function CreateFacturePage() {
             </div>
             {/* Sceau en grand à côté du QR Code */}
             <div style={{ marginTop: "15px" }}>
-              <img src="/assets/sc.png" alt="Sceau" style={{ maxHeight: "120px", height: "auto", width: "auto" }} />
+              <Image src="/assets/sc.png" alt="Sceau" width={120} height={120} style={{ maxHeight: "120px", height: "auto", width: "auto" }} />
             </div>
           </div>
 
@@ -670,7 +680,7 @@ export default function CreateFacturePage() {
           <div style={{ flex: "1", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "15px" }}>
             {/* Signature agrandie en haut */}
             <div style={{ marginBottom: "10px" }}>
-              <img src="/assets/signature.png" alt="Signature" style={{ maxHeight: "120px", height: "auto", width: "auto" }} />
+              <Image src="/assets/signature.png" alt="Signature" width={120} height={120} style={{ maxHeight: "120px", height: "auto", width: "auto" }} />
             </div>
             
             {/* Nom et fonction en dessous */}
@@ -725,7 +735,7 @@ export default function CreateFacturePage() {
 
         {/* Footer avec image */}
         <div style={{ marginTop: "20px", width: "100%" }}>
-          <img src="/assets/bas.png" alt="Pied de page AAGS" style={{ width: "100%", height: "auto", display: "block" }} />
+          <Image src="/assets/bas.png" alt="Pied de page AAGS" width={800} height={200} style={{ width: "100%", height: "auto", display: "block" }} />
         </div>
         </div>
       </div>

@@ -2,7 +2,13 @@
 
 import * as React from "react";
 
-export function DataTable({ columns, data }: { columns: any[]; data: any[] }) {
+type Column = {
+  header?: string;
+  accessorKey?: string;
+  [key: string]: unknown;
+};
+
+export function DataTable({ columns, data }: { columns: Column[]; data: Record<string, unknown>[] }) {
   return (
     <table className="min-w-full border">
       <thead>

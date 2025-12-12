@@ -467,7 +467,7 @@ export default function StockCreateForm({
                   Unité <span className="text-destructive">*</span>
                 </Label>
                 <Select
-                  onValueChange={(value: any) => setValue("unite", value)}
+                  onValueChange={(value: "KG" | "G" | "L" | "ML" | "TONNE" | "PIECE" | "BOITE" | "CAISSON" | "POUCE" | "METRE" | "METRE_CARRE" | "METRE_CUBE" | "METRE_LINEAIRE") => setValue("unite", value)}
                   defaultValue="L"
                 >
                   <SelectTrigger id="unite" className="h-10">
@@ -501,7 +501,7 @@ export default function StockCreateForm({
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Select
-                    onValueChange={(value: any) => setValue("devise", value)}
+                    onValueChange={(value: "XOF" | "USD" | "EUR" | "CDF") => setValue("devise", value)}
                     defaultValue="USD"
                   >
                     <SelectTrigger id="devise" className="h-10 pl-10">
@@ -534,7 +534,7 @@ export default function StockCreateForm({
               {stockType === "ENTREE" ? (
                 <div className="space-y-2">
                   <Label htmlFor="prixUnitaireAchat" className="text-sm font-medium">
-                    Prix unitaire d'achat
+                    Prix unitaire d&apos;achat
                   </Label>
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />

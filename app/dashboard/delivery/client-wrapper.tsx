@@ -1,8 +1,8 @@
 'use client';
 
 import DataTables from "./data-table";
-import { Delivery } from "@/models/mvc";
+import { DeliveryWithRelations } from "./columns";
 
-export default function DataTablesWrapper({ Element }: { Element: Delivery[] }) {
+export default function DataTablesWrapper({ Element }: { Element: DeliveryWithRelations[] }) {
   return <DataTables Element={Element} />;
 }

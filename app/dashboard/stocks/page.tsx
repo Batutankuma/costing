@@ -113,7 +113,7 @@ export default async function Page() {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Quantités par Dépôt</CardTitle>
-            <CardDescription>Vue d'ensemble des stocks par dépôt</CardDescription>
+            <CardDescription>Vue d&apos;ensemble des stocks par dépôt</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -6,11 +6,29 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, FileText, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
+type QuoteWithRelations = {
+  id: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  proformaNumber?: string | null;
+  description?: string | null;
+  tvaApplicable?: boolean | null;
+  tvaAmount?: number | null;
+  baseDDUUSD?: number | null;
+  baseDDPUSD?: number | null;
+  marginUSD?: number | null;
+  freightToMineUSD?: number | null;
+  totalDDUUSD?: number | null;
+  totalDDPUSD?: number | null;
+  client?: { name?: string | null } | null;
+  user?: { name?: string | null } | null;
+};
+
 export default async function ViewSalesQuotePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const response = await getQuoteById({ id });
 
-  if (!response?.data?.success || !response?.data?.result) {
+  if (!response.data?.success || !response.data.result) {
     return (
       <div className="p-6 space-y-4 max-w-xl mx-auto">
         <div className="text-destructive bg-destructive/10 p-4 rounded-md">
@@ -23,7 +41,7 @@ export default async function ViewSalesQuotePage({ params }: { params: Promise<{
     );
   }
 
-  const quote = response.data.result;
+  const quote = response.data.result as QuoteWithRelations;
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
@@ -75,8 +93,8 @@ export default async function ViewSalesQuotePage({ params }: { params: Promise<{
             <div>
               <Label className="text-sm font-medium text-muted-foreground">TVA Applicable</Label>
               <div className="mt-2">
-                <Badge variant={(quote as any).tvaApplicable ? "default" : "secondary"}>
-                  {(quote as any).tvaApplicable ? "Oui" : "Non"}
+                <Badge variant={quote.tvaApplicable ? "default" : "secondary"}>
+                  {quote.tvaApplicable ? "Oui" : "Non"}
                 </Badge>
               </div>
             </div>
@@ -100,25 +118,25 @@ export default async function ViewSalesQuotePage({ params }: { params: Promise<{
             <div>
               <Label className="text-sm font-medium text-muted-foreground">Base DDU (USD)</Label>
               <p className="text-2xl font-bold text-primary">
-                ${((quote as any).baseDDUUSD || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${(quote.baseDDUUSD || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
             <div>
               <Label className="text-sm font-medium text-muted-foreground">Base DDP (USD)</Label>
               <p className="text-2xl font-bold text-primary">
-                ${((quote as any).baseDDPUSD || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${(quote.baseDDPUSD || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
             <div>
               <Label className="text-sm font-medium text-muted-foreground">Marge (USD)</Label>
               <p className="text-xl font-semibold">
-                ${((quote as any).marginUSD || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${(quote.marginUSD || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
             <div>
               <Label className="text-sm font-medium text-muted-foreground">Fret vers Mine (USD)</Label>
               <p className="text-xl font-semibold">
-                ${((quote as any).freightToMineUSD || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${(quote.freightToMineUSD || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
             <div>
@@ -133,11 +151,11 @@ export default async function ViewSalesQuotePage({ params }: { params: Promise<{
                 ${(quote.totalDDPUSD || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
-            {(quote as any).tvaAmount && (
+            {quote.tvaAmount && (
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">Montant TVA</Label>
                 <p className="text-xl font-semibold">
-                  ${((quote as any).tvaAmount || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  ${(quote.tvaAmount || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
             )}

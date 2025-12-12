@@ -391,7 +391,7 @@ export function NonMiningPriceView({ priceStructure }: NonMiningPriceViewProps) 
                     </div>
                   </div>
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-sm">TVA à l'importation</span>
+                    <span className="text-sm">TVA à l&apos;importation</span>
                     <div className="text-right">
                       <div className="font-medium">{formatCurrency(priceStructure.fiscality.importVAT)}</div>
                       <div className="text-xs text-muted-foreground">{formatCurrency(priceStructure.fiscality.importVAT / (priceStructure.exchangeRate?.rate || 2500), "USD")}</div>
@@ -409,7 +409,7 @@ export function NonMiningPriceView({ priceStructure }: NonMiningPriceViewProps) 
                 </div>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-sm">TVA nette à l'intérieur</span>
+                    <span className="text-sm">TVA nette à l&apos;intérieur</span>
                     <div className="text-right">
                       <div className="font-medium">{formatCurrency(priceStructure.fiscality.netVAT)}</div>
                       <div className="text-xs text-muted-foreground">{formatCurrency(priceStructure.fiscality.netVAT / (priceStructure.exchangeRate?.rate || 2500), "USD")}</div>

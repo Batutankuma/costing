@@ -43,11 +43,11 @@ export default function EditForm({ id, initial, onCancel, onSuccess }: EditFormP
     setIsSubmitting(true);
     try {
       const res = await updateAction({ ...data, id });
-      if (!(res as any)?.data?.success) {
+      if (!res?.data?.success) {
         toast({ 
           variant: "destructive", 
           title: "Erreur", 
-          description: (res as any)?.data?.failure || "Mise à jour échouée" 
+          description: res?.data?.failure || "Mise à jour échouée" 
         });
         return;
       }
@@ -56,7 +56,7 @@ export default function EditForm({ id, initial, onCancel, onSuccess }: EditFormP
         description: "Fournisseur modifié avec succès" 
       });
       onSuccess?.();
-    } catch (error) {
+    } catch {
       toast({ 
         variant: "destructive", 
         title: "Erreur", 

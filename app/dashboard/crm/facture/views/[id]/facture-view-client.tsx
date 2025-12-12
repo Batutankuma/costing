@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { findFactureById } from "@/app/dashboard/crm/facture/actions";
@@ -69,7 +70,7 @@ const numberToWordsFR = (n: number): string => {
     return { head: (q === 1 && base === 1000 ? "mille" : numberToWordsFR(q) + " " + lbl), rest: r };
   };
   if (n === 0) return units[0];
-  let parts: string[] = [];
+  const parts: string[] = [];
   let rest = n;
   const milliards = scale(rest, 1_000_000_000, "milliard", "milliards");
   if (milliards.head) parts.push(milliards.head);
@@ -195,7 +196,7 @@ export default function FactureViewClient({ factureId }: FactureViewClientProps)
             <table className="w-full text-sm">
               <thead className="bg-muted/60">
                 <tr>
-                  <th className="px-4 py-2 text-left">Produit</th>
+                  <th className="px-4 py-2 text-left">Description</th>
                   <th className="px-4 py-2 text-left">Unité</th>
                   <th className="px-4 py-2 text-right">Quantité</th>
                   <th className="px-4 py-2 text-right">Prix unitaire</th>
@@ -321,7 +322,7 @@ export default function FactureViewClient({ factureId }: FactureViewClientProps)
       <div className="facture-print" style={{ fontFamily: "Arial, sans-serif", fontSize: "11px", lineHeight: "1.4", color: "#000", width: "100%", padding: "0", boxSizing: "border-box" }}>
         {/* En-tête avec image */}
         <div style={{ width: "100%", marginBottom: "20px" }}>
-          <img src="/assets/tete.png" alt="En-tête AAGS" style={{ width: "100%", height: "auto", display: "block" }} />
+          <Image src="/assets/tete.png" alt="En-tête AAGS" width={800} height={200} style={{ width: "100%", height: "auto", display: "block" }} />
         </div>
 
         {/* Contenu principal avec padding */}
@@ -361,7 +362,7 @@ export default function FactureViewClient({ factureId }: FactureViewClientProps)
           <thead>
             <tr style={{ backgroundColor: "#f5f5f5" }}>
               <th style={{ padding: "8px", textAlign: "center", border: "1px solid #333", fontWeight: "bold" }}>#</th>
-              <th style={{ padding: "8px", textAlign: "left", border: "1px solid #333", fontWeight: "bold" }}>PRODUIT</th>
+              <th style={{ padding: "8px", textAlign: "left", border: "1px solid #333", fontWeight: "bold" }}>DESCRIPTION / PRODUIT</th>
               <th style={{ padding: "8px", textAlign: "center", border: "1px solid #333", fontWeight: "bold" }}>UNITÉ</th>
               <th style={{ padding: "8px", textAlign: "center", border: "1px solid #333", fontWeight: "bold" }}>QTY</th>
               <th style={{ padding: "8px", textAlign: "center", border: "1px solid #333", fontWeight: "bold" }}>P.U Hors TVA</th>
@@ -433,7 +434,7 @@ export default function FactureViewClient({ factureId }: FactureViewClientProps)
             </div>
             {/* Sceau en grand à côté du QR Code */}
             <div style={{ marginTop: "15px" }}>
-              <img src="/assets/sc.png" alt="Sceau" style={{ maxHeight: "120px", height: "auto", width: "auto" }} />
+              <Image src="/assets/sc.png" alt="Sceau" width={120} height={120} style={{ maxHeight: "120px", height: "auto", width: "auto" }} />
             </div>
           </div>
 
@@ -441,7 +442,7 @@ export default function FactureViewClient({ factureId }: FactureViewClientProps)
           <div style={{ flex: "1", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "15px" }}>
             {/* Signature agrandie en haut */}
             <div style={{ marginBottom: "10px" }}>
-              <img src="/assets/signature.png" alt="Signature" style={{ maxHeight: "120px", height: "auto", width: "auto" }} />
+              <Image src="/assets/signature.png" alt="Signature" width={120} height={120} style={{ maxHeight: "120px", height: "auto", width: "auto" }} />
             </div>
             
             {/* Nom et fonction en dessous */}
@@ -496,7 +497,7 @@ export default function FactureViewClient({ factureId }: FactureViewClientProps)
 
         {/* Footer avec image */}
         <div style={{ marginTop: "20px", width: "100%" }}>
-          <img src="/assets/bas.png" alt="Pied de page AAGS" style={{ width: "100%", height: "auto", display: "block" }} />
+          <Image src="/assets/bas.png" alt="Pied de page AAGS" width={800} height={200} style={{ width: "100%", height: "auto", display: "block" }} />
         </div>
         </div>
       </div>

@@ -63,7 +63,7 @@ export default async function TankDetailPage({
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
               <Eye className="h-4 w-4" />
-              Vue d'ensemble
+              Vue d&apos;ensemble
             </CardTitle>
             <CardDescription>Détails actuels du tank</CardDescription>
           </CardHeader>

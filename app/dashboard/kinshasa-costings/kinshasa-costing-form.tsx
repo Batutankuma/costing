@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, SubmitHandler, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { CreateKinshasaCostingSchema } from "@/models/mvc.pruned";
@@ -60,24 +60,29 @@ export default function KinshasaCostingForm({ products, initialData }: Props) {
     []
   );
 
-  const form = useForm<FormSchema>({
-    resolver: zodResolver(CreateKinshasaCostingSchema),
-    defaultValues: initialData ?? {
-      title: "",
-      description: "",
-      productId: "",
-      currency: "CDF",
-      volumeM3: 0,
-      unitPriceUsd: 0,
-      clientExchangeRate: 0,
-      benchmarkExchangeRate: 0,
-      engenPriceCDF: 0,
-      engenPriceUSD: 0,
-      cdfBreakdown: defaultBreakdown,
-      usdBreakdown: defaultBreakdown,
-      notes: "",
-    },
-  });
+const form = useForm<FormSchema>({
+  resolver: zodResolver(CreateKinshasaCostingSchema) as Resolver<FormSchema>,
+  defaultValues: (initialData
+    ? {
+        ...initialData,
+        currency: (initialData.currency ?? "CDF") as "USD" | "CDF",
+      }
+    : {
+        title: "",
+        description: "",
+        productId: "",
+        currency: "CDF" as const,
+        volumeM3: 0,
+        unitPriceUsd: 0,
+        clientExchangeRate: 0,
+        benchmarkExchangeRate: 0,
+        engenPriceCDF: 0,
+        engenPriceUSD: 0,
+        cdfBreakdown: defaultBreakdown,
+        usdBreakdown: defaultBreakdown,
+        notes: "",
+      }) as FormSchema,
+});
 
   const {
     register,
@@ -105,7 +110,7 @@ export default function KinshasaCostingForm({ products, initialData }: Props) {
     name: "usdBreakdown",
   });
 
-  const onSubmit = async (values: FormSchema) => {
+  const onSubmit: SubmitHandler<FormSchema> = async (values) => {
     setIsSubmitting(true);
     try {
       if (initialData?.id) {
@@ -137,11 +142,13 @@ export default function KinshasaCostingForm({ products, initialData }: Props) {
     }
   };
 
+  const numericKeys = ["client", "threshold", "proposal", "mag", "afterMag"] as const;
+
   const renderBreakdown = (
     type: "cdfBreakdown" | "usdBreakdown",
     fields: typeof cdfFields,
-    append: typeof appendCDF,
-    remove: typeof removeCDF
+    append: (value: ReturnType<typeof makeRow>) => void,
+    remove: (index: number) => void
   ) => {
     const breakdownErrors = type === "cdfBreakdown" ? errors.cdfBreakdown : errors.usdBreakdown;
     return (
@@ -185,7 +192,7 @@ export default function KinshasaCostingForm({ products, initialData }: Props) {
                     </p>
                   )}
                 </td>
-                {["client", "threshold", "proposal", "mag", "afterMag"].map((key) => (
+                {numericKeys.map((key) => (
                   <td className="p-2" key={key}>
                     <Input
                       type="number"

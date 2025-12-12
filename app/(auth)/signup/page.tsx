@@ -32,8 +32,9 @@ export default function SignupPage() {
       await authClient.signUp.email({ email, password, name });
       setSuccess("Compte créé. Redirection...");
       setTimeout(() => router.push("/dashboard"), 700);
-    } catch (err: any) {
-      setError(err?.message || "Création de compte impossible");
+    } catch (err) {
+      const error = err instanceof Error ? err.message : "Création de compte impossible";
+      setError(error);
     } finally {
       setLoading(false);
     }

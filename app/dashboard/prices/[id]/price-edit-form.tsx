@@ -7,8 +7,16 @@ import { Label } from "@/components/ui/label";
 import { useAction } from "next-safe-action/hooks";
 import { updatePriceReference } from "../actions";
 
-export default function PriceEditForm({ initial }: { initial: any }) {
-  const [pmfUSD, setPmfUSD] = React.useState<number>(initial.pmfCommercialUSD);
+type PriceReferenceInitial = {
+  id: string;
+  pmfCommercialUSD?: number | null;
+  commercialCosts?: { socComFee?: number | null } | null;
+  logisticsCosts?: { warehouseFee?: number | null } | null;
+  fiscality?: { total2?: number | null } | null;
+};
+
+export default function PriceEditForm({ initial }: { initial: PriceReferenceInitial }) {
+  const [pmfUSD, setPmfUSD] = React.useState<number>(initial.pmfCommercialUSD ?? 0);
   const [socComFee, setSocComFee] = React.useState<number>(initial.commercialCosts?.socComFee ?? 0);
   const [warehouseFee, setWarehouseFee] = React.useState<number>(initial.logisticsCosts?.warehouseFee ?? 0);
   const [total2, setTotal2] = React.useState<number>(initial.fiscality?.total2 ?? 0);
@@ -23,7 +31,7 @@ export default function PriceEditForm({ initial }: { initial: any }) {
       commercial: { socComFee },
       logistics: { warehouseFee },
       fiscality: { total2 },
-    } as any);
+    });
   };
 
   return (

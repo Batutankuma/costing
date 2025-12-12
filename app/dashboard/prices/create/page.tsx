@@ -42,7 +42,7 @@ export default function CreatePricePage() {
   
 
   // Preview helper – optional input; server remains authoritative
-  const parseNum = (v: any) => {
+  const parseNum = (v: string | number | null | undefined) => {
     if (v === "" || v === null || v === undefined) return 0;
     if (typeof v === "number") return Number.isFinite(v) ? v : 0;
     if (typeof v === "string") {
@@ -85,11 +85,11 @@ export default function CreatePricePage() {
 
   React.useEffect(() => {
     if (session?.user?.id) {
-      setValue("userId", session.user.id as any, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+      setValue("userId", session.user.id, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
     }
   }, [session?.user?.id, setValue]);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: FormData) => {
     // Avoid keeping focus on any input after submit
     if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
@@ -114,7 +114,7 @@ export default function CreatePricePage() {
       data.commercial.marginPercent = 0;
     }
     const res = await executeAsync(data);
-    if ((res as any)?.data?.success) {
+    if (res?.data?.success) {
       router.push("/dashboard/prices");
     }
   };
@@ -138,7 +138,7 @@ export default function CreatePricePage() {
         </div>
       </div>
       
-      <form id="price-create-form" onSubmit={handleSubmit(onSubmit as any)} className="grid gap-6">
+      <form id="price-create-form" onSubmit={handleSubmit(onSubmit)} className="grid gap-6">
         <div className="grid md:grid-cols-2 gap-2">
           <div>
             <Label>Nom structure</Label>
@@ -147,17 +147,17 @@ export default function CreatePricePage() {
           </div>
           <div>
             <Label>Taux (aperçu local)</Label>
-            <Input type="number" step="0.0001" value={ratePreview as any} onChange={(e) => {
+            <Input type="number" step="0.0001" value={ratePreview === "" ? "" : ratePreview} onChange={(e) => {
               const raw = e.target.value;
               const normalized = raw.replace(",", ".");
               const next = normalized === "" ? "" : Number(normalized);
-              setRatePreview(next as any);
+              setRatePreview(next);
               if (typeof next === "number" && next > 0) setShowRateError(false);
               // Sync field `rate` as number for Zod resolver
               if (typeof next === "number" && Number.isFinite(next)) {
                 setValue("rate", next, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
               } else {
-                setValue("rate", undefined as any, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                setValue("rate", undefined, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
               }
             }} placeholder="Ex: 2858.6" />
             {showRateError && <p className="text-red-500 text-sm">Veuillez saisir un taux valide</p>}
@@ -200,7 +200,7 @@ export default function CreatePricePage() {
         {/* Sociétés de logistique */}
         <label htmlFor="pmf" className="text-lg font-semibold justify-center align-bottom text-orange-400">Sociétés de logistique</label>
         <div className="grid md:grid-cols-3 gap-4">
-          <Label> Charges d'exploitation logisticiens</Label>
+          <Label> Charges d&apos;exploitation logisticiens</Label>
           <Input type="number" step="0.01" {...register("logistics.warehouseFee", { setValueAs: parseNum })} placeholder="Entrepôt (CDF)" />
           <Input disabled value={toUSD(logisticsTotal) !== undefined ? toUSD(logisticsTotal)!.toFixed(6) : "-"} />
         </div>
@@ -209,7 +209,7 @@ export default function CreatePricePage() {
         <label htmlFor="logistique" className="text-lg font-semibold justify-center align-bottom text-orange-400">Sociétés Commerciales</label>
 
         <div className="grid md:grid-cols-3 gap-4">
-          <Label>Charges d'exploitation SOC. Com.</Label>
+          <Label>Charges d&apos;exploitation SOC. Com.</Label>
           <div>
             <Label>SOC. Com. (CDF)</Label>
             <Input type="number" step="0.01" {...register("commercial.socComFee", { setValueAs: parseNum })} placeholder="SOC. Com. (CDF)" />
@@ -365,7 +365,7 @@ export default function CreatePricePage() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-4">
-          <Label>TVA Nette à l'intérieur </Label>
+          <Label>TVA Nette à l&apos;intérieur </Label>
           <div>
             <Label>TVA (CDF)</Label>
             <Input type="number" step="0.01" {...register("fiscality.netVAT", { setValueAs: parseNum })} />

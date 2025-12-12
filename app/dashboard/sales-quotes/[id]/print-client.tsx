@@ -55,15 +55,29 @@ export default function PrintClient({ proformaNumber, clientName, clientAddress,
 
     try {
       // Load html2canvas and jsPDF from CDN
-      if (!(window as any).html2canvas) {
+      interface WindowWithLibs extends Window {
+        html2canvas?: (el: HTMLElement, opts?: { scale?: number; backgroundColor?: string; useCORS?: boolean }) => Promise<HTMLCanvasElement>;
+        jspdf?: { jsPDF: new (orientation?: string, unit?: string, format?: string) => {
+          addImage: (imgData: string, format: string, x: number, y: number, w: number, h: number, alias?: string, compression?: string) => void;
+          addPage: () => void;
+          save: (filename: string) => void;
+        } };
+      }
+      const win = window as WindowWithLibs;
+      
+      if (!win.html2canvas) {
         await loadScript("https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js");
       }
-      if (!(window as any).jspdf) {
+      if (!win.jspdf) {
         await loadScript("https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js");
       }
 
-      const html2canvas = (window as any).html2canvas as (el: HTMLElement, opts?: any) => Promise<HTMLCanvasElement>;
-      const { jsPDF } = (window as any).jspdf as { jsPDF: any };
+      if (!win.html2canvas || !win.jspdf) {
+        throw new Error("Failed to load required libraries");
+      }
+
+      const html2canvas = win.html2canvas;
+      const { jsPDF } = win.jspdf;
 
       const canvas = await html2canvas(target, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
       const imgData = canvas.toDataURL("image/png");
@@ -72,7 +86,7 @@ export default function PrintClient({ proformaNumber, clientName, clientAddress,
       const pageHeight = 297;
       const imgWidth = pageWidth - 20; // margins
       const imgHeight = canvas.height * imgWidth / canvas.width;
-      let y = 10;
+      const y = 10;
 
       if (imgHeight <= pageHeight - 20) {
         pdf.addImage(imgData, "PNG", 10, y, imgWidth, imgHeight, undefined, "FAST");
@@ -135,7 +149,7 @@ export default function PrintClient({ proformaNumber, clientName, clientAddress,
       const qStr = q === 1 ? `un ${one}` : `${underThousand(q)} ${many}`;
       return { head: qStr, rest: r };
     };
-    let parts: string[] = [];
+    const parts: string[] = [];
     let rest = value;
     const milliards = scale(rest, 1_000_000_000, "milliard", "milliards");
     if (milliards.head) parts.push(milliards.head);
@@ -211,7 +225,7 @@ export default function PrintClient({ proformaNumber, clientName, clientAddress,
             <div><span className="font-semibold">ID NAT:</span> {clientIdNat || ""}</div>
             <div><span className="font-semibold">NIF:</span> {clientNif || ""}</div>
             <div><span className="font-semibold">Bon de Commande :</span></div>
-            <div><span className="font-semibold">Validité de l'offre:</span> 30 Jours</div>
+            <div><span className="font-semibold">Validité de l&apos;offre:</span> 30 Jours</div>
           </div>
         </div>
 
@@ -291,7 +305,7 @@ export default function PrintClient({ proformaNumber, clientName, clientAddress,
             <div><span className="font-semibold">ID NAT:</span> {clientIdNat || ""}</div>
             <div><span className="font-semibold">NIF:</span> {clientNif || ""}</div>
             <div><span className="font-semibold">Bon de Commande :</span></div>
-            <div><span className="font-semibold">Validité de l'offre:</span> 30 Jours</div>
+            <div><span className="font-semibold">Validité de l&apos;offre:</span> 30 Jours</div>
           </div>
           <div>
             <div className="font-semibold">PROFORMA À :</div>
@@ -303,7 +317,7 @@ export default function PrintClient({ proformaNumber, clientName, clientAddress,
             <div><span className="font-semibold">ID NAT:</span> {clientIdNat || ""}</div>
             <div><span className="font-semibold">NIF:</span> {clientNif || ""}</div>
             <div><span className="font-semibold">Bon de Commande :</span></div>
-            <div><span className="font-semibold">Validité de l'offre:</span> 30 Jours</div>
+            <div><span className="font-semibold">Validité de l&apos;offre:</span> 30 Jours</div>
           </div>
         </div>
 

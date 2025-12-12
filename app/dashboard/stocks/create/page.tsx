@@ -33,10 +33,14 @@ export default async function CreateStockPage() {
   ]);
 
   // Préparer les données pour le formulaire
-  const productSuggestions = products.map((p: any) => ({ id: p.id, name: p.name, unit: p.unit }));
-  const fournisseurSuggestions = fournisseurs.map((f: any) => ({ id: f.id, nom: f.nom }));
-  const clientSuggestions = clients.map((c: any) => ({ id: c.id, name: c.name }));
-  const depotSuggestions = depots.map((d: any) => ({ id: d.id, name: d.name }));
+  type ProductRef = { id: string; name: string; unit: string };
+  type FournisseurRef = { id: string; nom: string };
+  type ClientRef = { id: string; name: string };
+  type DepotRef = { id: string; name: string };
+  const productSuggestions = products.map((p: ProductRef) => ({ id: p.id, name: p.name, unit: p.unit }));
+  const fournisseurSuggestions = fournisseurs.map((f: FournisseurRef) => ({ id: f.id, nom: f.nom }));
+  const clientSuggestions = clients.map((c: ClientRef) => ({ id: c.id, name: c.name }));
+  const depotSuggestions = depots.map((d: DepotRef) => ({ id: d.id, name: d.name }));
   const commandeSuggestions = commandes.map((commande) => ({
     id: commande.id,
     reference: commande.reference,

@@ -41,7 +41,7 @@ export default async function Page() {
           <CardDescription>Visualisez et gérez tous vos fournisseurs</CardDescription>
         </CardHeader>
         <CardContent>
-          <DataTables Element={fournisseurs as any} />
+          <DataTables Element={fournisseurs} />
         </CardContent>
       </Card>
     </div>

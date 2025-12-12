@@ -6,10 +6,31 @@ import PrintClient from "./print-client";
 
 interface Props { params: Promise<{ id: string }> }
 
+type QuoteWithRelations = {
+  id: string;
+  createdAt: Date | string;
+  proformaNumber?: string | null;
+  marginUSD?: number | null;
+  freightToMineUSD?: number | null;
+  description?: string | null;
+  tvaApplicable?: boolean | null;
+  tvaAmount?: number | null;
+  totalDDUUSD?: number | null;
+  totalDDPUSD?: number | null;
+  client?: { id: string; name: string; address?: string | null; rccm?: string | null; idNat?: string | null; nif?: string | null } | null;
+  costBuildUp?: {
+    id: string;
+    title: string;
+    totals?: { priceDDUUSD?: number | null; priceDDPUSD?: number | null } | null;
+    transport?: { freightToMineUSD?: number | null } | null;
+    supplierDDU?: { supplierMarginUSD?: number | null } | null;
+  } | null;
+};
+
 export default async function QuoteDetailPage({ params }: Props) {
   const { id } = await params;
   const res = await getQuoteById({ id });
-  const q = (res as any)?.data?.result;
+  const q = res.data?.success ? res.data.result : null;
 
   if (!q) {
     return (
@@ -18,7 +39,7 @@ export default async function QuoteDetailPage({ params }: Props) {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Modifier Devis</h1>
-              <p className="text-muted-foreground">Édition d'un devis commercial</p>
+              <p className="text-muted-foreground">Édition d&apos;un devis commercial</p>
             </div>
           </div>
         </div>
@@ -57,7 +78,7 @@ export default async function QuoteDetailPage({ params }: Props) {
           </div>
           <div>
             <div className="text-xs text-muted-foreground">Date</div>
-            <div className="font-medium">{q.createdAt ? new Date(q.createdAt as any).toLocaleDateString("fr-FR") : "—"}</div>
+            <div className="font-medium">{q.createdAt ? new Date(q.createdAt).toLocaleDateString("fr-FR") : "—"}</div>
           </div>
           <div>
             <div className="text-xs text-muted-foreground">Client</div>
@@ -140,10 +161,10 @@ export default async function QuoteDetailPage({ params }: Props) {
         <PrintClient
           proformaNumber={q.proformaNumber}
           clientName={q.client?.name}
-          clientAddress={(q.client as any)?.address}
-          clientRccm={(q.client as any)?.rccm}
-          clientIdNat={(q.client as any)?.idNat}
-          clientNif={(q.client as any)?.nif}
+          clientAddress={q.client?.address}
+          clientRccm={q.client?.rccm}
+          clientIdNat={q.client?.idNat}
+          clientNif={q.client?.nif}
           totalDDUUSD={q.totalDDUUSD}
           totalDDPUSD={q.totalDDPUSD}
           tvaApplicable={q.tvaApplicable}

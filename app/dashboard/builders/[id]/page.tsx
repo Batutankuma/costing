@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const res = await findBuilderById(id);
-  const item = (res as any)?.result;
+  const item = res.result;
   
   if (!item) {
     return (
@@ -15,7 +15,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Modifier Builder</h1>
-              <p className="text-muted-foreground">Édition d'une structure de coûts</p>
+              <p className="text-muted-foreground">Édition d&apos;une structure de coûts</p>
             </div>
           </div>
         </div>
@@ -37,7 +37,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Modifier Builder</h1>
-            <p className="text-muted-foreground">Édition d'une structure de coûts</p>
+            <p className="text-muted-foreground">Édition d&apos;une structure de coûts</p>
           </div>
           <Button asChild variant="outline">
             <Link href="/dashboard/builders">Annuler</Link>

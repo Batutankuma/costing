@@ -8,27 +8,42 @@ import Link from "next/link";
 async function CreateNonMiningBuilderPage() {
   const src = await getNonMiningPriceStructures();
   // Adapter les types potentiels null -> undefined pour la forme attendue du composant
-  const priceStructures = (src ?? []).map((s: any) => ({
+  type NonMiningPriceStructure = {
+    id: string;
+    nomStructure?: string | null;
+    description?: string | null;
+    exchangeRate?: { rate?: number | null; deviseBase?: string | null; deviseTarget?: string | null } | null;
+    fiscality?: { customsDuty?: number | null; importVAT?: number | null; netVAT?: number | null; consumptionDuty?: number | null } | null;
+    parafiscality?: { foner?: number | null } | null;
+    securityStock?: { estStock?: number | null; sudStock?: number | null } | null;
+  };
+  const priceStructures = (src ?? []).map((s: NonMiningPriceStructure) => ({
     id: s.id,
-    nomStructure: s.nomStructure,
+    nomStructure: s.nomStructure ?? "",
     exchangeRate: {
       rate: s?.exchangeRate?.rate ?? 0,
       deviseBase: s?.exchangeRate?.deviseBase ?? "CDF",
       deviseTarget: s?.exchangeRate?.deviseTarget ?? "USD",
     },
-    fiscality: s?.fiscality ? {
-      customsDuty: s.fiscality.customsDuty ?? 0,
-      importVAT: s.fiscality.importVAT ?? 0,
-      netVAT: s.fiscality.netVAT ?? 0,
-      consumptionDuty: s.fiscality.consumptionDuty ?? 0,
-    } : undefined,
-    parafiscality: s?.parafiscality ? {
-      foner: s.parafiscality.foner ?? 0,
-    } : undefined,
-    securityStock: s?.securityStock ? {
-      estStock: s.securityStock.estStock ?? 0,
-      sudStock: s.securityStock.sudStock ?? 0,
-    } : undefined,
+    fiscality: s?.fiscality
+      ? {
+          customsDuty: s.fiscality.customsDuty ?? 0,
+          importVAT: s.fiscality.importVAT ?? 0,
+          netVAT: s.fiscality.netVAT ?? 0,
+          consumptionDuty: s.fiscality.consumptionDuty ?? 0,
+        }
+      : undefined,
+    parafiscality: s?.parafiscality
+      ? {
+          foner: s.parafiscality.foner ?? 0,
+        }
+      : undefined,
+    securityStock: s?.securityStock
+      ? {
+          estStock: s.securityStock.estStock ?? 0,
+          sudStock: s.securityStock.sudStock ?? 0,
+        }
+      : undefined,
   }));
 
   return (

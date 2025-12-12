@@ -271,7 +271,7 @@ export function NonMiningPriceCreateForm({ exchangeRates }: NonMiningPriceCreate
               <Label htmlFor="cardinale">Zone géographique</Label>
               <Select
                 value={form.watch("cardinale")}
-                onValueChange={(value) => form.setValue("cardinale", value as any)}
+                onValueChange={(value) => form.setValue("cardinale", value as "SUD" | "NORD" | "EST" | "OUEST")}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une zone" />
@@ -563,7 +563,7 @@ export function NonMiningPriceCreateForm({ exchangeRates }: NonMiningPriceCreate
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="importVAT">TVA à l'importation</Label>
+              <Label htmlFor="importVAT">TVA à l&apos;importation</Label>
               <Input
                 id="importVAT"
                 type="number"
@@ -576,7 +576,7 @@ export function NonMiningPriceCreateForm({ exchangeRates }: NonMiningPriceCreate
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="netVAT">TVA nette à l'intérieur</Label>
+              <Label htmlFor="netVAT">TVA nette à l&apos;intérieur</Label>
               <Input
                 id="netVAT"
                 type="number"
@@ -751,7 +751,7 @@ export function NonMiningPriceCreateForm({ exchangeRates }: NonMiningPriceCreate
                 </div>
               </div>
               <div className="flex justify-between text-sm">
-                <span>TVA à l'importation</span>
+                <span>TVA à l&apos;importation</span>
                 <div className="text-right">
                   <div>{formatCurrency(watchedValues.importVAT || 0)}</div>
                   <div className="text-xs text-muted-foreground">{formatCurrency((watchedValues.importVAT || 0) / rate, "USD")}</div>
@@ -769,7 +769,7 @@ export function NonMiningPriceCreateForm({ exchangeRates }: NonMiningPriceCreate
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>TVA nette à l'intérieur</span>
+                <span>TVA nette à l&apos;intérieur</span>
                 <div className="text-right">
                   <div>{formatCurrency(watchedValues.netVAT || 0)}</div>
                   <div className="text-xs text-muted-foreground">{formatCurrency((watchedValues.netVAT || 0) / rate, "USD")}</div>
