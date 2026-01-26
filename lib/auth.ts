@@ -26,11 +26,11 @@ const trusted = [
     process.env.URL,
     "https://consting-ir0mkl38s-batutankumas-projects.vercel.app",
     "https://consting.vercel.app",
-    "http://192.168.1.179:3000",
+    "http://localhost:3000",
     process.env.NEXT_PUBLIC_APP_URL,
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
-    process.env.NODE_ENV !== "production" ? "http://192.168.1.179:3000" : undefined,
-    process.env.NODE_ENV !== "production" ? "http://192.168.1.179:3000" : undefined,
+    process.env.NODE_ENV !== "production" ? "http://localhost:3000" : undefined,
+    process.env.NODE_ENV !== "production" ? "http://localhost:3000" : undefined,
 ].filter((origin): origin is string => Boolean(origin));
 
 const appName = process.env.APP_NAME || "AAGS";

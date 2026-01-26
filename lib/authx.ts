@@ -44,7 +44,7 @@ function getTrustedOrigins(): string[] {
     
     // Ajoute les variantes localhost en développement
     if (process.env.NODE_ENV !== "production") {
-        origins.add("http://192.168.1.179:3000");
+        origins.add("http://localhost:3000");
         origins.add("http://127.0.0.1:3000");
     }
     
@@ -63,7 +63,7 @@ function getTrustedOrigins(): string[] {
 }
 
 export const auth = betterAuth({
-    database: prismaAdapter(prisma, { provider: "mysql" }),
+    database: prismaAdapter(prisma, { provider: "postgresql" }),
     trustedOrigins: getTrustedOrigins(),
     emailAndPassword: { 
         enabled: true 

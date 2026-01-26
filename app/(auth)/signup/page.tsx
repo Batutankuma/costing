@@ -28,13 +28,24 @@ export default function SignupPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccess(null);
     try {
-      await authClient.signUp.email({ email, password, name });
+      const result = await authClient.signUp.email({ email, password, name });
+      if (result.error) {
+        setError(result.error.message || "Création de compte impossible");
+        return;
+      }
       setSuccess("Compte créé. Redirection...");
       setTimeout(() => router.push("/dashboard"), 700);
-    } catch (err) {
-      const error = err instanceof Error ? err.message : "Création de compte impossible";
-      setError(error);
+    } catch (err: any) {
+      console.error(err);
+      // Extraire le message d'erreur de better-auth
+      const errorMessage = 
+        err?.message || 
+        err?.error?.message || 
+        err?.data?.message ||
+        "Création de compte impossible. Vérifiez vos informations.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -73,7 +84,6 @@ export default function SignupPage() {
           <Label htmlFor="password">Mot de passe</Label>
           <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
         <Button type="submit" disabled={loading}>{loading ? "Création..." : "Créer"}</Button>
       </form>
       <p className="text-sm text-muted-foreground">

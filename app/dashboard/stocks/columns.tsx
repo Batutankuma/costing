@@ -19,7 +19,7 @@ import RemoveDialog from "./delete";
 import { Badge } from "@/components/ui/badge";
 
 // Type pour Stock avec relations Prisma
-type StockWithRelations = {
+export type StockWithRelations = {
     id: string;
     date: Date;
     reference: string;
@@ -58,6 +58,19 @@ type StockWithRelations = {
     stockQuantiteFinal?: number | null;
     stockPrixUnitaireFinal?: number | null;
     stockValeurFinal?: number | null;
+    // Autres champs possibles pour l'export ou autres composants
+    margeUnitaire?: number | null;
+    margeTotale?: number | null;
+    deviseAchat?: string | null;
+    deviseVente?: string | null;
+    tauxChangeAchat?: string | null;
+    tauxChangeVente?: string | null;
+    prixVenteUnitaireConverti?: string | null;
+    quantiteStockFinal?: string | null;
+    pump?: string | null;
+    valeurStockFinal?: string | null;
+    fournisseur_nom?: string;
+    client_nom?: string;
 };
 
 // La fonction de filtre utilise des champs disponibles avec relations

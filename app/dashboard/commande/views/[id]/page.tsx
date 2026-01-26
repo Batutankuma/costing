@@ -97,7 +97,7 @@ export default function ViewCommandePage() {
         <div className="text-destructive bg-destructive/10 p-4 rounded-md">
           <p className="font-medium">{error}</p>
         </div>
-        <Button variant="outline" onClick={() => router.push(`/dashboard/operations/commande`)}>
+        <Button variant="outline" onClick={() => router.push(`/dashboard/commande`)}>
           Retour à la liste
         </Button>
       </div>
@@ -108,7 +108,7 @@ export default function ViewCommandePage() {
     return (
       <div className="p-6 space-y-4 max-w-xl mx-auto">
         <p className="text-gray-700">Aucune donnée commande disponible pour cet ID.</p>
-        <Button variant="outline" onClick={() => router.push(`/dashboard/operations/commande`)}>
+        <Button variant="outline" onClick={() => router.push(`/dashboard/commande`)}>
           Retour à la liste
         </Button>
       </div>
@@ -205,7 +205,7 @@ export default function ViewCommandePage() {
             </div>
 
             <div className="md:col-span-2 flex justify-end gap-2">
-              <Button variant="outline" onClick={() => router.push(`/dashboard/operations/commande`)}>
+              <Button variant="outline" onClick={() => router.push(`/dashboard/commande`)}>
                 Retour à la liste
               </Button>
             </div>

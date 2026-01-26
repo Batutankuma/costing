@@ -247,7 +247,7 @@ export default function CreateReceptionPage() {
       }
       
       toast({ title: "Succès", description: "Réception ajoutée avec succès !" });
-      router.push('/dashboard/operations/reception');
+      router.push('/dashboard/reception');
     } catch (e: unknown) {
       console.error("Erreur lors de la soumission du formulaire:", e);
       toast({ 
@@ -531,17 +531,17 @@ export default function CreateReceptionPage() {
             {isPending ? "Enregistrement..." : 
              ((selectedCommande?.currentQuantity ?? 0) === 0) ? "Commande déjà reçue" : "Enregistrer"}
           </Button>
-          <Button type="button" variant="outline" onClick={() => router.push('/dashboard/operations/reception')}>
+          <Button type="button" variant="outline" onClick={() => router.push('/dashboard/reception')}>
             Annuler
           </Button>
         </div>
       </form>
       <div className="flex items-center gap-3 mt-6">
-        <Button variant="outline" onClick={() => router.push('/dashboard/operations/reception/list')}>
+        <Button variant="outline" onClick={() => router.push('/dashboard/reception/list')}>
           <List className="h-4 w-4 mr-2" />
           Voir la liste
         </Button>
-        <Button onClick={() => router.push('/dashboard/operations/reception')}>
+        <Button onClick={() => router.push('/dashboard/reception')}>
           <Package className="h-4 w-4 mr-2" />
           Retour au tableau de bord
         </Button>

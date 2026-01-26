@@ -74,7 +74,7 @@ export default function EditTankForm({ tank }: EditFormProps) {
     try {
       const res = await updateAction({ ...data, id: tank.id });
       
-      if (res.success) {
+      if (res?.success) {
         toast({ 
           title: "Succès", 
           description: "Tank modifié avec succès" 
@@ -85,7 +85,7 @@ export default function EditTankForm({ tank }: EditFormProps) {
         toast({ 
           variant: "destructive", 
           title: "Erreur", 
-          description: res.failure || "Mise à jour échouée" 
+          description: res?.failure || "Mise à jour échouée" 
         });
       }
     } catch (error) {

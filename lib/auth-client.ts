@@ -18,7 +18,7 @@ const getClientBaseURL = () => {
     return process.env.URL_LOCAL;
   }
   
-  return "http://192.168.1.179:3000";
+  return "http://localhost:3000";
 };
 
 export const authClient = createAuthClient({

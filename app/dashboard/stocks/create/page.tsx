@@ -37,11 +37,21 @@ export default async function CreateStockPage() {
   type FournisseurRef = { id: string; nom: string };
   type ClientRef = { id: string; name: string };
   type DepotRef = { id: string; name: string };
+  type CommandeRef = {
+    id: string;
+    reference: string;
+    status: string;
+    depotId: string | null;
+    produitId: string | null;
+    fournisseurId: string | null;
+    fournisseur: { nom: string } | null;
+    quantite: number;
+  };
   const productSuggestions = products.map((p: ProductRef) => ({ id: p.id, name: p.name, unit: p.unit }));
   const fournisseurSuggestions = fournisseurs.map((f: FournisseurRef) => ({ id: f.id, nom: f.nom }));
   const clientSuggestions = clients.map((c: ClientRef) => ({ id: c.id, name: c.name }));
   const depotSuggestions = depots.map((d: DepotRef) => ({ id: d.id, name: d.name }));
-  const commandeSuggestions = commandes.map((commande) => ({
+  const commandeSuggestions = commandes.map((commande: CommandeRef) => ({
     id: commande.id,
     reference: commande.reference,
     status: commande.status,

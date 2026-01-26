@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import DataTables from "./data-table";
+import { StockWithRelations } from "./columns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -41,8 +42,8 @@ export default async function Page() {
 
   // Calculer les statistiques
   const totalStocks = stocks.length;
-  const entrees = stocks.filter(s => s.type === 'ENTREE').length;
-  const sorties = stocks.filter(s => s.type === 'SORTIE').length;
+  const entrees = (stocks as StockWithRelations[]).filter(s => s.type === 'ENTREE').length;
+  const sorties = (stocks as StockWithRelations[]).filter(s => s.type === 'SORTIE').length;
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -117,8 +118,8 @@ export default async function Page() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {depots.map((d) => {
-                const depotStocks = stocks.filter((s) => s.depotId === d.id);
+              {depots.map((d: { id: string; name: string }) => {
+                const depotStocks = (stocks as StockWithRelations[]).filter((s) => s.depotId === d.id);
                 const entrees = depotStocks
                   .filter((s) => s.type === 'ENTREE')
                   .reduce((acc, s) => acc + (Number(s.quantite) || 0), 0);

@@ -65,7 +65,7 @@ import {
     Trash,
 } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { columns, ProspectWithRelations } from "./columns";
+import { columns, ProspectWithRelations, stageLabels } from "./columns";
 import ExportExcel from "@/components/exportExcel";
 import { useRouter } from "next/navigation";
 
@@ -73,7 +73,7 @@ export default function DataTables({ Element }: { Element: ProspectWithRelations
     const id = useId();
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-    const router = useRouter(); 
+    const router = useRouter();
     const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10, });
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -113,7 +113,7 @@ export default function DataTables({ Element }: { Element: ProspectWithRelations
         state: { sorting, pagination, columnFilters, columnVisibility, },
     });
 
-    
+
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -150,7 +150,7 @@ export default function DataTables({ Element }: { Element: ProspectWithRelations
                             </button>
                         )}
                     </div>
-                    
+
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline">
@@ -187,7 +187,7 @@ export default function DataTables({ Element }: { Element: ProspectWithRelations
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2">
                         <Label>Étape</Label>
-                        <Select value={selectedStage} onValueChange={(v)=> setSelectedStage(v)}>
+                        <Select value={selectedStage} onValueChange={(v) => setSelectedStage(v)}>
                             <SelectTrigger className="min-w-32"><SelectValue placeholder="Tous" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="ALL">Tous</SelectItem>
@@ -239,21 +239,21 @@ export default function DataTables({ Element }: { Element: ProspectWithRelations
                             </AlertDialogContent>
                         </AlertDialog>
                     )}
-                    <Button onClick={()=> router.push(`/dashboard/prospects/create`) }>Nouveau Prospect</Button>
+                    <Button onClick={() => router.push(`/dashboard/prospects/create`)}>Nouveau Prospect</Button>
                     <ExportExcel
-                      data={filteredData}
-                      filename="prospects"
-                      mapRow={(row: ProspectWithRelations) => {
-                        return {
-                          Nom: row.name,
-                          Société: row.company || '',
-                          Email: row.email || '',
-                          Téléphone: row.phone || '',
-                          Source: row.source || '',
-                          Étape: stageLabels[row.stage],
-                          'Créé le': row.createdAt,
-                        };
-                      }}
+                        data={filteredData}
+                        filename="prospects"
+                        mapRow={(row: ProspectWithRelations) => {
+                            return {
+                                Nom: row.name,
+                                Société: row.company || '',
+                                Email: row.email || '',
+                                Téléphone: row.phone || '',
+                                Source: row.source || '',
+                                Étape: stageLabels[row.stage],
+                                'Créé le': row.createdAt,
+                            };
+                        }}
                     />
                 </div>
             </div>

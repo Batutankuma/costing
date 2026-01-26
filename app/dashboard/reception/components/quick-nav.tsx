@@ -20,7 +20,7 @@ export default function QuickNav() {
       title: "Tableau de bord",
       description: "Vue d'ensemble des réceptions et commandes",
       icon: BarChart3,
-      url: "/dashboard/operations/reception/dashboard",
+      url: "/dashboard/reception/dashboard",
       variant: "default" as const,
       color: "bg-blue-500 hover:bg-blue-600"
     },
@@ -28,7 +28,7 @@ export default function QuickNav() {
       title: "Liste des réceptions",
       description: "Gérer et consulter toutes les réceptions",
       icon: List,
-      url: "/dashboard/operations/reception/list",
+      url: "/dashboard/reception/list",
       variant: "outline" as const,
       color: "bg-green-500 hover:bg-green-600"
     },
@@ -36,7 +36,7 @@ export default function QuickNav() {
       title: "Nouvelle réception",
       description: "Créer une nouvelle réception de produits",
       icon: Plus,
-      url: "/dashboard/operations/reception/create",
+      url: "/dashboard/reception/create",
       variant: "outline" as const,
       color: "bg-purple-500 hover:bg-purple-600"
     },
@@ -44,7 +44,7 @@ export default function QuickNav() {
       title: "Commandes",
       description: "Gérer les commandes et leur statut",
       icon: Package,
-      url: "/dashboard/operations/commande",
+      url: "/dashboard/commande",
       variant: "outline" as const,
       color: "bg-orange-500 hover:bg-orange-600"
     },

@@ -222,7 +222,7 @@ export default function DataTables({ Element }: { Element: Reception[] }) {
                             </AlertDialogContent>
                         </AlertDialog>
                     )}
-                    <Button onClick={()=> router.push(`/dashboard/operations/reception/create`) }>Create</Button>
+                    <Button onClick={()=> router.push(`/dashboard/reception/create`) }>Create</Button>
                     <ExportExcel data={data} filename="reception" />
                 </div>
             </div>

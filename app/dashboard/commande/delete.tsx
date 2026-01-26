@@ -31,7 +31,7 @@ export default function RemoveDialog({ open, setOpen, Id, nameClient }: { open: 
           title: "Succès",
           description: "Commande supprimée avec succès"
         });
-        router.push(`/dashboard/operations/commande`);
+        router.push(`/dashboard/commande`);
         setOpen(false);
       } else {
         toast({

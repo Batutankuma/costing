@@ -25,7 +25,7 @@ export default function RemoveDialog({ open, setOpen, Id, nameClient }: { open: 
       router.refresh();
       setOpen(false);
     } else {
-      console.error("Erreur lors de la suppression du devis:", result?.data?.failure);
+      console.error("Erreur lors de la suppression du devis:", result?.serverError || "Erreur inconnue");
     }
   }
 

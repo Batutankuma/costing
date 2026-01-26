@@ -30,8 +30,7 @@ export const createAction = actionClient
   .schema(ServerCommandeSchema)
   .action(async ({ parsedInput }) => {
     try {
-      console.log('[CMD-ACTION] createAction input:', parsedInput);
-
+    
       // Préparer les données avec gestion des valeurs optionnelles
       const commandeData = {
         status: parsedInput.status,
@@ -44,8 +43,7 @@ export const createAction = actionClient
         fournisseurId: parsedInput.fournisseurId,
         unitPrice: parsedInput.unitPrice,
       };
-      console.log('[CMD-ACTION] prisma payload:', commandeData);
-
+     
       const result = await prisma.commande.create({
         data: commandeData,
         include: {
@@ -54,8 +52,7 @@ export const createAction = actionClient
           fournisseur: { select: { nom: true } },
         },
       });
-      console.log('[CMD-ACTION] prisma result:', result?.id);
-      
+     
       revalidatePath("/dashboard/commande");
       return { success: result };
     } catch (error) {
@@ -143,7 +140,7 @@ export const findAllAction = actionClient
  * @returns An object indicating success with the updated commande, or failure with an error message.
  */
 export const updateAction = actionClient
-  .schema(CreateCommandeSchema.extend({ id: z.string().uuid() }))
+  .schema(CreateCommandeSchema.extend({ id: z.string().min(1, "L'ID est requis") }))
   .action(async ({ parsedInput }) => {
     try {
       const { id, ...updateData } = parsedInput; // Destructurer pour exclure l'ID

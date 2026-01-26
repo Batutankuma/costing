@@ -12,7 +12,13 @@ export default async function Page() {
   // Récupérer les prospects avec les relations
   const prospects = await prisma.prospect.findMany({
     include: {
-      owner: true,
+      owner: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        }
+      },
     },
     orderBy: { createdAt: 'desc' }
   });

@@ -34,6 +34,15 @@ export type ProspectWithRelations = {
         id: string;
         name: string;
     } | null;
+    // Champs de qualification
+    jobTitle?: string | null;
+    website?: string | null;
+    address?: string | null;
+    city?: string | null;
+    country?: string | null;
+    potentialValue?: number | null;
+    expectedCloseDate?: Date | null;
+    tags?: string[];
 };
 
 const stageVariantByStage: Record<ProspectWithRelations["stage"], "default" | "secondary" | "destructive" | "outline"> = {
@@ -44,9 +53,9 @@ const stageVariantByStage: Record<ProspectWithRelations["stage"], "default" | "s
     LOST: "destructive",
 };
 
-const stageLabels = {
+export const stageLabels = {
     NEW: "Nouveau",
-    CONTACTED: "Contacté", 
+    CONTACTED: "Contacté",
     QUALIFIED: "Qualifié",
     WON: "Gagné",
     LOST: "Perdu"
@@ -54,7 +63,7 @@ const stageLabels = {
 
 // La fonction de filtre utilise des champs disponibles avec relations
 const multiColumnFilterFn: FilterFn<ProspectWithRelations> = (row, columnId, filterValue) => {
-    const searchableRowContent = `${row.original.name} ${row.original.company || ''} ${row.original.email || ''} ${row.original.phone || ''}`.toLowerCase();
+    const searchableRowContent = `${row.original.name} ${row.original.company || ''} ${row.original.email || ''} ${row.original.phone || ''} ${row.original.source || ''} ${row.original.jobTitle || ''} ${row.original.city || ''} ${row.original.country || ''} ${row.original.owner?.name || ''} ${row.original.tags?.join(' ') || ''}`.toLowerCase();
     const searchTerm = (filterValue ?? "").toLowerCase();
     return searchableRowContent.includes(searchTerm);
 };
@@ -126,6 +135,24 @@ export const columns: ColumnDef<ProspectWithRelations>[] = [
                     {stageLabels[stage as keyof typeof stageLabels]}
                 </Badge>
             );
+        },
+    },
+    {
+        header: "Propriétaire",
+        accessorKey: "owner",
+        size: 150,
+        cell: ({ row }) => {
+            const owner = row.original.owner;
+            return <div>{owner?.name || "Non assigné"}</div>;
+        },
+    },
+    {
+        header: "Valeur potentielle",
+        accessorKey: "potentialValue",
+        size: 150,
+        cell: ({ row }) => {
+            const value = row.original.potentialValue;
+            return <div>{value ? `${value.toLocaleString('fr-FR')} USD` : "N/A"}</div>;
         },
     },
     {

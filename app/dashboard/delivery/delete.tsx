@@ -21,7 +21,7 @@ export default function RemoveDialog({ open, setOpen, Id, nameClient }: { open: 
   async function deleteElement() {
     const { failure } = await removeByIdAction(Id);
     if (!failure) {
-      router.push(`/dashboard/operations/delivery`);
+      router.push(`/dashboard/delivery`);
       setOpen(false);
     } else {
       console.error("Erreur lors de la suppression du delivery:", failure);

@@ -64,7 +64,7 @@ export default function EditDeliveryPage() {
   const [tanks, setTanks] = useState<Tank[]>([]);
   const [produits, setProduits] = useState<Produit[]>([]);
   const [loadingData, setLoadingData] = useState(true);
-  
+
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
@@ -121,7 +121,7 @@ export default function EditDeliveryPage() {
     const loadData = async () => {
       try {
         setLoadingData(true);
-        
+
         // Charger les clients
         const clientsResult = await getClients();
         const mappedClients = (clientsResult || []).map((c: any) => ({
@@ -145,7 +145,7 @@ export default function EditDeliveryPage() {
         // Charger les produits
         const produitsResult = await executeProduits();
         const produitsData = produitsResult?.data?.data ?? [];
-        setProduits((produitsData || []).map(p => ({ id: p.id, nom: p.name })));
+        setProduits((produitsData || []).map((p: any) => ({ id: p.id, nom: p.name })));
       } catch (error) {
         console.error("Erreur lors du chargement des données:", error);
         toast({
@@ -170,7 +170,7 @@ export default function EditDeliveryPage() {
         const result = await findByIdAction(entityId);
         if (result.success && result.result) {
           const entity = result.result as z.infer<typeof EditDeliverySchema>;
-          
+
           // Mettre à jour tous les champs
           setValue("deliveryDate", entity.deliveryDate ? new Date(entity.deliveryDate) : new Date());
           setValue("note", entity.note || "");
@@ -197,7 +197,7 @@ export default function EditDeliveryPage() {
             title: "Erreur",
             description: msg,
           });
-          setTimeout(() => router.push(`/dashboard/delivery`), 2000); 
+          setTimeout(() => router.push(`/dashboard/delivery`), 2000);
         }
       } catch (error) {
         console.error("Erreur lors du chargement de la livraison:", error);
@@ -207,7 +207,7 @@ export default function EditDeliveryPage() {
           title: "Erreur",
           description: "Impossible de charger la livraison.",
         });
-        setTimeout(() => router.push(`/dashboard/delivery`), 2000); 
+        setTimeout(() => router.push(`/dashboard/delivery`), 2000);
       } finally {
         setIsLoading(false);
       }
@@ -240,7 +240,7 @@ export default function EditDeliveryPage() {
         flightNumber: data.flightNumber,
         linkDoc: data.linkDoc
       });
-      
+
       if (!result?.data?.success) {
         throw new Error(result?.data?.failure || "Une erreur est survenue lors de la mise à jour.");
       }
@@ -303,19 +303,19 @@ export default function EditDeliveryPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="deliveryDate">Date <span className="text-red-500">*</span></Label>
-                <Input 
-                  id="deliveryDate" 
-                  type="date" 
-                  {...register("deliveryDate", { valueAsDate: true })} 
+                <Input
+                  id="deliveryDate"
+                  type="date"
+                  {...register("deliveryDate", { valueAsDate: true })}
                 />
                 {errors.deliveryDate && <p className="text-red-500 text-sm">{errors.deliveryDate.message}</p>}
               </div>
               <div>
                 <Label htmlFor="note">Note <span className="text-red-500">*</span></Label>
-                <Input 
-                  id="note" 
-                  {...register("note")} 
-                  placeholder="Numéro de note de livraison" 
+                <Input
+                  id="note"
+                  {...register("note")}
+                  placeholder="Numéro de note de livraison"
                 />
                 {errors.note && <p className="text-red-500 text-sm">{errors.note.message}</p>}
               </div>
@@ -323,21 +323,21 @@ export default function EditDeliveryPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="quantity">Quantité <span className="text-red-500">*</span></Label>
-                <Input 
-                  id="quantity" 
-                  type="number" 
+                <Input
+                  id="quantity"
+                  type="number"
                   step="0.0001"
-                  {...register("quantity", { valueAsNumber: true })} 
-                  placeholder="Ex: 1.2345" 
+                  {...register("quantity", { valueAsNumber: true })}
+                  placeholder="Ex: 1.2345"
                 />
                 {errors.quantity && <p className="text-red-500 text-sm">{errors.quantity.message}</p>}
               </div>
               <div>
                 <Label htmlFor="unit">Unité <span className="text-red-500">*</span></Label>
-                <Input 
-                  id="unit" 
-                  {...register("unit")} 
-                  placeholder="Ex: L, M3" 
+                <Input
+                  id="unit"
+                  {...register("unit")}
+                  placeholder="Ex: L, M3"
                 />
                 {errors.unit && <p className="text-red-500 text-sm">{errors.unit.message}</p>}
               </div>
@@ -434,42 +434,42 @@ export default function EditDeliveryPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="openingEter">Compteur d&apos;ouverture <span className="text-red-500">*</span></Label>
-                <Input 
-                  id="openingEter" 
-                  type="number" 
-                  {...register("openingEter", { valueAsNumber: true })} 
-                  placeholder="Ex: 1000" 
+                <Input
+                  id="openingEter"
+                  type="number"
+                  {...register("openingEter", { valueAsNumber: true })}
+                  placeholder="Ex: 1000"
                 />
                 {errors.openingEter && <p className="text-red-500 text-sm">{errors.openingEter.message as string}</p>}
               </div>
 
               <div>
                 <Label htmlFor="closingEter">Compteur de fermeture <span className="text-red-500">*</span></Label>
-                <Input 
-                  id="closingEter" 
-                  type="number" 
-                  {...register("closingEter", { valueAsNumber: true })} 
-                  placeholder="Ex: 1200" 
+                <Input
+                  id="closingEter"
+                  type="number"
+                  {...register("closingEter", { valueAsNumber: true })}
+                  placeholder="Ex: 1200"
                 />
                 {errors.closingEter && <p className="text-red-500 text-sm">{errors.closingEter.message as string}</p>}
               </div>
 
               <div>
                 <Label htmlFor="timeStart">Heure de début <span className="text-red-500">*</span></Label>
-                <Input 
-                  id="timeStart" 
-                  type="time" 
-                  {...register("timeStart")} 
+                <Input
+                  id="timeStart"
+                  type="time"
+                  {...register("timeStart")}
                 />
                 {errors.timeStart && <p className="text-red-500 text-sm">{errors.timeStart.message as string}</p>}
               </div>
 
               <div>
                 <Label htmlFor="timeEnd">Heure de fin <span className="text-red-500">*</span></Label>
-                <Input 
-                  id="timeEnd" 
-                  type="time" 
-                  {...register("timeEnd")} 
+                <Input
+                  id="timeEnd"
+                  type="time"
+                  {...register("timeEnd")}
                 />
                 {errors.timeEnd && <p className="text-red-500 text-sm">{errors.timeEnd.message as string}</p>}
               </div>
@@ -487,11 +487,11 @@ export default function EditDeliveryPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="prixUnitaire">Prix unitaire <span className="text-red-500">*</span></Label>
-                <Input 
-                  id="prixUnitaire" 
-                  type="number" 
-                  step="0.0001" 
-                  {...register("prixUnitaire", { valueAsNumber: true })} 
+                <Input
+                  id="prixUnitaire"
+                  type="number"
+                  step="0.0001"
+                  {...register("prixUnitaire", { valueAsNumber: true })}
                   placeholder="Ex: 1.0949"
                 />
                 {errors.prixUnitaire && <p className="text-red-500 text-sm">{errors.prixUnitaire.message}</p>}
@@ -513,9 +513,9 @@ export default function EditDeliveryPage() {
 
               <div>
                 <Label htmlFor="typeAircraft">Type d&apos;avion <span className="text-red-500">*</span></Label>
-                <Input 
-                  id="typeAircraft" 
-                  {...register("typeAircraft")} 
+                <Input
+                  id="typeAircraft"
+                  {...register("typeAircraft")}
                   placeholder="Ex: Boeing 737"
                 />
                 {errors.typeAircraft && <p className="text-red-500 text-sm">{errors.typeAircraft.message as string}</p>}
@@ -523,9 +523,9 @@ export default function EditDeliveryPage() {
 
               <div>
                 <Label htmlFor="flightNumber">Numéro de vol <span className="text-red-500">*</span></Label>
-                <Input 
-                  id="flightNumber" 
-                  {...register("flightNumber")} 
+                <Input
+                  id="flightNumber"
+                  {...register("flightNumber")}
                   placeholder="Ex: AF1234"
                 />
                 {errors.flightNumber && <p className="text-red-500 text-sm">{errors.flightNumber.message as string}</p>}
@@ -534,10 +534,10 @@ export default function EditDeliveryPage() {
 
             <div>
               <Label htmlFor="linkDoc">Lien du document</Label>
-              <Input 
-                id="linkDoc" 
-                {...register("linkDoc")} 
-                placeholder="URL ou lien de fichier (optionnel)" 
+              <Input
+                id="linkDoc"
+                {...register("linkDoc")}
+                placeholder="URL ou lien de fichier (optionnel)"
               />
               {errors.linkDoc && <p className="text-red-500 text-sm">{errors.linkDoc.message as string}</p>}
             </div>

@@ -19,13 +19,14 @@ export default function RemoveDialog({ open, setOpen, Id, nameClient }: { open: 
   if (!isMounted) return null;
 
   async function deleteElement() {
-    const { failure } = await deleteProspect({ id: Id });
-    if (!failure) {
+    const result = await deleteProspect({ id: Id });
+
+    if (result?.data?.success) {
       router.push(`/dashboard/prospects`);
       router.refresh();
       setOpen(false);
     } else {
-      console.error("Erreur lors de la suppression du prospect:", failure);
+      console.error("Erreur lors de la suppression du prospect:", result?.data?.failure || result?.serverError);
     }
   }
 

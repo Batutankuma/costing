@@ -30,7 +30,7 @@ import { findAllAction as findAllTanks } from "@/app/dashboard/tank/actions";
 export default function EditReceptionPage() {
   const params = useParams();
   const receptionId = params.id as string;
-  
+
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [produits, setProduits] = useState<Produit[]>([]);
   const [tanks, setTanks] = useState<Tank[]>([]);
@@ -47,9 +47,9 @@ export default function EditReceptionPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  const { 
-    register, 
-    handleSubmit, 
+  const {
+    register,
+    handleSubmit,
     formState: { errors },
     setValue,
     watch,
@@ -59,14 +59,14 @@ export default function EditReceptionPage() {
     resolver: zodResolver(z.object({
       id: z.string().uuid(),
       receptionDate: z.date(),
-      reference: z.string().optional(),
+      reference: z.string().optional().nullable(),
       quantity: z.number().min(0),
       unit: z.enum(["KG", "G", "L", "ML", "TONNE", "PIECE", "BOITE", "CAISSON", "POUCE", "METRE", "METRE_CARRE", "METRE_CUBE", "METRE_LINEAIRE"]),
-      notes: z.string().optional(),
+      notes: z.string().optional().nullable(),
       receptionStatus: z.enum(["RECEIVED", "IN_TRANSIT", "CANCELLED"]),
       commandeId: z.string().uuid(),
       produitId: z.string().uuid(),
-      tankId: z.string().uuid().optional(),
+      tankId: z.string().uuid().optional().nullable(),
       stockEntryId: z.string().uuid().optional(),
       user: z.string().uuid().optional()
     })),
@@ -93,15 +93,19 @@ export default function EditReceptionPage() {
     const loadData = async () => {
       try {
         setLoading(true);
-        
+
         // Charger la réception à modifier
         const receptionResult = await findByIdAction(receptionId);
         if (receptionResult?.success && receptionResult.result) {
           const receptionData = receptionResult.result;
           setReception(receptionData);
-          
+
           // Pré-remplir le formulaire
-          setValue("receptionDate", new Date(receptionData.receptionDate));
+          // Amélioration pour éviter les problèmes de fuseau horaire
+          const localDate = new Date(receptionData.receptionDate);
+          const formattedDate = `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, '0')}-${String(localDate.getDate()).padStart(2, '0')}T${String(localDate.getHours()).padStart(2, '0')}:${String(localDate.getMinutes()).padStart(2, '0')}`;
+          setValue("receptionDate", new Date(formattedDate));
+
           setValue("reference", receptionData.reference || "");
           setValue("quantity", receptionData.quantity);
           setValue("unit", receptionData.unit);
@@ -155,7 +159,7 @@ export default function EditReceptionPage() {
         setSelectedCommande(commande);
         setValue("reference", commande.reference);
         setValue("produitId", commande.produitId);
-        setValue("unit", commande.unit || "L");
+        setValue("unit", (commande.unit as any) || "L");
         clearErrors("quantity");
         setQuantityError("");
       }
@@ -168,7 +172,7 @@ export default function EditReceptionPage() {
   useEffect(() => {
     if (selectedCommande && quantity > 0) {
       const remainingQuantity = selectedCommande.currentQuantity;
-      
+
       if (quantity > remainingQuantity) {
         const errorMsg = `Quantité trop élevée. Il ne reste que ${remainingQuantity} ${selectedCommande.unit || 'unités'} à recevoir sur cette commande.`;
         setQuantityError(errorMsg);
@@ -199,13 +203,13 @@ export default function EditReceptionPage() {
         throw new Error(result?.data?.failure || "Erreur inconnue lors de la modification.");
       }
       toast({ title: "Succès", description: "Réception modifiée avec succès !" });
-      router.push('/dashboard/operations/reception');
+      router.push('/dashboard/reception');
     } catch (e: unknown) {
       console.error("Erreur lors de la soumission du formulaire:", e);
-      toast({ 
-        variant: "destructive", 
-        title: "Erreur", 
-        description: e instanceof Error ? e.message : "Une erreur est survenue lors de la modification." 
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: e instanceof Error ? e.message : "Une erreur est survenue lors de la modification."
       });
     }
   };
@@ -230,9 +234,9 @@ export default function EditReceptionPage() {
           <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-red-600">Réception non trouvée</h2>
           <p className="text-gray-600 mt-2">La réception que vous essayez de modifier n&apos;existe pas.</p>
-          <Button 
-            className="mt-4" 
-            onClick={() => router.push('/dashboard/operations/reception')}
+          <Button
+            className="mt-4"
+            onClick={() => router.push('/dashboard/reception')}
           >
             Retour aux réceptions
           </Button>
@@ -251,14 +255,14 @@ export default function EditReceptionPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button 
+          <Button
             variant="outline"
-            onClick={() => router.push('/dashboard/operations/reception/list')}
+            onClick={() => router.push('/dashboard/reception/list')}
           >
             <List className="h-4 w-4 mr-2" />
             Voir la liste
           </Button>
-          <Button onClick={() => router.push('/dashboard/operations/reception')}>
+          <Button onClick={() => router.push('/dashboard/reception')}>
             <Package className="h-4 w-4 mr-2" />
             Retour au tableau de bord
           </Button>
@@ -299,10 +303,10 @@ export default function EditReceptionPage() {
                 <strong>Commande :</strong> {selectedCommande.reference}
               </div>
               <div>
-                <strong>Quantité totale commandée :</strong> {selectedCommande.quantity} {selectedCommande.unit || 'unités'}
+                <strong>Quantité totale commandée :</strong> {selectedCommande.quantite} {selectedCommande.unit || 'unités'}
               </div>
               <div>
-                <strong>Quantité restante à recevoir :</strong> 
+                <strong>Quantité restante à recevoir :</strong>
                 <span className={`font-bold ${selectedCommande.currentQuantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {selectedCommande.currentQuantity} {selectedCommande.unit || 'unités'}
                 </span>
@@ -316,10 +320,10 @@ export default function EditReceptionPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Label htmlFor="reference">Référence</Label>
-            <Input 
-              id="reference" 
-              placeholder="Référence automatique de la commande" 
-              {...register("reference")} 
+            <Input
+              id="reference"
+              placeholder="Référence automatique de la commande"
+              {...register("reference")}
               readOnly
               className="bg-gray-50"
             />
@@ -331,25 +335,25 @@ export default function EditReceptionPage() {
 
           <div>
             <Label htmlFor="receptionDate">Date de réception <span className="text-red-500">*</span></Label>
-            <Input 
-              id="receptionDate" 
-              type="datetime-local" 
-              {...register("receptionDate", { 
+            <Input
+              id="receptionDate"
+              type="datetime-local"
+              {...register("receptionDate", {
                 valueAsDate: true,
                 setValueAs: (value) => new Date(value)
-              })} 
+              })}
             />
             {errors.receptionDate && <p className="text-red-500 text-sm">{errors.receptionDate.message}</p>}
           </div>
 
           <div>
             <Label htmlFor="quantity">Quantité <span className="text-red-500">*</span></Label>
-            <Input 
-              id="quantity" 
-              type="number" 
-              step="0.01" 
-              placeholder="Quantité reçue" 
-              {...register("quantity", { valueAsNumber: true })} 
+            <Input
+              id="quantity"
+              type="number"
+              step="0.01"
+              placeholder="Quantité reçue"
+              {...register("quantity", { valueAsNumber: true })}
               className={quantityError ? "border-red-500" : ""}
             />
             {quantityError && (
@@ -461,10 +465,10 @@ export default function EditReceptionPage() {
 
         <div>
           <Label htmlFor="notes">Notes</Label>
-          <textarea 
-            id="notes" 
-            placeholder="Notes sur la réception" 
-            {...register("notes")} 
+          <textarea
+            id="notes"
+            placeholder="Notes sur la réception"
+            {...register("notes")}
             className="w-full p-2 border rounded-md"
             rows={3}
           />
@@ -472,17 +476,17 @@ export default function EditReceptionPage() {
         </div>
 
         <div className="flex gap-4">
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={isPending || !!quantityError}
           >
             <Save className="mr-2 h-4 w-4" />
             {isPending ? "Modification..." : "Modifier la réception"}
           </Button>
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => router.push('/dashboard/operations/reception')}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push('/dashboard/reception')}
           >
             Annuler
           </Button>

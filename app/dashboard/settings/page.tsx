@@ -27,7 +27,7 @@ function applyTheme(theme: Theme) {
 export default function SettingsPage() {
   const router = useRouter();
   const { data: session } = authClient.useSession();
-  const role = session?.user?.role as "ADMIN" | "COMMERCIAL" | undefined;
+  const role = (session?.user as any)?.role as "ADMIN" | "COMMERCIAL" | undefined;
   const [theme, setTheme] = useState<Theme>("system");
   const [language, setLanguage] = useState<Language>("fr");
   const [saving, setSaving] = useState(false);
@@ -142,7 +142,7 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        
+
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>Mot de passe</CardTitle>

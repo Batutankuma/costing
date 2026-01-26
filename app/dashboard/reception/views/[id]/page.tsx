@@ -11,14 +11,14 @@ import { Reception } from "@/models/mvc";
 
 // Types locaux
 type CommandeRef = { id: string; reference?: string | null; quantite?: number; quantity?: number; unit?: string | null; currentQuantity?: number; status?: string };
-type ProduitRef = { id: string; name: string };
-type TankRef = { id: string; name: string };
-import { 
-  ArrowLeft, 
-  Edit, 
-  Package, 
-  Scale, 
-  FileText, 
+type ProduitRef = { id: string; nom: string; description?: string | null };
+type TankRef = { id: string; name: string; capacity?: number; currentLevel?: number; unit?: string };
+import {
+  ArrowLeft,
+  Edit,
+  Package,
+  Scale,
+  FileText,
   AlertTriangle,
   CheckCircle,
   Clock,
@@ -36,7 +36,7 @@ export default function ViewReceptionPage() {
   const params = useParams();
   const receptionId = params.id as string;
   const router = useRouter();
-  
+
   const [reception, setReception] = useState<Reception | null>(null);
   const [commande, setCommande] = useState<CommandeRef | null>(null);
   const [produit, setProduit] = useState<ProduitRef | null>(null);
@@ -52,13 +52,13 @@ export default function ViewReceptionPage() {
     const loadData = async () => {
       try {
         setLoading(true);
-        
+
         // Charger la réception
         const receptionResult = await findByIdAction(receptionId);
         if (receptionResult?.success && receptionResult.result) {
           const receptionData = receptionResult.result;
           setReception(receptionData);
-          
+
           // Charger les données liées
           if (receptionData.commandeId) {
             const commandesResult = await executeCommandes();
@@ -67,7 +67,7 @@ export default function ViewReceptionPage() {
               setCommande(foundCommande || null);
             }
           }
-          
+
           if (receptionData.produitId) {
             const produitsResult = await executeProduits();
             const produits = produitsResult?.data?.data ?? [];
@@ -76,7 +76,7 @@ export default function ViewReceptionPage() {
               setProduit(foundProduit || null);
             }
           }
-          
+
           if (receptionData.tankId) {
             const tanksResult = await executeTanks();
             if (tanksResult?.data?.success && tanksResult.data.result) {
@@ -144,9 +144,9 @@ export default function ViewReceptionPage() {
           <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-red-600">Réception non trouvée</h2>
           <p className="text-gray-600 mt-2">La réception que vous recherchez n&apos;existe pas.</p>
-          <Button 
-            className="mt-4" 
-            onClick={() => router.push('/dashboard/operations/reception')}
+          <Button
+            className="mt-4"
+            onClick={() => router.push('/dashboard/reception')}
           >
             Retour aux réceptions
           </Button>
@@ -160,9 +160,9 @@ export default function ViewReceptionPage() {
       {/* En-tête avec navigation */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
-            onClick={() => router.push('/dashboard/operations/reception')}
+          <Button
+            variant="outline"
+            onClick={() => router.push('/dashboard/reception')}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour
@@ -175,24 +175,24 @@ export default function ViewReceptionPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Button 
+          <Button
             variant="outline"
-            onClick={() => router.push('/dashboard/operations/reception/list')}
+            onClick={() => router.push('/dashboard/reception/list')}
           >
             <List className="h-4 w-4 mr-2" />
             Voir la liste
           </Button>
-          <Button 
+          <Button
             variant="outline"
-            onClick={() => router.push(`/dashboard/operations/reception/${reception.id}`)}
+            onClick={() => router.push(`/dashboard/reception/${reception.id}`)}
           >
             <Edit className="h-4 w-4 mr-2" />
             Modifier
           </Button>
-          <DeleteReception 
+          <DeleteReception
             receptionId={reception.id}
             receptionReference={reception.reference || `Réception ${reception.id.slice(0, 8)}...`}
-            onDelete={() => router.push('/dashboard/operations/reception')}
+            onDelete={() => router.push('/dashboard/reception')}
           />
         </div>
       </div>
@@ -301,9 +301,8 @@ export default function ViewReceptionPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Quantité restante :</span>
-                  <span className={`font-semibold ${
-                    commande.currentQuantity === 0 ? 'text-green-600' : 'text-orange-600'
-                  }`}>
+                  <span className={`font-semibold ${commande.currentQuantity === 0 ? 'text-green-600' : 'text-orange-600'
+                    }`}>
                     {commande.currentQuantity} {commande.unit || 'unités'}
                   </span>
                 </div>
@@ -321,13 +320,15 @@ export default function ViewReceptionPage() {
                     })()}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                    <div 
+                    <div
                       className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${(() => {
-                        const total = commande.quantite ?? commande.quantity ?? 0;
-                        const remaining = commande.currentQuantity ?? 0;
-                        return total > 0 ? ((total - remaining) / total) * 100 : 0;
-                      })()}%` }}
+                      style={{
+                        width: `${(() => {
+                          const total = commande.quantite ?? commande.quantity ?? 0;
+                          const remaining = commande.currentQuantity ?? 0;
+                          return total > 0 ? ((total - remaining) / total) * 100 : 0;
+                        })()}%`
+                      }}
                     />
                   </div>
                 </div>
@@ -401,24 +402,24 @@ export default function ViewReceptionPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
-            <Button 
-              onClick={() => router.push(`/dashboard/operations/reception/${reception.id}`)}
+            <Button
+              onClick={() => router.push(`/dashboard/reception/${reception.id}`)}
               className="flex-1 md:flex-none"
             >
               <Edit className="h-4 w-4 mr-2" />
               Modifier cette réception
             </Button>
-            <Button 
+            <Button
               variant="outline"
-              onClick={() => router.push('/dashboard/operations/reception/create')}
+              onClick={() => router.push('/dashboard/reception/create')}
               className="flex-1 md:flex-none"
             >
               <Package className="h-4 w-4 mr-2" />
               Créer une nouvelle réception
             </Button>
-            <Button 
+            <Button
               variant="outline"
-              onClick={() => router.push('/dashboard/operations/reception')}
+              onClick={() => router.push('/dashboard/reception')}
               className="flex-1 md:flex-none"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />

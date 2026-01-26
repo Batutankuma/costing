@@ -59,7 +59,7 @@ export default function QuoteEditForm({ initial }: { initial: Quote }) {
   useEffect(() => {
     (async () => {
       const res = await listBuilders();
-      const items = res.data?.success ? res.data.result : [];
+      const items = res?.data?.success ? res.data.result : [];
       setBuilders(items.map((b: { id: string; title: string }) => ({ id: b.id, title: b.title })));
     })();
   }, []);
@@ -87,11 +87,11 @@ export default function QuoteEditForm({ initial }: { initial: Quote }) {
       if (!builderId) return;
       try {
         const r = await computeBasePrices(builderId);
-        if (r.data?.success && r.data.result) {
-          setBaseDDUUSD(Number(r.data.result.baseDDUUSD || 0));
-          setBaseDDPUSD(Number(r.data.result.baseDDPUSD || 0));
+        if (r.success && r.result) {
+          setBaseDDUUSD(Number(r.result.baseDDUUSD || 0));
+          setBaseDDPUSD(Number(r.result.baseDDPUSD || 0));
         }
-      } catch {}
+      } catch { }
     })();
   }, [builderId]);
 

@@ -178,7 +178,7 @@ export const updateFactureAction = actionClient
   .action(async ({ parsedInput }) => {
     try {
       const { subtotal, taxAmount, total } = computeTotals(parsedInput);
-      const result = await prisma.$transaction(async (tx) => {
+      const result = await prisma.$transaction(async (tx: any) => {
         await tx.manualFactureLine.deleteMany({ where: { factureId: parsedInput.id } });
         const updated = await tx.manualFacture.update({
           where: { id: parsedInput.id },

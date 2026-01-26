@@ -68,11 +68,20 @@ export default function CreateDeliveryPage() {
         }));
         setClients(mappedClients);
 
-        // Charger les dépôts
+        // Charger les dépôts - Filtrer pour ne garder que Kalemie
         const depotsResult = await executeDepots();
         if (!isMounted) return;
         const depotsData = depotsResult?.data?.data ?? [];
-        setDepots(depotsData || []);
+        // Filtrer pour ne garder que le dépôt Kalemie
+        const kalemieDepot = depotsData.filter((depot: DepotRef) => 
+          depot.name?.toLowerCase().includes("kalemie")
+        );
+        setDepots(kalemieDepot || []);
+        
+        // Pré-sélectionner Kalemie si trouvé
+        if (kalemieDepot.length > 0) {
+          setValue("depotId", kalemieDepot[0].id);
+        }
 
         // Charger les tanks
         const tanksResult = await executeTanks();
@@ -306,13 +315,23 @@ export default function CreateDeliveryPage() {
 
               <div>
                 <Label htmlFor="depotId">Dépôt</Label>
-                <Select onValueChange={(value) => {
-                  setValue("depotId", value);
-                  // Réinitialiser le tank si le dépôt change
-                  setValue("tankId", "");
-                }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un dépôt (optionnel)" />
+                <Select 
+                  onValueChange={(value) => {
+                    setValue("depotId", value);
+                    // Réinitialiser le tank si le dépôt change
+                    setValue("tankId", "");
+                  }}
+                  value={watch("depotId") || undefined}
+                  disabled={depots.length === 1}
+                >
+                  <SelectTrigger className={depots.length === 1 ? "bg-muted" : ""}>
+                    <SelectValue 
+                      placeholder={
+                        depots.length === 1 
+                          ? depots[0]?.name || "Kalemie" 
+                          : "Sélectionner un dépôt (optionnel)"
+                      } 
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {depots.map((depot) => (
@@ -323,6 +342,11 @@ export default function CreateDeliveryPage() {
                   </SelectContent>
                 </Select>
                 {errors.depotId && <p className="text-red-500 text-sm">{errors.depotId.message as string}</p>}
+                {depots.length === 1 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Dépôt Kalemie pré-sélectionné
+                  </p>
+                )}
               </div>
 
               <div>
@@ -355,19 +379,35 @@ export default function CreateDeliveryPage() {
                 <Select 
                   onValueChange={(value) => setValue("produitId", value)}
                   value={watch("produitId") || undefined}
+                  disabled={tankId && tanks.find(t => t.id === tankId)?.produitId ? true : false}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un produit (optionnel)" />
+                  <SelectTrigger className={tankId && tanks.find(t => t.id === tankId)?.produitId ? "bg-muted" : ""}>
+                    <SelectValue 
+                      placeholder={
+                        tankId && tanks.find(t => t.id === tankId)?.produitId 
+                          ? "Sélectionné automatiquement selon le tank" 
+                          : "Sélectionner un produit (optionnel)"
+                      } 
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    {produits.map((produit) => (
-                      <SelectItem key={produit.id} value={produit.id}>
-                        {produit.nom}
-                      </SelectItem>
-                    ))}
+                    {produits.length === 0 ? (
+                      <SelectItem value="" disabled>Aucun produit disponible</SelectItem>
+                    ) : (
+                      produits.map((produit) => (
+                        <SelectItem key={produit.id} value={produit.id}>
+                          {produit.nom || "Produit sans nom"}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
                 {errors.produitId && <p className="text-red-500 text-sm">{errors.produitId.message as string}</p>}
+                {tankId && tanks.find(t => t.id === tankId)?.produitId && (
+                  <p className="text-xs text-blue-600 mt-1 font-medium">
+                    ✓ Produit automatiquement sélectionné selon le tank
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>

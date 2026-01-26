@@ -383,11 +383,12 @@ export const CreateReceptionSchema = z.object({
   reference: z.string().optional().nullable(),
   receptionDate: z.date(),
   quantity: z.number().min(0, "La quantité doit être positive"),
-  unit: z.string().min(1, "L'unité est requise"),
+  unit: z.enum(["KG", "G", "L", "ML", "TONNE", "PIECE", "BOITE", "CAISSON", "POUCE", "METRE", "METRE_CARRE", "METRE_CUBE", "METRE_LINEAIRE"]),
   receptionStatus: z.enum(["RECEIVED", "IN_TRANSIT", "CANCELLED"]).default("RECEIVED"),
-  commandeId: z.string().optional().nullable(),
+  commandeId: z.string().min(1, "Commande requise"),
   depotId: z.string().optional().nullable(),
-  produitId: z.string().optional().nullable(),
+  produitId: z.string().min(1, "Produit requis"),
+  notes: z.string().optional().nullable(),
   tankId: z.string().optional().nullable(),
 });
 
@@ -422,6 +423,22 @@ export const DeliverySchema = CreateDeliverySchema.extend({
 });
 
 // Export types for use in components
+
 export type Reception = z.infer<typeof ReceptionSchema>;
 export type Delivery = z.infer<typeof DeliverySchema>;
+
+export type CreateReception = z.infer<typeof CreateReceptionSchema>;
+export type Tank = z.infer<typeof TankSchema>;
+export type Commande = z.infer<typeof CommandeSchema> & {
+  currentQuantity: number;
+  unit?: string | null;
+  produitId: string;
+};
+
+export type Produit = {
+  id: string;
+  nom: string;
+};
+
+export type CommandeStatus = "DRAFT" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "PARTIALLY_RECEIVED";
 

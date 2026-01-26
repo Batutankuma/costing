@@ -65,43 +65,7 @@ import {
     Trash,
 } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { columns } from "./columns";
-// Type pour Stock avec relations Prisma
-type StockWithRelations = {
-  id: string;
-  date: Date;
-  reference: string;
-  depotId?: string;
-  type: 'ENTREE' | 'SORTIE';
-  fournisseurId?: string;
-  clientId?: string;
-  produitId: string;
-  quantite: number;
-  prixUnitaireVente?: number;
-  prixUnitaireAchat?: number;
-  unite: string;
-  devise: string;
-  seuilMinimum: number;
-  createdAt: Date;
-  updatedAt: Date;
-  depot?: {
-    id: string;
-    name: string;
-  };
-  produit?: {
-    id: string;
-    nom: string;
-  };
-  client?: {
-    id: string;
-    nom: string;
-  };
-  fournisseur?: {
-    id: string;
-    nom: string;
-  };
-};
- 
+import { columns, StockWithRelations } from "./columns";
 import ExportExcel from "@/components/exportExcel";
 import { useRouter } from "next/navigation";
 
@@ -109,11 +73,11 @@ import { useRouter } from "next/navigation";
 type DepotOption = { id: string; name: string };
 type CommandeLite = { id: string; produitId: string; depotId: string; fournisseurId: string; unitPrice: number; Fournisseur?: { nom?: string } };
 
-export default function DataTables({ Element, Depots, Commandes }: { Element: Stock[]; Depots: DepotOption[]; Commandes: CommandeLite[] }) {
+export default function DataTables({ Element, Depots, Commandes }: { Element: StockWithRelations[]; Depots: DepotOption[]; Commandes: CommandeLite[] }) {
     const id = useId();
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-    const router = useRouter(); 
+    const router = useRouter();
     const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10, });
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -123,7 +87,7 @@ export default function DataTables({ Element, Depots, Commandes }: { Element: St
     const [startDate, setStartDate] = useState<string>("");
     const [endDate, setEndDate] = useState<string>("");
 
-    const [data, setData] = useState<Stock[]>([]);
+    const [data, setData] = useState<StockWithRelations[]>([]);
     useEffect(() => { setData(Element); }, [Element]);
 
     const filteredData = useMemo(() => {
@@ -161,7 +125,7 @@ export default function DataTables({ Element, Depots, Commandes }: { Element: St
         state: { sorting, pagination, columnFilters, columnVisibility, },
     });
 
-    
+
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -198,7 +162,7 @@ export default function DataTables({ Element, Depots, Commandes }: { Element: St
                             </button>
                         )}
                     </div>
-                    
+
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline">
@@ -235,11 +199,11 @@ export default function DataTables({ Element, Depots, Commandes }: { Element: St
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2">
                         <Label>Dépot</Label>
-                        <Select value={selectedDepot} onValueChange={(v)=> setSelectedDepot(v)}>
+                        <Select value={selectedDepot} onValueChange={(v) => setSelectedDepot(v)}>
                             <SelectTrigger className="min-w-40"><SelectValue placeholder="Tous" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="ALL">Tous</SelectItem>
-                                {Depots.map((d)=> (
+                                {Depots.map((d) => (
                                     <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                                 ))}
                             </SelectContent>
@@ -247,7 +211,7 @@ export default function DataTables({ Element, Depots, Commandes }: { Element: St
                     </div>
                     <div className="flex items-center gap-2">
                         <Label>Type</Label>
-                        <Select value={selectedType} onValueChange={(v)=> setSelectedType(v as "ALL" | "ENTREE" | "SORTIE")}>
+                        <Select value={selectedType} onValueChange={(v) => setSelectedType(v as "ALL" | "ENTREE" | "SORTIE")}>
                             <SelectTrigger className="min-w-32"><SelectValue placeholder="Tous" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="ALL">Tous</SelectItem>
@@ -258,9 +222,9 @@ export default function DataTables({ Element, Depots, Commandes }: { Element: St
                     </div>
                     <div className="flex items-center gap-2">
                         <Label>Du</Label>
-                        <Input type="date" value={startDate} onChange={(e)=> setStartDate(e.target.value)} />
+                        <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                         <Label>Au</Label>
-                        <Input type="date" value={endDate} onChange={(e)=> setEndDate(e.target.value)} />
+                        <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                     </div>
                     {table.getSelectedRowModel().rows.length > 0 && (
                         <AlertDialog>
@@ -302,61 +266,61 @@ export default function DataTables({ Element, Depots, Commandes }: { Element: St
                             </AlertDialogContent>
                         </AlertDialog>
                     )}
-                    <Button disabled={true} onClick={()=> router.push(`/dashboard/stock/stocks/create`) }>Create</Button>
+                    <Button disabled={true} onClick={() => router.push(`/dashboard/stock/stocks/create`)}>Create</Button>
                     <ExportExcel
-                      data={filteredData}
-                      filename="stocks"
-                      mapRow={(row: Stock & { Fournisseur?: { nom?: string }; Client?: { nom?: string }; Produit?: { nom?: string }; Depot?: { name?: string } }) => {
-                        // Trouver la commande correspondante (même produit + dépôt), la plus récente pertinente
-                        const cmd = (Commandes || []).find((c) => c.produitId === row.produitId && c.depotId === row.depotId);
-                        type AnyRow = { Fournisseur?: { nom?: string }; Client?: { nom?: string }; Produit?: { nom?: string }; Depot?: { name?: string }; fournisseur?: { nom?: string }; fournisseur_nom?: string; client?: { nom?: string }; client_nom?: string };
-                        const ar = row as unknown as AnyRow;
-                        const cmdF = (cmd && (cmd as unknown as { Fournisseur?: { nom?: string } }).Fournisseur?.nom) || '';
-                        const fournisseurNom = cmdF || ar.Fournisseur?.nom || ar.fournisseur?.nom || ar.fournisseur_nom || '';
-                        const clientNom = ar.Client?.nom || ar.client?.nom || ar.client_nom || '';
-                        const acteur = row.type === 'ENTREE' ? fournisseurNom : clientNom;
-                        const produitNom = row.Produit?.nom || row.produitId;
-                        const depotNom = row.Depot?.name || row.depotId;
-                        const prixUnitaireAchat = row.type === 'ENTREE'
-                          ? (Number(row.prixUnitaireAchat ?? 0) || (cmd ? Number(cmd.unitPrice || 0) : null))
-                          : (Number(row.prixUnitaireAchat ?? 0) || (cmd ? Number(cmd.unitPrice || 0) : null));
-                        const prixUnitaireVente = Number(row.prixUnitaireVente ?? 0) || null;
-                        const totalAchat = prixUnitaireAchat != null ? prixUnitaireAchat * (row.quantite ?? 0) : null;
-                        const totalVente = prixUnitaireVente != null ? prixUnitaireVente * (row.quantite ?? 0) : null;
-                        const unitMargin = row.margeUnitaire != null
-                          ? row.margeUnitaire
-                          : (row.type === 'SORTIE' && prixUnitaireVente != null && prixUnitaireAchat != null)
-                            ? (prixUnitaireVente - prixUnitaireAchat)
-                            : null;
-                        const totalMargin = row.margeTotale != null
-                          ? row.margeTotale
-                          : unitMargin != null ? unitMargin * (row.quantite ?? 0) : null;
-                        return {
-                          Date: row.date,
-                          Ref: row.reference,
-                          'Fourn./Client': acteur,
-                          Produit: produitNom,
-                          Dépôt: depotNom,
-                          Type: row.type,
-                          Qté: row.quantite,
-                          'PU Achat': prixUnitaireAchat,
-                          'PU Vente': prixUnitaireVente,
-                          'Devise Achat': row.deviseAchat ?? '',
-                          'Devise Vente': row.deviseVente ?? '',
-                          'Taux change achat': row.tauxChangeAchat ?? '',
-                          'Taux change vente': row.tauxChangeVente ?? '',
-                          'Total Achat': totalAchat,
-                          'Total Vente': totalVente,
-                          'Prix vente unitaire (converti)': row.prixVenteUnitaireConverti ?? '',
-                          'Marge unitaire': unitMargin,
-                          'Marge totale': totalMargin,
-                          'Valeur entrée': row.valeurEntree ?? '',
-                          'Valeur sortie': row.valeurSortie ?? '',
-                          'Qté stock final': row.quantiteStockFinal ?? '',
-                          PUMP: row.pump ?? '',
-                          'Valeur stock final': row.valeurStockFinal ?? '',
-                        } as Record<string, unknown>;
-                      }}
+                        data={filteredData}
+                        filename="stocks"
+                        mapRow={(row: StockWithRelations & { Fournisseur?: { nom?: string }; Client?: { nom?: string }; Produit?: { nom?: string }; Depot?: { name?: string }; deviseAchat?: string | null; deviseVente?: string | null; tauxChangeAchat?: string | null; tauxChangeVente?: string | null; prixVenteUnitaireConverti?: string | null; margeUnitaire?: number | null; margeTotale?: number | null; quantiteStockFinal?: string | null; pump?: string | null; valeurStockFinal?: string | null }) => {
+                            // Trouver la commande correspondante (même produit + dépôt), la plus récente pertinente
+                            const cmd = (Commandes || []).find((c) => c.produitId === row.produitId && c.depotId === row.depotId);
+                            type AnyRow = { Fournisseur?: { nom?: string }; Client?: { nom?: string }; Produit?: { nom?: string }; Depot?: { name?: string }; fournisseur?: { nom?: string }; fournisseur_nom?: string; client?: { nom?: string }; client_nom?: string };
+                            const ar = row as unknown as AnyRow;
+                            const cmdF = (cmd && (cmd as unknown as { Fournisseur?: { nom?: string } }).Fournisseur?.nom) || '';
+                            const fournisseurNom = cmdF || ar.Fournisseur?.nom || ar.fournisseur?.nom || ar.fournisseur_nom || '';
+                            const clientNom = ar.Client?.nom || ar.client?.nom || ar.client_nom || '';
+                            const acteur = row.type === 'ENTREE' ? fournisseurNom : clientNom;
+                            const produitNom = row.Produit?.nom || row.produitId;
+                            const depotNom = row.Depot?.name || row.depotId;
+                            const prixUnitaireAchat = row.type === 'ENTREE'
+                                ? (Number(row.prixUnitaireAchat ?? 0) || (cmd ? Number(cmd.unitPrice || 0) : null))
+                                : (Number(row.prixUnitaireAchat ?? 0) || (cmd ? Number(cmd.unitPrice || 0) : null));
+                            const prixUnitaireVente = Number(row.prixUnitaireVente ?? 0) || null;
+                            const totalAchat = prixUnitaireAchat != null ? prixUnitaireAchat * (row.quantite ?? 0) : null;
+                            const totalVente = prixUnitaireVente != null ? prixUnitaireVente * (row.quantite ?? 0) : null;
+                            const unitMargin = row.margeUnitaire != null
+                                ? row.margeUnitaire
+                                : (row.type === 'SORTIE' && prixUnitaireVente != null && prixUnitaireAchat != null)
+                                    ? (prixUnitaireVente - prixUnitaireAchat)
+                                    : null;
+                            const totalMargin = row.margeTotale != null
+                                ? row.margeTotale
+                                : unitMargin != null ? unitMargin * (row.quantite ?? 0) : null;
+                            return {
+                                Date: row.date,
+                                Ref: row.reference,
+                                'Fourn./Client': acteur,
+                                Produit: produitNom,
+                                Dépôt: depotNom,
+                                Type: row.type,
+                                Qté: row.quantite,
+                                'PU Achat': prixUnitaireAchat,
+                                'PU Vente': prixUnitaireVente,
+                                'Devise Achat': row.deviseAchat ?? '',
+                                'Devise Vente': row.deviseVente ?? '',
+                                'Taux change achat': row.tauxChangeAchat ?? '',
+                                'Taux change vente': row.tauxChangeVente ?? '',
+                                'Total Achat': totalAchat,
+                                'Total Vente': totalVente,
+                                'Prix vente unitaire (converti)': row.prixVenteUnitaireConverti ?? '',
+                                'Marge unitaire': unitMargin,
+                                'Marge totale': totalMargin,
+                                'Valeur entrée': row.valeurEntree ?? '',
+                                'Valeur sortie': row.valeurSortie ?? '',
+                                'Qté stock final': row.quantiteStockFinal ?? '',
+                                PUMP: row.pump ?? '',
+                                'Valeur stock final': row.valeurStockFinal ?? '',
+                            } as Record<string, unknown>;
+                        }}
                     />
                 </div>
             </div>

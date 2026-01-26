@@ -62,7 +62,7 @@ export default function CreateSalesQuotePage() {
     (async () => {
       try {
         const r = await listQuotes({});
-        const items = r.data?.success ? r.data.result : [];
+        const items = r?.data?.success ? r.data.result : [];
         const next = (Array.isArray(items) ? items.length : 0) + 1;
         const mm = new Date().toLocaleDateString("fr-FR", { month: "2-digit" }).slice(0, 2);
         setProformaNumber(`${String(next).padStart(4, "0")}-${mm}`);
@@ -91,8 +91,8 @@ export default function CreateSalesQuotePage() {
     if (!selectedId) return;
     (async () => {
       const r = await computeBasePrices(selectedId);
-      if (r.data?.success && r.data.result) {
-        const { baseDDUUSD: ddu, baseDDPUSD: ddp } = r.data.result;
+      if (r.success && r.result) {
+        const { baseDDUUSD: ddu, baseDDPUSD: ddp } = r.result;
         setBaseDDUUSD(ddu);
         setBaseDDPUSD(ddp);
       }
@@ -101,11 +101,11 @@ export default function CreateSalesQuotePage() {
 
   // Resolve role (from session, then API fallback)
   useEffect(() => {
-    const current = session?.user?.role as "ADMIN" | "COMMERCIAL" | undefined;
+    const current = (session?.user as any)?.role as "ADMIN" | "COMMERCIAL" | undefined;
     if (current) {
       setRole(current);
       // Précharger la signature enregistrée sur l'utilisateur s'il y en a une
-      const sig = session?.user?.signatureDataUrl;
+      const sig = (session?.user as any)?.signatureDataUrl;
       if (sig) setSignatureDataUrl(sig);
       return;
     }
@@ -210,8 +210,8 @@ export default function CreateSalesQuotePage() {
 
   // ===== Helpers: montant en lettres (FR) =====
   const numberToWordsFR = (n: number): string => {
-    const units = ["zéro","un","deux","trois","quatre","cinq","six","sept","huit","neuf","dix","onze","douze","treize","quatorze","quinze","seize"]; 
-    const tens = ["","dix","vingt","trente","quarante","cinquante","soixante","soixante","quatre-vingt","quatre-vingt"]; 
+    const units = ["zéro", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze", "douze", "treize", "quatorze", "quinze", "seize"];
+    const tens = ["", "dix", "vingt", "trente", "quarante", "cinquante", "soixante", "soixante", "quatre-vingt", "quatre-vingt"];
     const underHundred = (num: number): string => {
       if (num < 17) return units[num];
       if (num < 20) return "dix-" + units[num - 10];
@@ -477,7 +477,7 @@ export default function CreateSalesQuotePage() {
             <div className="mt-2">N° Impôt : A2441781R</div>
           </div>
           <div className="text-right">
-            <div className="uppercase tracking-widest text-neutral-400 font-semibold">FACTURE<br/>PROFORMA</div>
+            <div className="uppercase tracking-widest text-neutral-400 font-semibold">FACTURE<br />PROFORMA</div>
             <div className="mt-1 text-xs text-neutral-500">N° {proformaNumber}</div>
             <div className="mt-10">Kinshasa {new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}</div>
           </div>
@@ -570,7 +570,7 @@ export default function CreateSalesQuotePage() {
             <div className="mt-2">N° Impôt : A2441781R</div>
           </div>
           <div className="text-right">
-            <div className="uppercase tracking-widest text-neutral-400 font-semibold">FACTURE<br/>PROFORMA</div>
+            <div className="uppercase tracking-widest text-neutral-400 font-semibold">FACTURE<br />PROFORMA</div>
             <div className="mt-1 text-xs text-neutral-500">N° {proformaNumber}</div>
             <div className="mt-10">Kinshasa {new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}</div>
           </div>

@@ -28,7 +28,7 @@ export default async function ViewSalesQuotePage({ params }: { params: Promise<{
   const { id } = await params;
   const response = await getQuoteById({ id });
 
-  if (!response.data?.success || !response.data.result) {
+  if (!response?.data?.success || !response.data.result) {
     return (
       <div className="p-6 space-y-4 max-w-xl mx-auto">
         <div className="text-destructive bg-destructive/10 p-4 rounded-md">
@@ -172,24 +172,24 @@ export default async function ViewSalesQuotePage({ params }: { params: Promise<{
             <div>
               <Label className="text-sm font-medium text-muted-foreground">Date de création</Label>
               <p className="text-sm text-gray-600">
-                {new Date(quote.createdAt).toLocaleDateString('fr-FR', { 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric', 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
+                {new Date(quote.createdAt).toLocaleDateString('fr-FR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
                 })}
               </p>
             </div>
             <div>
               <Label className="text-sm font-medium text-muted-foreground">Dernière mise à jour</Label>
               <p className="text-sm text-gray-600">
-                {new Date(quote.updatedAt).toLocaleDateString('fr-FR', { 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric', 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
+                {new Date(quote.updatedAt).toLocaleDateString('fr-FR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
                 })}
               </p>
             </div>

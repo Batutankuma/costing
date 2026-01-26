@@ -35,8 +35,7 @@ export default function DeleteReception({
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      console.log("🗑️ Suppression de la réception:", receptionId);
-      
+     
       const result = await removeByIdAction(receptionId);
       
       if (result?.success) {
@@ -48,14 +47,12 @@ export default function DeleteReception({
         
         // Appeler le callback de rafraîchissement
         if (onDelete) {
-          console.log("🔄 Appel du callback onDelete pour rafraîchir la liste");
-          onDelete();
+        onDelete();
         }
         
         // Forcer un rafraîchissement de la page si pas de callback
         if (!onDelete) {
-          console.log("🔄 Rafraîchissement forcé de la page");
-          window.location.reload();
+        window.location.reload();
         }
       } else {
         toast({

@@ -30,7 +30,7 @@ type QuoteWithRelations = {
 export default async function QuoteDetailPage({ params }: Props) {
   const { id } = await params;
   const res = await getQuoteById({ id });
-  const q = res.data?.success ? res.data.result : null;
+  const q = res?.data?.success ? res.data.result : null;
 
   if (!q) {
     return (

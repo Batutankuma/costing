@@ -129,9 +129,9 @@ export const adminCreateWithPasswordAction = actionClient
       const candidates = Array.from(new Set([
         process.env.NEXT_PUBLIC_BASE_URL?.trim(),
         process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
-        "http://192.168.1.179:3000",
-        "http://192.168.1.179:3000",
-        "http://192.168.1.179:3000",
+        "http://localhost:3000",
+        "http://localhost:3000",
+        "http://localhost:3000",
       ].filter(Boolean) as string[]));
 
       let lastErrorText = "";

@@ -25,16 +25,14 @@ export default function ReceptionListPage() {
   const loadReceptions = useCallback(async () => {
     try {
       setLoading(true);
-      console.log("🔄 Chargement des réceptions...");
-      
+     
       const result = await executeFindAll();
-      
+
       if (result?.data?.success && result.data.result) {
         const newReceptions = result.data.result;
         setReceptions(newReceptions);
         setLastUpdate(new Date());
-        console.log(`✅ ${newReceptions.length} réceptions chargées`);
-        
+       
         // Afficher un toast de confirmation
         if (newReceptions.length > 0) {
           toast({
@@ -69,13 +67,11 @@ export default function ReceptionListPage() {
   }, [loadReceptions]);
 
   const handleRefresh = () => {
-    console.log("🔄 Rafraîchissement manuel demandé");
     loadReceptions();
   };
 
   const handleDelete = useCallback(() => {
-    console.log("🗑️ Suppression effectuée, rafraîchissement de la liste...");
-    // Délai court pour laisser le temps à la base de données de se mettre à jour
+  // Délai court pour laisser le temps à la base de données de se mettre à jour
     setTimeout(() => {
       loadReceptions();
     }, 500);
@@ -85,7 +81,6 @@ export default function ReceptionListPage() {
   useEffect(() => {
     const interval = setInterval(() => {
       if (!loading && !isRefreshing) {
-        console.log("🔄 Rafraîchissement automatique...");
         loadReceptions();
       }
     }, 30000); // 30 secondes
@@ -119,20 +114,20 @@ export default function ReceptionListPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handleRefresh}
             disabled={isRefreshing}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
             {isRefreshing ? 'Actualisation...' : 'Actualiser'}
           </Button>
-          <ExportExcel 
-            data={receptions} 
-            filename="receptions" 
+          <ExportExcel
+            data={receptions}
+            filename="receptions"
             className="mr-2"
           />
-          <Button onClick={() => router.push('/dashboard/operations/reception/create')}>
+          <Button onClick={() => router.push('/dashboard/reception/create')}>
             <Plus className="mr-2 h-4 w-4" />
             Nouvelle Réception
           </Button>
@@ -167,15 +162,14 @@ export default function ReceptionListPage() {
 
       {/* Tableau des réceptions */}
       <div className="bg-white rounded-lg border shadow-sm">
-        <DataTable 
-          columns={columns} 
+        <DataTable
+          columns={columns as any}
           data={receptions}
-          onDelete={handleDelete}
         />
       </div>
 
       {/* Notification des mises à jour */}
-      <UpdateNotification 
+      <UpdateNotification
         lastUpdate={lastUpdate}
         isRefreshing={isRefreshing}
         hasUpdates={receptions.length > 0}
@@ -196,7 +190,7 @@ export default function ReceptionListPage() {
           </div>
         </div>
         <p className="text-xs text-blue-600 mt-2">
-                      <strong>Note :</strong> La suppression d&apos;une réception annule automatiquement tous ses effets 
+          <strong>Note :</strong> La suppression d&apos;une réception annule automatiquement tous ses effets
           (stock, tank, commande) pour maintenir la cohérence des données. La liste se rafraîchit automatiquement.
         </p>
         <p className="text-xs text-blue-600 mt-1">

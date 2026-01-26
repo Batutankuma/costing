@@ -24,7 +24,7 @@ export default async function KinshasaCostingsPage() {
         </CardHeader>
         <CardContent>
           <KinshasaCostingTable
-            data={costings.map((item) => ({
+            data={costings.map((item: any) => ({
               id: item.id,
               title: item.title,
               currency: item.currency as "USD" | "CDF",

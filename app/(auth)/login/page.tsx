@@ -30,13 +30,24 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccess(null);
     try {
-      await authClient.signIn.email({ email, password });
+      const result = await authClient.signIn.email({ email, password });
+      if (result.error) {
+        setError(result.error.message || "Connexion impossible");
+        return;
+      }
       setSuccess("Connexion réussie. Redirection...");
       setTimeout(() => router.push("/dashboard"), 700);
-    } catch (err) {
-      const error = err instanceof Error ? err.message : "Connexion impossible";
-      setError(error);
+    } catch (err: any) {
+      console.error(err);
+      // Extraire le message d'erreur de better-auth
+      const errorMessage = 
+        err?.message || 
+        err?.error?.message || 
+        err?.data?.message ||
+        "Connexion impossible. Vérifiez vos identifiants.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

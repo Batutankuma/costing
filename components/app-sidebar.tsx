@@ -55,6 +55,7 @@ const data = {
         { title: "Prospects", url: "/dashboard/prospects", icon: RiTeamLine },
         { title: "Fournisseurs", url: "/dashboard/fournisseurs", icon: RiTruckLine },
         { title: "Factures", url: "/dashboard/crm/facture", icon: RiBillLine },
+        { title: "Factures DGI", url: "/dashboard/crm/facture-dgi", icon: RiBillLine },
       ],
     },
     {
@@ -68,6 +69,7 @@ const data = {
         { title: "Commandes", url: "/dashboard/commande", icon: RiShoppingCart2Line },
         { title: "Réceptions", url: "/dashboard/reception", icon: RiInboxArchiveLine },
         { title: "Livraisons", url: "/dashboard/delivery", icon: RiFlightTakeoffLine },
+        { title: "Shipments", url: "/dashboard/shipments", icon: RiTruckLine },
       ],
     },
     {
@@ -116,7 +118,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       .catch(() => void 0);
   }, [session]);
 
-  
+
 
   const handleSignOut = async () => {
     try {

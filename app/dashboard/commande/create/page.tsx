@@ -115,7 +115,7 @@ export default function CreateCommandePage() {
     return "0.00";
   }, [watchedQuantity, watchedUnitPrice]);
 
-  console.log(errors)
+  
   // Soumission du formulaire
   type CommandeFormData = {
     reference: string;
@@ -131,15 +131,12 @@ export default function CreateCommandePage() {
 
   const onSubmit = async (data: CommandeFormData) => {
     try {
-      console.log("[CREATE-COMMANDE] Soumission - données du formulaire:", data);
-      console.log("[CREATE-COMMANDE] Tailles chargées:", { produits: produits.length, depots: depots.length, fournisseurs: fournisseurs.length });
-
+  
       // Validation des données sélectionnées
       const selectedProduit = produits.find(p => p.id === data.produitId);
       const selectedDepot = depots.find(d => d.id === data.depotId);
       const selectedFournisseur = fournisseurs.find(f => f.id === data.fournisseurId);
-      console.log("[CREATE-COMMANDE] Sélections:", { selectedProduit, selectedDepot, selectedFournisseur });
-
+   
       if (!selectedProduit || !selectedDepot || !selectedFournisseur) {
         console.warn("[CREATE-COMMANDE] Sélection invalide", { produitId: data.produitId, depotId: data.depotId, fournisseurId: data.fournisseurId });
         toast({
@@ -164,15 +161,13 @@ export default function CreateCommandePage() {
         currentQuantity: 0,
       };
 
-      console.log("[CREATE-COMMANDE] Données envoyées à l'action:", commandeData);
-
+   
       // Envoyer au serveur
       const result = await executeCreate(commandeData);
-      console.log("[CREATE-COMMANDE] Réponse serveur:", result);
-
+    
       if (result?.data?.success) {
         toast({ title: "Succès", description: "Commande créée avec succès !" });
-      router.push('/dashboard/operations/commande');
+      router.push('/dashboard/commande');
       } else {
         const failure = result?.data?.failure || "Erreur lors de la création de la commande";
         console.error("[CREATE-COMMANDE] Erreur serveur:", failure);
@@ -187,7 +182,7 @@ export default function CreateCommandePage() {
         description: error instanceof Error ? error.message : "Une erreur est survenue"
       });
     } finally {
-      console.log("[CREATE-COMMANDE] Fin soumission");
+    
     }
   };
 
@@ -594,7 +589,7 @@ export default function CreateCommandePage() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.push('/dashboard/operations/commande')}
+            onClick={() => router.push('/dashboard/commande')}
             className="min-w-[120px]"
           >
             Annuler

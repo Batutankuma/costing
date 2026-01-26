@@ -66,7 +66,14 @@ import {
 } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { columns } from "./columns";
-import type { Fournisseur } from "@prisma/client";
+type Fournisseur = {
+    id: string;
+    nom: string;
+    adresse: string | null;
+    accountId: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+};
 import { useRouter } from "next/navigation";
 
 
@@ -74,15 +81,15 @@ export default function DataTables({ Element }: { Element: Fournisseur[] }) {
     const id = useId();
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-    const router = useRouter(); 
+    const router = useRouter();
     const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10, });
     const inputRef = useRef<HTMLInputElement>(null);
 
     const [sorting, setSorting] = useState<SortingState>([{ id: "nom", desc: false, },]);
 
     const [data, setData] = useState<Fournisseur[]>([]);
-    useEffect(() => { 
-        setData(Element); 
+    useEffect(() => {
+        setData(Element);
     }, [Element]);
 
     const handleDeleteRows = () => {
@@ -110,7 +117,7 @@ export default function DataTables({ Element }: { Element: Fournisseur[] }) {
         state: { sorting, pagination, columnFilters, columnVisibility, },
     });
 
-    
+
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -147,7 +154,7 @@ export default function DataTables({ Element }: { Element: Fournisseur[] }) {
                             </button>
                         )}
                     </div>
-                    
+
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline">
@@ -222,8 +229,8 @@ export default function DataTables({ Element }: { Element: Fournisseur[] }) {
                             </AlertDialogContent>
                         </AlertDialog>
                     )}
-                    <Button onClick={()=> router.push(`/dashboard/crm/fournisseur/create`) }>Create</Button>
-                    
+                    <Button onClick={() => router.push(`/dashboard/crm/fournisseur/create`)}>Create</Button>
+
                 </div>
             </div>
 

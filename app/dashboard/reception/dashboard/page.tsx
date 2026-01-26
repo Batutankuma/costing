@@ -23,14 +23,12 @@ export default function ReceptionDashboardPage() {
     const loadData = async () => {
       try {
         setLoading(true);
-        console.log("🔄 Chargement des données de réception...");
-        
+     
         // Charger les commandes
         const commandesResult = await executeCommandes();
         if (commandesResult?.data?.success && commandesResult.data.result) {
           setCommandes(commandesResult.data.result || []);
-          console.log(`✅ ${commandesResult.data.result.length} commandes chargées`);
-        }
+      }
 
 
       } catch (error) {
@@ -47,8 +45,7 @@ export default function ReceptionDashboardPage() {
   useEffect(() => {
     const interval = setInterval(async () => {
       if (!loading) {
-        console.log("🔄 Rafraîchissement automatique des données...");
-        try {
+      try {
           // Recharger les données
           const commandesResult = await executeCommandes();
           if (commandesResult?.data?.success && commandesResult.data.result) {
@@ -73,8 +70,8 @@ export default function ReceptionDashboardPage() {
 
 
   // Calculer le pourcentage global de réception
-  const totalQuantity = commandes.reduce((sum, c) => sum + c.quantity, 0);
-  const totalReceived = commandes.reduce((sum, c) => sum + (c.quantity - c.currentQuantity), 0);
+  const totalQuantity = commandes.reduce((sum: number, c: any) => sum + (c.quantite || 0), 0);
+  const totalReceived = commandes.reduce((sum: number, c: any) => sum + ((c.quantite || 0) - c.currentQuantity), 0);
   const globalPercentage = totalQuantity > 0 ? (totalReceived / totalQuantity) * 100 : 0;
 
   const getStatusColor = (status: CommandeStatus) => {
@@ -116,7 +113,7 @@ export default function ReceptionDashboardPage() {
     <div className="space-y-8">
       {/* Navigation rapide */}
       <QuickNav />
-      
+
       {/* Contenu existant */}
       <div className="space-y-6">
         {/* En-tête */}
@@ -128,14 +125,14 @@ export default function ReceptionDashboardPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button 
+            <Button
               variant="outline"
-              onClick={() => router.push('/dashboard/operations/reception')}
+              onClick={() => router.push('/dashboard/reception')}
             >
               <List className="h-4 w-4 mr-2" />
               Voir la liste
             </Button>
-            <Button onClick={() => router.push('/dashboard/operations/reception/create')}>
+            <Button onClick={() => router.push('/dashboard/reception/create')}>
               <Plus className="mr-2 h-4 w-4" />
               Ajouter une réception
             </Button>
@@ -232,10 +229,10 @@ export default function ReceptionDashboardPage() {
               {commandes
                 .filter(c => c.status !== "CANCELLED" && c.status !== "DRAFT")
                 .map((commande) => {
-                  const percentageReceived = ((commande.quantity - commande.currentQuantity) / commande.quantity) * 100;
+                  const percentageReceived = (((commande as any).quantite - commande.currentQuantity) / (commande as any).quantite) * 100;
                   const isCompleted = commande.status === "COMPLETED";
                   const isPartiallyReceived = commande.status === "PARTIALLY_RECEIVED";
-                  
+
                   return (
                     <div key={commande.id} className="border rounded-lg p-4 space-y-3">
                       <div className="flex items-center justify-between">
@@ -249,18 +246,17 @@ export default function ReceptionDashboardPage() {
                           {getStatusText(commande.status)}
                         </Badge>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                         <div>
                           <span className="font-medium">Quantité commandée:</span>
-                          <div className="text-lg font-semibold">{commande.quantity} {commande.unit || 'unités'}</div>
+                          <div className="text-lg font-semibold">{(commande as any).quantite} {commande.unit || 'unités'}</div>
                         </div>
                         <div>
                           <span className="font-medium">Quantité restante:</span>
-                          <div className={`text-lg font-semibold ${
-                            commande.currentQuantity === 0 ? 'text-green-600' : 
-                            commande.currentQuantity < commande.quantity ? 'text-orange-600' : 'text-blue-600'
-                          }`}>
+                          <div className={`text-lg font-semibold ${commande.currentQuantity === 0 ? 'text-green-600' :
+                              commande.currentQuantity < (commande as any).quantite ? 'text-orange-600' : 'text-blue-600'
+                            }`}>
                             {commande.currentQuantity} {commande.unit || 'unités'}
                           </div>
                         </div>
@@ -269,26 +265,25 @@ export default function ReceptionDashboardPage() {
                           <div className="text-lg font-semibold">{percentageReceived.toFixed(1)}%</div>
                         </div>
                       </div>
-                      
+
                       <div className="space-y-2">
                         <div className="flex justify-between text-xs text-muted-foreground">
                           <span>0%</span>
                           <span>100%</span>
                         </div>
-                        <Progress 
-                          value={percentageReceived} 
-                          className={`h-2 ${
-                            isCompleted ? 'bg-green-100' : 
-                            isPartiallyReceived ? 'bg-orange-100' : 'bg-blue-100'
-                          }`}
+                        <Progress
+                          value={percentageReceived}
+                          className={`h-2 ${isCompleted ? 'bg-green-100' :
+                              isPartiallyReceived ? 'bg-orange-100' : 'bg-blue-100'
+                            }`}
                         />
                       </div>
-                      
+
                       {commande.currentQuantity > 0 && (
                         <div className="flex justify-end">
-                          <Button 
-                            size="sm" 
-                            onClick={() => router.push(`/dashboard/operations/reception/create?commandeId=${commande.id}`)}
+                          <Button
+                            size="sm"
+                            onClick={() => router.push(`/dashboard/reception/create?commandeId=${commande.id}`)}
                           >
                             <Plus className="mr-2 h-3 w-3" />
                             Ajouter une réception

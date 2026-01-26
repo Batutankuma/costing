@@ -16,7 +16,14 @@ import { Ellipsis } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import RemoveDialog from "./delete";
-import type { Fournisseur } from "@prisma/client";
+type Fournisseur = {
+    id: string;
+    nom: string;
+    adresse: string | null;
+    accountId: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+};
 
 // La fonction de filtre est mise à jour pour utiliser les champs 'nom' et 'adresse'
 const multiColumnFilterFn: FilterFn<Fournisseur> = (row, columnId, filterValue) => {

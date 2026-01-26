@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -298,8 +297,10 @@ model Client {
   salesQuotes SalesQuote[]
   stocks    Stock[]
   deliveries Delivery[]
+  shipments  Shipment[]
   activities CRMActivity[]
   contacts   Contact[]
+  dgiFactures DGIFacture[]
 
   @@map("client")
 }
@@ -676,6 +677,7 @@ model Product {
   tanks      Tank[]
   receptions Reception[]
   deliveries Delivery[]
+  shipments  Shipment[]
   kinshasaCostings KinshasaCosting[]
 
   @@map("product")
@@ -687,7 +689,7 @@ model Depot {
   type      DepotType @default(OWNED)
   location  String?
   createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  updatedAt DateTime @updatedAt
 
   products   DepotProduct[]
   stocks     Stock[]
@@ -695,6 +697,7 @@ model Depot {
   tanks      Tank[]
   receptions Reception[]
   deliveries Delivery[]
+  shipments  Shipment[]
 
   @@map("depot")
 }
@@ -772,6 +775,62 @@ model ManualFactureLine {
   facture ManualFacture @relation(fields: [factureId], references: [id], onDelete: Cascade)
 
   @@map("manual_facture_line")
+}
+
+// ===== Facture DGI =====
+model DGIFacture {
+  id             String    @id @default(cuid())
+  invoiceNumber  String    @unique // Numéro facture DGI (compteur)
+  invoiceDate    DateTime
+  
+  // Infos Client
+  clientName     String
+  clientAddress  String?
+  clientNif      String?   // Obligatoire pour les sociétés
+  clientRccm     String?
+  clientId       String?   // Lien optionnel vers client CRM
+  client         Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  // Infos Vendeur (Snapshot au moment de la facture)
+  vendorName     String    @default("AAGS PETROLE ET GAZ SARLU")
+  vendorNif      String    @default("A2441781R")
+  
+  // Données DGI & Sécurité
+  dgiNim         String?   // Numéro Identification Machine (si dispo)
+  dgiMeccef      String?   // Code MECeF / Signature électronique
+  dgiQrCode      String?   // Contenu complet du QR Code
+  dgiSignature   String?   // Signature textuelle courte
+
+  currency       DeviseCode @default(USD)
+  notes          String?
+
+  // Totaux
+  totalHT        Float     @default(0)
+  totalTVA       Float     @default(0) // 16% généralement
+  totalTTC       Float     @default(0)
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  lines DGIFactureLine[]
+
+  @@map("dgi_facture")
+}
+
+model DGIFactureLine {
+  id           String     @id @default(cuid())
+  dgiFactureId String
+  description  String
+  unit         String?
+  quantity     Float
+  unitPrice    Float
+  totalHT      Float      // quantity * unitPrice
+  tvaRate      Float      @default(16) // Pour garder la flexibilité si besoin de 0% ou exonéré
+  createdat    DateTime   @default(now())
+  
+  dgiFacture   DGIFacture @relation(fields: [dgiFactureId], references: [id], onDelete: Cascade)
+
+  @@map("dgi_facture_line")
 }
 
 // ===== Stocks =====
@@ -952,4 +1011,25 @@ model Delivery {
   updatedAt       DateTime      @updatedAt
 
   @@map("delivery")
+}
+
+// ===== Livraisons (Shipments) =====
+model Shipment {
+  id              String    @id @default(cuid())
+  numerobl        String    // Numéro BL (Bon de Livraison)
+  date            DateTime  @default(now())
+  quantite        Float     @default(0)
+  unite           Unite
+  prixUnitaire    Float?
+  description     String?
+  clientId        String?
+  client          Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  produitId       String
+  produit         Product   @relation(fields: [produitId], references: [id], onDelete: Cascade)
+  depotId         String?
+  depot           Depot?    @relation(fields: [depotId], references: [id], onDelete: SetNull)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("shipment")
 }
