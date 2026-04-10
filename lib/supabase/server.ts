@@ -2,6 +2,15 @@
 // This file provides the createClient function that existing code expects
 
 export const createClient = () => {
+  type QueryResult<T = unknown> = { data: T; error: unknown };
+  type SelectChain = {
+    eq: (_column: string, _value: unknown) => SelectChain;
+    order: (_column: string, _opts?: { ascending?: boolean }) => SelectChain;
+    limit: (_n: number) => SelectChain;
+    maybeSingle: () => Promise<QueryResult>;
+    single: () => Promise<QueryResult>;
+  };
+
   // Return a mock client that provides the expected interface
   return {
     auth: {
@@ -17,7 +26,7 @@ export const createClient = () => {
       // Mock table query interface
       return {
         select: (_columns: string) => {
-          const chain: any = {
+          const chain: SelectChain = {
             eq: (_column: string, _value: unknown) => chain,
             order: (_column: string, _opts?: { ascending?: boolean }) => chain,
             limit: (_n: number) => chain,
@@ -31,7 +40,8 @@ export const createClient = () => {
             select: (_cols?: string) => {
               const result = { data: [] as unknown[], error: null as unknown };
               const obj: {
-                single: () => Promise<{ data: unknown; error: unknown }>;
+                single: () => Promise<QueryResult>;
+                then: (resolve: (v: typeof result) => unknown) => unknown;
               } = {
                 single: () => Promise.resolve({ data: { id: 'mock-id' } as unknown, error: null as unknown }),
                 then: (resolve: (v: typeof result) => unknown) => resolve(result),
@@ -45,8 +55,9 @@ export const createClient = () => {
         update: (_values: Record<string, unknown>) => {
           const result = { data: [] as unknown[], error: null as unknown };
           const chain: {
-            eq: (column: string, value: unknown) => typeof chain;
-            select: (cols?: string) => { single: () => Promise<{ data: unknown; error: unknown }> };
+            eq: (_column: string, _value: unknown) => typeof chain;
+            select: (_cols?: string) => { single: () => Promise<QueryResult> };
+            then: (resolve: (v: typeof result) => unknown) => unknown;
           } = {
             eq: (_column: string, _value: unknown) => chain,
             select: (_cols?: string) => ({
@@ -91,8 +102,8 @@ export const createClient = () => {
         return {
           upload: async (
             path: string,
-            file: Blob | ArrayBuffer | Uint8Array | Buffer | File,
-            options?: Record<string, unknown>
+            _file: Blob | ArrayBuffer | Uint8Array | Buffer | File,
+            _options?: Record<string, unknown>
           ): Promise<{
             data: { path: string; fullPath: string };
             error: { message: string } | null;
