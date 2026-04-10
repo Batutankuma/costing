@@ -27,6 +27,8 @@ pool.on("error", (err) => {
   console.error("[prisma/pg] Pool error (connexion base)", err);
 });
 
+const adapter = new PrismaPg(pool);
+
 const prismaInstance: PrismaClient =
   global.prisma ??
   new PrismaClient({
