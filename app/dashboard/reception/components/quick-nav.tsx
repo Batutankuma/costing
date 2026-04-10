@@ -57,10 +57,10 @@ export default function QuickNav() {
       color: "bg-indigo-500 hover:bg-indigo-600"
     },
     {
-      title: "Tanks",
-      description: "Gérer les niveaux des tanks",
+      title: "Équipements",
+      description: "Gérer les niveaux des équipements",
       icon: Truck,
-      url: "/dashboard/stock/tank",
+      url: "/dashboard/equipment",
       variant: "outline" as const,
       color: "bg-teal-500 hover:bg-teal-600"
     }

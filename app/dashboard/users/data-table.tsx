@@ -99,7 +99,9 @@ export default function DataTables({ Element }: { Element: UserItem[] }) {
           id: String(u?.id ?? ""),
           name: u?.name ?? null,
           email: u?.email ?? null,
-          emailVerified: typeof u?.emailVerified === "boolean" ? u.emailVerified : Boolean(u?.emailVerified ?? false),
+          emailVerified: typeof u?.emailVerified === "boolean" 
+            ? (u.emailVerified ? new Date() : null)
+            : (u?.emailVerified ?? null),
         }))
       : [];
     setData(rows);

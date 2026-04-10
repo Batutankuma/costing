@@ -24,6 +24,11 @@ const ServerCommandeSchema = z.object({
   unitPrice: z.number().min(0.0001, "Le prix unitaire doit être supérieur à 0"),
   devise: z.enum(["XOF", "USD", "EUR", "CDF"]),
   typePaiement: z.enum(["DIRECT", "CREDIT"]),
+  // Champs facture
+  numeroFacture: z.string().optional().nullable(),
+  typeFacture: z.string().optional().nullable(),
+  dateFacture: z.date().optional().nullable(),
+  tva: z.number().optional().nullable(),
 });
 
 export const createAction = actionClient
@@ -42,6 +47,11 @@ export const createAction = actionClient
         quantite: parsedInput.quantity,
         fournisseurId: parsedInput.fournisseurId,
         unitPrice: parsedInput.unitPrice,
+        // Champs facture
+        numeroFacture: parsedInput.numeroFacture ?? null,
+        typeFacture: parsedInput.typeFacture ?? null,
+        dateFacture: parsedInput.dateFacture ?? null,
+        tva: parsedInput.tva ?? null,
       };
      
       const result = await prisma.commande.create({

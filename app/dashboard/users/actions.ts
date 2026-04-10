@@ -64,7 +64,8 @@ export const adminResetPasswordAction = actionClient
       // Try to import bcryptjs dynamically (so repo can build without it)
       let bcrypt: typeof import("bcryptjs");
       try {
-        bcrypt = (await import("bcryptjs")).default ?? (await import("bcryptjs")) as typeof import("bcryptjs");
+        const bcryptModule = await import("bcryptjs");
+        bcrypt = (bcryptModule.default || bcryptModule) as typeof import("bcryptjs");
       } catch {
         return { failure: "bcryptjs non installé. Exécutez: pnpm add bcryptjs" };
       }
@@ -122,59 +123,67 @@ export const adminCreateWithPasswordAction = actionClient
         return { failure: "Accès refusé : vous n'avez pas le droit de créer un utilisateur." };
       }
 
+      // Vérifier si l'utilisateur existe déjà
+      const existingUser = await prisma.user.findUnique({
+        where: { email: parsedInput.email },
+      });
+
+      if (existingUser) {
+        return { failure: "Un utilisateur avec cet email existe déjà." };
+      }
+
       // Generate random password
       const generatedPassword = Math.random().toString(36).slice(-10) + "!A1";
 
-      // Build absolute base URL to avoid "Failed to parse URL" in server context
-      const candidates = Array.from(new Set([
-        process.env.NEXT_PUBLIC_BASE_URL?.trim(),
-        process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
-        "http://localhost:3000",
-        "http://localhost:3000",
-        "http://localhost:3000",
-      ].filter(Boolean) as string[]));
-
-      let lastErrorText = "";
-      let createdOk = false;
-      for (const baseUrl of candidates) {
-        try {
-          const resp = await fetch(`${baseUrl}/api/auth/sign-up/email`, {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            cache: "no-store",
-            body: JSON.stringify({
-              email: parsedInput.email,
-              password: generatedPassword,
-              name: parsedInput.name,
-            }),
-          });
-          if (resp.ok) { createdOk = true; break; }
-          try { lastErrorText = await resp.text(); } catch { lastErrorText = `HTTP ${resp.status}`; }
-        } catch (err: unknown) {
-          lastErrorText = (err instanceof Error ? err.message : String(err)) || "Failed to fetch";
-        }
+      // Importer bcryptjs dynamiquement
+      let bcrypt: typeof import("bcryptjs");
+      try {
+        const bcryptModule = await import("bcryptjs");
+        bcrypt = (bcryptModule.default || bcryptModule) as typeof import("bcryptjs");
+      } catch {
+        return { failure: "bcryptjs non installé. Exécutez: pnpm add bcryptjs" };
       }
 
-      if (!createdOk) {
-        return { failure: `Echec de création Better Auth: ${lastErrorText}` };
-      }
+      // Hasher le mot de passe
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(generatedPassword, salt);
 
-      // Persist/ensure Prisma user fields (role, optional image)
-      await prisma.user.update({
-        where: { email: parsedInput.email },
+      const now = new Date();
+
+      // Créer l'utilisateur dans Prisma
+      const newUser = await prisma.user.create({
         data: {
-          image: null,
+          name: parsedInput.name,
+          email: parsedInput.email,
+          emailVerified: parsedInput.emailVerified ?? false,
           role: parsedInput.role,
-          updatedAt: new Date(),
+          image: null,
+          createdAt: now,
+          updatedAt: now,
         },
       });
 
-      return { success: { ok: true, password: generatedPassword } };
+      // Créer le compte avec le mot de passe hashé
+      await prisma.account.create({
+        data: {
+          accountId: parsedInput.email,
+          providerId: "email",
+          userId: newUser.id,
+          password: hashedPassword,
+          createdAt: now,
+          updatedAt: now,
+        },
+      });
+
+      revalidatePath("/dashboard/users");
+      return { success: { ok: true, password: generatedPassword, userId: newUser.id } };
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return { failure: "Validation failed: " + error };
+        return { failure: "Validation failed: " + error.errors.map(e => e.message).join(", ") };
       }
-      return { failure: handlePrismaError(error) };
+      const errorMessage = handlePrismaError(error);
+      console.error("Erreur lors de la création de l'utilisateur:", error);
+      return { failure: errorMessage };
     }
   });
 

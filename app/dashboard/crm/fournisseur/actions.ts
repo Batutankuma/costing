@@ -24,7 +24,15 @@ export const createAction = actionClient
       const created = await prisma.fournisseur.create({
         data: {
           nom: parsedInput.nom,
+          company: parsedInput.company ?? null,
+          email: parsedInput.email && parsedInput.email !== "" ? parsedInput.email : null,
+          phone: parsedInput.phone ?? null,
           adresse: parsedInput.adresse ?? null,
+          rccm: parsedInput.rccm ?? null,
+          idNat: parsedInput.idNat ?? null,
+          nif: parsedInput.nif ?? null,
+          pays: parsedInput.pays ?? null,
+          notes: parsedInput.notes ?? null,
           accountId: account.id,
         },
       });
@@ -82,7 +90,15 @@ export const updateAction = actionClient
         where: { id: parsedInput.id },
         data: {
           nom: parsedInput.nom,
+          company: parsedInput.company ?? null,
+          email: parsedInput.email && parsedInput.email !== "" ? parsedInput.email : null,
+          phone: parsedInput.phone ?? null,
           adresse: parsedInput.adresse ?? null,
+          rccm: parsedInput.rccm ?? null,
+          idNat: parsedInput.idNat ?? null,
+          nif: parsedInput.nif ?? null,
+          pays: parsedInput.pays ?? null,
+          notes: parsedInput.notes ?? null,
         },
       });
       revalidatePath("/dashboard/crm/fournisseur");

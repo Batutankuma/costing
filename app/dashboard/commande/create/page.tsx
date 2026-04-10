@@ -74,6 +74,11 @@ export default function CreateCommandePage() {
     unitPrice: z.number().min(0.0001, "Le prix unitaire doit être supérieur à 0"),
     devise: z.enum(["XOF", "USD", "EUR", "CDF"]),
     typePaiement: z.enum(["DIRECT", "CREDIT"]),
+    // Champs facture
+    numeroFacture: z.string().optional(),
+    typeFacture: z.string().optional(),
+    dateFacture: z.date().optional().nullable(),
+    tva: z.number().optional().nullable(),
   });
 
   type CommandeForm = z.infer<typeof ClientCommandeSchema>;
@@ -97,6 +102,10 @@ export default function CreateCommandePage() {
       fournisseurId: "",
       quantity: 0,
       unitPrice: 0,
+      numeroFacture: "",
+      typeFacture: "",
+      dateFacture: undefined,
+      tva: 0,
     }
   });
 
@@ -127,6 +136,10 @@ export default function CreateCommandePage() {
     unitPrice: number;
     devise: "XOF" | "USD" | "EUR" | "CDF";
     typePaiement: "DIRECT" | "CREDIT";
+    numeroFacture?: string;
+    typeFacture?: string;
+    dateFacture?: Date | null;
+    tva?: number | null;
   };
 
   const onSubmit = async (data: CommandeFormData) => {
@@ -159,6 +172,10 @@ export default function CreateCommandePage() {
         devise: data.devise,
         typePaiement: data.typePaiement,
         currentQuantity: 0,
+        numeroFacture: data.numeroFacture || null,
+        typeFacture: data.typeFacture || null,
+        dateFacture: data.dateFacture || null,
+        tva: data.tva || null,
       };
 
    
@@ -581,6 +598,103 @@ export default function CreateCommandePage() {
                 )}
           </div>
         </div>
+          </CardContent>
+        </Card>
+
+        {/* Section Facture */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Informations Facture
+            </CardTitle>
+            <CardDescription>
+              Renseignez les informations de facturation (optionnel)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="numeroFacture" className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Numéro Facture
+                </Label>
+                <Input
+                  id="numeroFacture"
+                  placeholder="Ex: FACT-2024-001"
+                  {...register("numeroFacture")}
+                  className={errors.numeroFacture ? "border-red-500" : ""}
+                />
+                {errors.numeroFacture && (
+                  <p className="text-red-500 text-sm flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {errors.numeroFacture?.message?.toString()}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="typeFacture" className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Type de Facture
+                </Label>
+                <Input
+                  id="typeFacture"
+                  placeholder="Ex: Proforma, Définitive..."
+                  {...register("typeFacture")}
+                  className={errors.typeFacture ? "border-red-500" : ""}
+                />
+                {errors.typeFacture && (
+                  <p className="text-red-500 text-sm flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {errors.typeFacture?.message?.toString()}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="dateFacture" className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Date Facture
+                </Label>
+                <Input
+                  id="dateFacture"
+                  type="date"
+                  {...register("dateFacture", {
+                    setValueAs: (value) => value ? new Date(value) : null
+                  })}
+                  className={errors.dateFacture ? "border-red-500" : ""}
+                />
+                {errors.dateFacture && (
+                  <p className="text-red-500 text-sm flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {errors.dateFacture?.message?.toString()}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tva" className="flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" />
+                  TVA (%)
+                </Label>
+                <Input
+                  id="tva"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  {...register("tva", { valueAsNumber: true })}
+                  className={errors.tva ? "border-red-500" : ""}
+                />
+                {errors.tva && (
+                  <p className="text-red-500 text-sm flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {errors.tva?.message?.toString()}
+                  </p>
+                )}
+              </div>
+            </div>
           </CardContent>
         </Card>
 

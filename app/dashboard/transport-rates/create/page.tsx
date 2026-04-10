@@ -39,7 +39,7 @@ export default function CreateTransportRatePage() {
   const onSubmit = async (data: TransportRateFormData) => {
     try {
       const result = await createTransportRate(data);
-      if (result.data?.failure) {
+      if (result?.data?.failure) {
         toast({ 
           variant: "destructive",
           title: "Erreur", 

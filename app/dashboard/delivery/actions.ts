@@ -105,7 +105,7 @@ export const createAction = actionClient
             clientId: parsedInput.clientId,
             depotId: parsedInput.depotId,
             produitId: parsedInput.produitId,
-            tankId: parsedInput.tankId,
+            equipmentId: parsedInput.equipmentId,
           },
         });
 
@@ -298,7 +298,7 @@ export const updateAction = actionClient
             clientId: parsedInput.clientId,
             depotId: parsedInput.depotId,
             produitId: parsedInput.produitId,
-            tankId: parsedInput.tankId,
+            equipmentId: parsedInput.equipmentId,
           },
         });
 

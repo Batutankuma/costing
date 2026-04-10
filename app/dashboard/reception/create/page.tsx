@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 // Import des actions pour récupérer les données
 import { findAllAction as findAllCommandes } from "@/app/dashboard/commande/actions";
 import { listProducts } from "@/app/dashboard/products/actions";
-import { findAllAction as findAllTanks } from "@/app/dashboard/tank/actions";
+import { findAllAction as findAllEquipment } from "@/app/dashboard/equipment/actions";
 import { listDepots } from "@/app/dashboard/depots/actions";
 
 // Types locaux minimaux
@@ -30,7 +30,7 @@ type CommandeLite = { id: string; reference?: string | null; produitId?: string 
 export default function CreateReceptionPage() {
   const [commandes, setCommandes] = useState<CommandeLite[]>([]);
   const [produits, setProduits] = useState<Array<{ id: string; name: string }>>([]);
-  const [tanks, setTanks] = useState<Array<{ id: string; name: string }>>([]);
+  const [equipment, setEquipment] = useState<Array<{ id: string; name: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [isInternalDepot, setIsInternalDepot] = useState<boolean | null>(null);
   const [selectedCommande, setSelectedCommande] = useState<CommandeLite | null>(null);
@@ -41,7 +41,7 @@ export default function CreateReceptionPage() {
   // Hooks pour les actions de récupération
   const { executeAsync: executeCommandes } = useAction(findAllCommandes);
   const { executeAsync: executeProduits } = useAction(listProducts);
-  const { executeAsync: executeTanks } = useAction(findAllTanks);
+  const { executeAsync: executeEquipment } = useAction(findAllEquipment);
   const { executeAsync: executeDepots } = useAction(listDepots);
 
   const { toast } = useToast();
@@ -64,7 +64,7 @@ export default function CreateReceptionPage() {
       receptionStatus: "RECEIVED",
       commandeId: "",
       produitId: "",
-      tankId: undefined,
+      equipmentId: undefined,
     }
   });
 
@@ -96,10 +96,10 @@ export default function CreateReceptionPage() {
         if (!isMounted) return;
         setLoading(true);
 
-        const [cmdRes, prodRes, tankRes] = await Promise.allSettled([
+        const [cmdRes, prodRes, equipmentRes] = await Promise.allSettled([
           executeCommandes(),
           executeProduits(),
-          executeTanks(),
+          executeEquipment(),
         ]);
 
         if (!isMounted) return;
@@ -121,11 +121,11 @@ export default function CreateReceptionPage() {
           setProduits(produitsData || []);
         }
 
-        // Tanks
-        if (tankRes.status === "fulfilled") {
-          const r = tankRes.value;
+        // Équipements
+        if (equipmentRes.status === "fulfilled") {
+          const r = equipmentRes.value;
           if (r?.data?.success && r.data.result) {
-            setTanks(r.data.result || []);
+            setEquipment(r.data.result || []);
           }
         }
       } catch (error) {
@@ -182,7 +182,7 @@ export default function CreateReceptionPage() {
             const isInternal = depot?.type === 'OWNED';
             setIsInternalDepot(isInternal ?? null);
             if (isInternal === false) {
-              setValue('tankId', undefined);
+              setValue('equipmentId', undefined);
             }
           } catch {
             setIsInternalDepot(null);
@@ -500,18 +500,18 @@ export default function CreateReceptionPage() {
 
           {isInternalDepot ? (
             <div>
-              <Label htmlFor="tankId">Tank</Label>
-              <Select onValueChange={(value) => setValue("tankId", value === "none" ? undefined : value)}>
+              <Label htmlFor="equipmentId">Équipement</Label>
+              <Select onValueChange={(value) => setValue("equipmentId", value === "none" ? undefined : value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un tank" />
+                  <SelectValue placeholder="Sélectionner un équipement" />
                 </SelectTrigger>
                 <SelectContent>
-                  {tanks.map((tank) => (
-                    <SelectItem key={tank.id} value={tank.id}>{tank.name}</SelectItem>
+                  {equipment.map((eq) => (
+                    <SelectItem key={eq.id} value={eq.id}>{eq.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.tankId && <p className="text-red-500 text-sm">{errors.tankId.message}</p>}
+              {errors.equipmentId && <p className="text-red-500 text-sm">{errors.equipmentId.message}</p>}
               <p className="text-xs text-gray-500 mt-1">Le Tank est requis pour un dépôt interne.</p>
             </div>
           ) : (

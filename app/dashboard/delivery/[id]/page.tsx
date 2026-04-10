@@ -30,7 +30,7 @@ const EditDeliverySchema = CreateDeliverySchema.extend({
 import { findByIdAction, updateAction } from "../actions";
 import { getClients } from "@/app/dashboard/clients/actions";
 import { listDepots } from "@/app/dashboard/depots/actions";
-import { findAllAction as findAllTanks } from "@/app/dashboard/tank/actions";
+import { findAllAction as findAllEquipment } from "@/app/dashboard/equipment/actions";
 import { listProducts } from "@/app/dashboard/products/actions";
 
 type Client = {
@@ -45,7 +45,7 @@ type Depot = {
   name: string;
 };
 
-type Tank = {
+type Equipment = {
   id: string;
   name: string;
   produitId?: string | null;
@@ -61,7 +61,7 @@ export default function EditDeliveryPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
   const [depots, setDepots] = useState<Depot[]>([]);
-  const [tanks, setTanks] = useState<Tank[]>([]);
+  const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [produits, setProduits] = useState<Produit[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
@@ -71,7 +71,7 @@ export default function EditDeliveryPage() {
 
   // Hooks pour les actions de récupération
   const { executeAsync: executeDepots } = useAction(listDepots);
-  const { executeAsync: executeTanks } = useAction(findAllTanks);
+  const { executeAsync: executeEquipment } = useAction(findAllEquipment);
   const { executeAsync: executeProduits } = useAction(listProducts);
 
   const {
@@ -88,7 +88,7 @@ export default function EditDeliveryPage() {
       note: "",
       clientId: "",
       depotId: "",
-      tankId: "",
+      equipmentId: "",
       produitId: "",
       quantity: 0,
       unit: "L",
@@ -104,17 +104,17 @@ export default function EditDeliveryPage() {
     }),
   });
 
-  const tankId = watch("tankId");
+  const equipmentId = watch("equipmentId");
 
-  // Récupérer le produit automatiquement selon le tank
+  // Récupérer le produit automatiquement selon le Equipment
   useEffect(() => {
-    if (tankId) {
-      const tank = tanks.find(t => t.id === tankId);
-      if (tank && tank.produitId) {
-        setValue("produitId", tank.produitId);
+    if (equipmentId) {
+      const eq = equipment.find(e => e.id === equipmentId);
+      if (eq && eq.produitId) {
+        setValue("produitId", eq.produitId);
       }
     }
-  }, [tankId, tanks, setValue]);
+  }, [equipmentId, equipment, setValue]);
 
   // Charger les données de référence
   useEffect(() => {
@@ -137,10 +137,10 @@ export default function EditDeliveryPage() {
         const depotsData = depotsResult?.data?.data ?? [];
         setDepots(depotsData || []);
 
-        // Charger les tanks
-        const tanksResult = await executeTanks();
-        const tanksData = tanksResult?.data?.success ? tanksResult.data.result : [];
-        setTanks(tanksData || []);
+        // Charger les equipment
+        const equipmentResult = await executeEquipment();
+        const equipmentData = equipmentResult?.data?.success ? equipmentResult.data.result : [];
+        setEquipment(equipmentData || []);
 
         // Charger les produits
         const produitsResult = await executeProduits();
@@ -159,7 +159,7 @@ export default function EditDeliveryPage() {
     };
 
     loadData();
-  }, [executeDepots, executeTanks, executeProduits, toast]);
+  }, [executeDepots, executeEquipment, executeProduits, toast]);
 
   // Charger les données du delivery
   useEffect(() => {
@@ -176,7 +176,7 @@ export default function EditDeliveryPage() {
           setValue("note", entity.note || "");
           setValue("clientId", entity.clientId || "");
           setValue("depotId", entity.depotId || "");
-          setValue("tankId", entity.tankId || "");
+          setValue("equipmentId", entity.equipmentId || "");
           setValue("produitId", entity.produitId || "");
           setValue("quantity", entity.quantity || 0);
           setValue("unit", entity.unit || "L");
@@ -226,7 +226,7 @@ export default function EditDeliveryPage() {
         note: data.note,
         clientId: data.clientId,
         depotId: data.depotId,
-        tankId: data.tankId,
+        equipmentId: data.equipmentId,
         produitId: data.produitId,
         quantity: data.quantity,
         unit: data.unit,
@@ -349,7 +349,7 @@ export default function EditDeliveryPage() {
         <Card>
           <CardHeader>
             <CardTitle>Sélection</CardTitle>
-            <CardDescription>Client, dépôt, tank et produit</CardDescription>
+            <CardDescription>Client, dépôt, Equipment et produit</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -388,20 +388,20 @@ export default function EditDeliveryPage() {
               </div>
 
               <div>
-                <Label htmlFor="tankId">Tank <span className="text-red-500">*</span></Label>
-                <Select onValueChange={(value) => setValue("tankId", value)}>
+                <Label htmlFor="equipmentId">Equipment <span className="text-red-500">*</span></Label>
+                <Select onValueChange={(value) => setValue("equipmentId", value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un tank" />
+                    <SelectValue placeholder="Sélectionner un Equipment" />
                   </SelectTrigger>
                   <SelectContent>
-                    {tanks.map((tank) => (
-                      <SelectItem key={tank.id} value={tank.id}>
-                        {tank.name}
+                    {equipment.map((eq) => (
+                      <SelectItem key={eq.id} value={eq.id}>
+                        {eq.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {errors.tankId && <p className="text-red-500 text-sm">{errors.tankId.message as string}</p>}
+                {errors.equipmentId && <p className="text-red-500 text-sm">{errors.equipmentId.message as string}</p>}
               </div>
 
               <div>

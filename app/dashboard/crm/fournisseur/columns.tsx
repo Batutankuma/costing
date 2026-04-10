@@ -19,15 +19,23 @@ import RemoveDialog from "./delete";
 type Fournisseur = {
     id: string;
     nom: string;
+    company: string | null;
+    email: string | null;
+    phone: string | null;
     adresse: string | null;
+    rccm: string | null;
+    idNat: string | null;
+    nif: string | null;
+    pays: string | null;
+    notes: string | null;
     accountId: string | null;
     createdAt: Date;
     updatedAt: Date;
 };
 
-// La fonction de filtre est mise à jour pour utiliser les champs 'nom' et 'adresse'
+// La fonction de filtre est mise à jour pour utiliser tous les champs
 const multiColumnFilterFn: FilterFn<Fournisseur> = (row, columnId, filterValue) => {
-    const searchableRowContent = `${row.original.nom} ${row.original.adresse ?? ''}`.toLowerCase();
+    const searchableRowContent = `${row.original.nom} ${row.original.company ?? ''} ${row.original.email ?? ''} ${row.original.phone ?? ''} ${row.original.adresse ?? ''} ${row.original.rccm ?? ''} ${row.original.idNat ?? ''} ${row.original.nif ?? ''} ${row.original.pays ?? ''} ${row.original.notes ?? ''}`.toLowerCase();
     const searchTerm = (filterValue ?? "").toLowerCase();
     return searchableRowContent.includes(searchTerm);
 };
@@ -65,9 +73,32 @@ export const columns: ColumnDef<Fournisseur>[] = [
         enableHiding: false,
     },
     {
+        header: "Société",
+        accessorKey: "company",
+        cell: ({ row }) => <div>{row.getValue("company") || "-"}</div>,
+        size: 150,
+    },
+    {
+        header: "Email",
+        accessorKey: "email",
+        cell: ({ row }) => <div>{row.getValue("email") || "-"}</div>,
+        size: 200,
+    },
+    {
+        header: "Téléphone",
+        accessorKey: "phone",
+        cell: ({ row }) => <div>{row.getValue("phone") || "-"}</div>,
+        size: 150,
+    },
+    {
         header: "Adresse",
         accessorKey: "adresse",
         size: 220,
+    },
+    {
+        header: "Pays",
+        accessorKey: "pays",
+        size: 150,
     },
     {
         id: "actions",

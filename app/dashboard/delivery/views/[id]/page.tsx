@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { DeliverySchema } from "@/models/mvc"; 
 import { getClients } from "@/app/dashboard/clients/actions";
 import { listDepots } from "@/app/dashboard/depots/actions";
-import { findAllAction as findAllTanks } from "@/app/dashboard/tank/actions";
+import { findAllAction as findAllEquipment } from "@/app/dashboard/equipment/actions";
 import { listProducts } from "@/app/dashboard/products/actions";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,7 +21,7 @@ import { findByIdAction } from "../../actions";
 // Local minimal reference types to avoid depending on missing exports
 type ClientRef = { id: string; nom?: string };
 type DepotRef = { id: string; name?: string };
-type TankRef = { id: string; name?: string };
+type EquipmentRef = { id: string; name?: string };
 type ProduitRef = { id: string; nom?: string };
 
 type DeliveryData = z.infer<typeof DeliverySchema>;
@@ -76,30 +76,30 @@ function DepotName({ depotId }: { depotId: string }) {
   return <span className="text-lg font-medium">{depotName || depotId}</span>;
 }
 
-function TankName({ tankId }: { tankId: string }) {
-  const [tankName, setTankName] = useState<string>("");
-  const { executeAsync: execTanks } = useAction(findAllTanks);
+function EquipmentName({ equipmentId }: { equipmentId: string }) {
+  const [equipmentName, setEquipmentName] = useState<string>("");
+  const { executeAsync: execEquipment } = useAction(findAllEquipment);
 
   useEffect(() => {
-    const loadTank = async () => {
+    const loadEquipment = async () => {
       try {
-        const result = await execTanks();
-        const tanks: TankRef[] = (result?.data?.result ?? []) as TankRef[];
-        const tank = tanks.find((t) => t.id === tankId);
-        if (tank) {
-          setTankName(tank.name || "");
+        const result = await execEquipment();
+        const equipmentList: EquipmentRef[] = (result?.data?.result ?? []) as EquipmentRef[];
+        const equipment = equipmentList.find((e) => e.id === equipmentId);
+        if (equipment) {
+          setEquipmentName(equipment.name || "");
         }
       } catch (error) {
-        console.error("Erreur lors du chargement du tank:", error);
+        console.error("Erreur lors du chargement de l'équipement:", error);
       }
     };
 
-    if (tankId) {
-      loadTank();
+    if (equipmentId) {
+      loadEquipment();
     }
-  }, [tankId, execTanks]);
+  }, [equipmentId, execEquipment]);
 
-  return <span className="text-lg font-medium">{tankName || tankId}</span>;
+  return <span className="text-lg font-medium">{equipmentName || equipmentId}</span>;
 }
 
 function ProduitName({ produitId }: { produitId: string }) {
@@ -314,8 +314,8 @@ export default function ViewDeliveryPage() {
             </div>
 
             <div>
-              <Label className="text-sm font-medium text-gray-600">Tank</Label>
-              <TankName tankId={delivery.tankId ?? ""} />
+              <Label className="text-sm font-medium text-gray-600">Equipment</Label>
+              <EquipmentName equipmentId={delivery.equipmentId ?? ""} />
             </div>
 
             <div>

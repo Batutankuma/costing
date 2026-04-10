@@ -11,7 +11,7 @@ export const revalidate = 0;
 
 export default async function Page() {
   // Récupérer les stocks avec les relations
-  const stocks = await prisma.stock.findMany({
+  const stocksRaw = await prisma.stock.findMany({
     include: {
       depot: true,
       produit: true,
@@ -21,13 +21,37 @@ export default async function Page() {
     orderBy: { createdAt: 'desc' }
   });
 
+  // Mapper les données Prisma vers le type StockWithRelations attendu
+  const stocks: StockWithRelations[] = stocksRaw.map((s) => ({
+    ...s,
+    depotId: s.depotId || undefined,
+    fournisseurId: s.fournisseurId || undefined,
+    clientId: s.clientId || undefined,
+    depot: s.depot ? {
+      id: s.depot.id,
+      name: s.depot.name,
+    } : undefined,
+    produit: s.produit ? {
+      id: s.produit.id,
+      nom: s.produit.name || "",
+    } : undefined,
+    client: s.client ? {
+      id: s.client.id,
+      nom: s.client.name || "",
+    } : undefined,
+    fournisseur: s.fournisseur ? {
+      id: s.fournisseur.id,
+      nom: s.fournisseur.nom,
+    } : undefined,
+  }));
+
   // Récupérer les dépôts pour le mini dashboard
   const depots = await prisma.depot.findMany({
     select: { id: true, name: true }
   });
 
   // Récupérer les commandes pour les calculs
-  const commandes = await prisma.commande.findMany({
+  const commandesRaw = await prisma.commande.findMany({
     select: {
       id: true,
       produitId: true,
@@ -39,11 +63,21 @@ export default async function Page() {
       }
     }
   });
+  
+  // Mapper les commandes pour convertir null en undefined
+  const commandes = commandesRaw.map((c) => ({
+    id: c.id,
+    produitId: c.produitId,
+    depotId: c.depotId || undefined,
+    fournisseurId: c.fournisseurId || undefined,
+    unitPrice: c.unitPrice || null,
+    fournisseur: c.fournisseur ? { nom: c.fournisseur.nom } : undefined,
+  }));
 
   // Calculer les statistiques
   const totalStocks = stocks.length;
-  const entrees = (stocks as StockWithRelations[]).filter(s => s.type === 'ENTREE').length;
-  const sorties = (stocks as StockWithRelations[]).filter(s => s.type === 'SORTIE').length;
+  const entrees = stocks.filter(s => s.type === 'ENTREE').length;
+  const sorties = stocks.filter(s => s.type === 'SORTIE').length;
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -119,7 +153,7 @@ export default async function Page() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {depots.map((d: { id: string; name: string }) => {
-                const depotStocks = (stocks as StockWithRelations[]).filter((s) => s.depotId === d.id);
+                const depotStocks = stocks.filter((s) => s.depotId === d.id);
                 const entrees = depotStocks
                   .filter((s) => s.type === 'ENTREE')
                   .reduce((acc, s) => acc + (Number(s.quantite) || 0), 0);

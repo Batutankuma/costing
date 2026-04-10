@@ -11,7 +11,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const dynamic = "force-dynamic";
 
 export default async function Page() {
-  const data = await prisma.user.findMany({ orderBy: { createdAt: "desc" } });
+  const dataRaw = await prisma.user.findMany({ orderBy: { createdAt: "desc" } });
+
+  // Mapper les données Prisma pour convertir emailVerified de boolean en Date | null
+  const data = dataRaw.map((user) => ({
+    ...user,
+    emailVerified: typeof user.emailVerified === "boolean" 
+      ? (user.emailVerified ? new Date() : null)
+      : (user.emailVerified ?? null),
+  }));
 
   return (
     <div className="p-6 max-w-7xl mx-auto">

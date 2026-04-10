@@ -54,7 +54,7 @@ export default async function CreateStockPage() {
   const commandeSuggestions = commandes.map((commande: CommandeRef) => ({
     id: commande.id,
     reference: commande.reference,
-    status: commande.status,
+    status: commande.status as "COMPLETED" | "DRAFT" | "CONFIRMED" | "CANCELLED" | "PARTIALLY_RECEIVED",
     depotId: commande.depotId,
     produitId: commande.produitId,
     fournisseurId: commande.fournisseurId,

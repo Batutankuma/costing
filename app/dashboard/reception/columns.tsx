@@ -22,7 +22,7 @@ import { Badge } from "@/components/ui/badge";
 // Import des actions pour récupérer les données
 import { findAllAction as findAllCommandes } from "@/app/dashboard/commande/actions";
 import { listProducts } from "@/app/dashboard/products/actions";
-import { findAllAction as findAllTanks } from "@/app/dashboard/tank/actions";
+import { findAllAction as findAllEquipment } from "@/app/dashboard/equipment/actions";
 
 // La fonction de filtre pour la recherche
 const multiColumnFilterFn: FilterFn<Reception> = (row, columnId, filterValue) => {
@@ -112,34 +112,34 @@ function ProduitName({ produitId }: { produitId: string }) {
 }
 
 // Composant pour afficher le nom du tank
-function TankName({ tankId }: { tankId: string | null }) {
-    const [tankName, setTankName] = useState<string>("");
-    const { executeAsync: executeTanks } = useAction(findAllTanks);
+function EquipmentName({ equipmentId }: { equipmentId: string | null }) {
+    const [equipmentName, setEquipmentName] = useState<string>("");
+    const { executeAsync: executeEquipment } = useAction(findAllEquipment);
 
     useEffect(() => {
-        const loadTank = async () => {
+        const loadEquipment = async () => {
             try {
-                const result = await executeTanks();
+                const result = await executeEquipment();
                 if (result?.data?.success && result.data.result) {
-                    type TankRef = { id: string; name: string };
-                    const tank = (result.data.result as TankRef[]).find((t) => t.id === tankId);
-                    setTankName(tank?.name || "Aucun tank");
+                    type EquipmentRef = { id: string; name: string };
+                    const equipment = (result.data.result as EquipmentRef[]).find((e) => e.id === equipmentId);
+                    setEquipmentName(equipment?.name || "Aucun équipement");
                 }
             } catch (error) {
-                console.error("Erreur lors du chargement du tank:", error);
+                console.error("Erreur lors du chargement de l'équipement:", error);
             }
         };
 
-        if (tankId) {
-            loadTank();
+        if (equipmentId) {
+            loadEquipment();
         }
-    }, [tankId, executeTanks]);
+    }, [equipmentId, executeEquipment]);
 
-    if (!tankId) {
-        return <span className="text-muted-foreground text-sm">Aucun tank</span>;
+    if (!equipmentId) {
+        return <span className="text-muted-foreground text-sm">Aucun équipement</span>;
     }
 
-    return <div className="font-medium">{tankName || tankId}</div>;
+    return <div className="font-medium">{equipmentName || equipmentId}</div>;
 }
 
 // Définition des colonnes
@@ -216,12 +216,12 @@ export const columns: ColumnDef<Reception>[] = [
         },
     },
     {
-        header: "Tank",
-        accessorKey: "tankId",
+        header: "Équipement",
+        accessorKey: "equipmentId",
         size: 150,
         cell: ({ row }) => {
-            const tankId = row.getValue("tankId") as string | null;
-            return <TankName tankId={tankId} />;
+            const equipmentId = row.getValue("equipmentId") as string | null;
+            return <EquipmentName equipmentId={equipmentId} />;
         },
     },
     {

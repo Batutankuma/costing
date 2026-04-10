@@ -7,6 +7,7 @@ import { authClient } from "@/lib/auth-client";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 type Theme = "system" | "light" | "dark";
 type Language = "fr" | "en";
@@ -96,6 +97,42 @@ export default function SettingsPage() {
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold">Paramètres</h1>
         <p className="text-sm text-muted-foreground">Personnalisez votre thème et votre langue.</p>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Gestion des Utilisateurs</CardTitle>
+            <CardDescription>Gérez les utilisateurs et leurs permissions.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col gap-2">
+              <Button variant="outline" asChild>
+                <Link href="/dashboard/users">Voir tous les utilisateurs</Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href="/dashboard/users/create">Créer un utilisateur</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Gestion des Modules</CardTitle>
+            <CardDescription>Gérez les modules disponibles dans le système.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col gap-2">
+              <Button variant="outline" asChild>
+                <Link href="/dashboard/settings/modules">Voir tous les modules</Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href="/dashboard/settings/modules/create">Créer un module</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">

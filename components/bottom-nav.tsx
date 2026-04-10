@@ -37,7 +37,7 @@ export default function BottomNav() {
                   active ? "text-primary" : "text-muted-foreground"
                 )}
               >
-                <Icon size={18} />
+                <Icon className="h-[18px] w-[18px]" />
                 <span>{it.label}</span>
               </Link>
             </li>

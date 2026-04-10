@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,19 @@ export default function ReceptionListPage() {
 
       if (result?.data?.success && result.data.result) {
         const newReceptions = result.data.result;
-        setReceptions(newReceptions);
+        // Mapper les données Prisma vers le type Reception attendu
+        setReceptions(newReceptions.map((r: any) => ({
+          id: r.id,
+          reference: r.reference,
+          receptionDate: r.receptionDate,
+          quantity: r.quantity,
+          unit: r.unit as "KG" | "G" | "L" | "ML" | "TONNE" | "PIECE" | "BOITE" | "CAISSON" | "POUCE" | "METRE" | "METRE_CARRE" | "METRE_CUBE" | "METRE_LINEAIRE",
+          receptionStatus: r.receptionStatus,
+          commandeId: r.commandeId || undefined,
+          depotId: r.depotId || undefined,
+          produitId: r.produitId || undefined,
+          equipmentId: r.equipmentId || undefined,
+        })) as Reception[]);
         setLastUpdate(new Date());
        
         // Afficher un toast de confirmation
@@ -191,7 +203,7 @@ export default function ReceptionListPage() {
         </div>
         <p className="text-xs text-blue-600 mt-2">
           <strong>Note :</strong> La suppression d&apos;une réception annule automatiquement tous ses effets
-          (stock, tank, commande) pour maintenir la cohérence des données. La liste se rafraîchit automatiquement.
+          (stock, Equipment, commande) pour maintenir la cohérence des données. La liste se rafraîchit automatiquement.
         </p>
         <p className="text-xs text-blue-600 mt-1">
           <strong>Rafraîchissement automatique :</strong> Toutes les 30 secondes

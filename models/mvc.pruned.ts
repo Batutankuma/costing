@@ -237,13 +237,29 @@ export const UpdateNonMiningPriceStructureSchema = NonMiningPriceStructureCore.p
 // ===== CRM: Fournisseurs =====
 export const CreateFournisseurSchema = z.object({
   nom: z.string().min(1, "Le nom est requis"),
+  company: z.string().optional().nullable(),
+  email: z.string().email("Email invalide").optional().nullable().or(z.literal("")),
+  phone: z.string().optional().nullable(),
   adresse: z.string().optional().nullable(),
+  rccm: z.string().optional().nullable(),
+  idNat: z.string().optional().nullable(),
+  nif: z.string().optional().nullable(),
+  pays: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
 });
 
 export const FournisseurSchema = z.object({
   id: z.string(),
   nom: z.string().min(1, "Le nom est requis"),
+  company: z.string().optional().nullable(),
+  email: z.string().email("Email invalide").optional().nullable().or(z.literal("")),
+  phone: z.string().optional().nullable(),
   adresse: z.string().optional().nullable(),
+  rccm: z.string().optional().nullable(),
+  idNat: z.string().optional().nullable(),
+  nif: z.string().optional().nullable(),
+  pays: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
 });
 
 // ===== Factures Manuelles =====
@@ -348,7 +364,7 @@ export const DeviseEnum = z.nativeEnum({
 });
 
 // ===== Tanks =====
-export const CreateTankSchema = z.object({
+export const CreateEquipmentSchema = z.object({
   name: z.string().min(1, "Le nom est requis"),
   capacity: z.number().min(0, "La capacité doit être positive"),
   currentLevel: z.number().min(0, "Le niveau actuel doit être positif").optional(),
@@ -357,7 +373,7 @@ export const CreateTankSchema = z.object({
   produitId: z.string().optional().nullable(),
 });
 
-export const TankSchema = CreateTankSchema.extend({
+export const EquipmentSchema = CreateEquipmentSchema.extend({
   id: z.string(),
 });
 
@@ -372,6 +388,11 @@ export const CreateCommandeSchema = z.object({
   quantite: z.number().min(0, "La quantité doit être positive"),
   unitPrice: z.number().optional().nullable(),
   devise: z.enum(["XOF", "USD", "EUR", "CDF"]).default("USD").optional().nullable(),
+  // Champs facture
+  numeroFacture: z.string().optional().nullable(),
+  typeFacture: z.string().optional().nullable(),
+  dateFacture: z.date().optional().nullable(),
+  tva: z.number().optional().nullable(),
 });
 
 export const CommandeSchema = CreateCommandeSchema.extend({
@@ -385,11 +406,11 @@ export const CreateReceptionSchema = z.object({
   quantity: z.number().min(0, "La quantité doit être positive"),
   unit: z.enum(["KG", "G", "L", "ML", "TONNE", "PIECE", "BOITE", "CAISSON", "POUCE", "METRE", "METRE_CARRE", "METRE_CUBE", "METRE_LINEAIRE"]),
   receptionStatus: z.enum(["RECEIVED", "IN_TRANSIT", "CANCELLED"]).default("RECEIVED"),
-  commandeId: z.string().min(1, "Commande requise"),
+  commandeId: z.string().optional().nullable(),
   depotId: z.string().optional().nullable(),
-  produitId: z.string().min(1, "Produit requis"),
+  produitId: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
-  tankId: z.string().optional().nullable(),
+  equipmentId: z.string().optional().nullable(),
 });
 
 export const ReceptionSchema = CreateReceptionSchema.extend({
@@ -415,7 +436,7 @@ export const CreateDeliverySchema = z.object({
   clientId: z.string().optional().nullable(),
   depotId: z.string().optional().nullable(),
   produitId: z.string().optional().nullable(),
-  tankId: z.string().optional().nullable(),
+  equipmentId: z.string().optional().nullable(),
 });
 
 export const DeliverySchema = CreateDeliverySchema.extend({
@@ -428,7 +449,7 @@ export type Reception = z.infer<typeof ReceptionSchema>;
 export type Delivery = z.infer<typeof DeliverySchema>;
 
 export type CreateReception = z.infer<typeof CreateReceptionSchema>;
-export type Tank = z.infer<typeof TankSchema>;
+export type Equipment = z.infer<typeof EquipmentSchema>;
 export type Commande = z.infer<typeof CommandeSchema> & {
   currentQuantity: number;
   unit?: string | null;
@@ -442,3 +463,74 @@ export type Produit = {
 
 export type CommandeStatus = "DRAFT" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "PARTIALLY_RECEIVED";
 
+// ===== Banque =====
+export const CreateBanqueSchema = z.object({
+  nom: z.string().min(1, "Le nom est requis"),
+  numeroCompte: z.string().min(1, "Le numéro de compte est requis"),
+  devise: z.enum(["XOF", "USD", "EUR", "CDF"]),
+  swift: z.string().optional().nullable(),
+  mailGestionnaire: z.string().email("Email invalide").optional().nullable().or(z.literal("")),
+  contactGestionnaire: z.string().optional().nullable(),
+});
+
+export const BanqueSchema = z.object({
+  id: z.string(),
+  nom: z.string().min(1, "Le nom est requis"),
+  numeroCompte: z.string().min(1, "Le numéro de compte est requis"),
+  devise: z.enum(["XOF", "USD", "EUR", "CDF"]),
+  swift: z.string().optional().nullable(),
+  mailGestionnaire: z.string().email("Email invalide").optional().nullable().or(z.literal("")),
+  contactGestionnaire: z.string().optional().nullable(),
+});
+
+// ===== Licence =====
+export const CreateLicenceSchema = z.object({
+  commandeId: z.string().min(1, "La commande est requise"),
+  banqueId: z.string().min(1, "La banque est requise"),
+  validiteLicence: z.enum(["VALIDE", "EXPIREE", "EN_ATTENTE", "SUSPENDUE"]).default("EN_ATTENTE"),
+  numeroBulletin: z.string().optional().nullable(),
+  numeroLicenceImport: z.string().optional().nullable(),
+  numeroLettreEngagement: z.string().optional().nullable(),
+  statusJustification: z.boolean().default(false),
+});
+
+export const LicenceSchema = CreateLicenceSchema.extend({
+  id: z.string(),
+});
+
+// ===== Paiement Banque =====
+export const CreatePaiementBanqueSchema = z.object({
+  commandeId: z.string().min(1, "La commande est requise"),
+  banqueId: z.string().min(1, "La banque est requise"),
+  statusPaiement: z.enum(["EN_ATTENTE", "PAYE", "PARTIEL", "ANNULE"]).default("EN_ATTENTE"),
+  datePaiement: z.date().optional().nullable(),
+  montant: z.number().optional().nullable(),
+});
+
+export const PaiementBanqueSchema = CreatePaiementBanqueSchema.extend({
+  id: z.string(),
+});
+
+// ===== Module =====
+export const CreateModuleSchema = z.object({
+  name: z.string().min(1, "Le nom du module est requis"),
+  type: z.enum(["FINANCE", "CRM", "DEPOT_AUTRES", "DEPOT_KALEMIE", "DEPOT_LUBUMBASHI", "DEPOT_KINSHASA", "OPERATION"]),
+  description: z.string().optional().nullable(),
+  isActive: z.boolean().default(true),
+});
+
+export const ModuleSchema = CreateModuleSchema.extend({
+  id: z.string(),
+});
+
+// ===== UserModule =====
+export const CreateUserModuleSchema = z.object({
+  userId: z.string().min(1, "L'utilisateur est requis"),
+  moduleIds: z.array(z.string()).min(1, "Au moins un module doit être sélectionné"),
+});
+
+export const UserModuleSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  moduleId: z.string(),
+});

@@ -30,21 +30,85 @@ export default async function ViewFournisseurPage({ params }: { params: Promise<
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            <div>
-              <Label htmlFor="nom">Nom</Label>
-              <p id="nom" className="text-lg font-semibold">{fournisseur.nom}</p>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <Label htmlFor="nom">Nom</Label>
+                <p id="nom" className="text-lg font-semibold">{fournisseur.nom}</p>
+              </div>
+              {fournisseur.company && (
+                <div>
+                  <Label htmlFor="company">Société</Label>
+                  <p id="company" className="text-lg">{fournisseur.company}</p>
+                </div>
+              )}
             </div>
-            <div>
-              <Label htmlFor="adresse">Adresse</Label>
-              <p id="adresse" className="text-lg">{fournisseur.adresse ?? "N/A"}</p>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {fournisseur.email && (
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <p id="email" className="text-lg">{fournisseur.email}</p>
+                </div>
+              )}
+              {fournisseur.phone && (
+                <div>
+                  <Label htmlFor="phone">Téléphone</Label>
+                  <p id="phone" className="text-lg">{fournisseur.phone}</p>
+                </div>
+              )}
             </div>
-            <div>
-              <Label>Date de création</Label>
-              <p className="text-sm text-gray-600">{new Date(fournisseur.createdAt).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+
+            {fournisseur.adresse && (
+              <div>
+                <Label htmlFor="adresse">Adresse</Label>
+                <p id="adresse" className="text-lg">{fournisseur.adresse}</p>
+              </div>
+            )}
+
+            <div className="grid md:grid-cols-3 gap-6">
+              {fournisseur.rccm && (
+                <div>
+                  <Label htmlFor="rccm">RCCM</Label>
+                  <p id="rccm" className="text-lg">{fournisseur.rccm}</p>
+                </div>
+              )}
+              {fournisseur.idNat && (
+                <div>
+                  <Label htmlFor="idNat">ID NAT</Label>
+                  <p id="idNat" className="text-lg">{fournisseur.idNat}</p>
+                </div>
+              )}
+              {fournisseur.nif && (
+                <div>
+                  <Label htmlFor="nif">NIF</Label>
+                  <p id="nif" className="text-lg">{fournisseur.nif}</p>
+                </div>
+              )}
             </div>
-            <div>
-              <Label>Dernière mise à jour</Label>
-              <p className="text-sm text-gray-600">{new Date(fournisseur.updatedAt).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+
+            {fournisseur.pays && (
+              <div>
+                <Label htmlFor="pays">Pays</Label>
+                <p id="pays" className="text-lg">{fournisseur.pays}</p>
+              </div>
+            )}
+
+            {fournisseur.notes && (
+              <div>
+                <Label htmlFor="notes">Notes</Label>
+                <p id="notes" className="text-lg">{fournisseur.notes}</p>
+              </div>
+            )}
+
+            <div className="grid md:grid-cols-2 gap-6 pt-4 border-t">
+              <div>
+                <Label>Date de création</Label>
+                <p className="text-sm text-gray-600">{new Date(fournisseur.createdAt).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+              </div>
+              <div>
+                <Label>Dernière mise à jour</Label>
+                <p className="text-sm text-gray-600">{new Date(fournisseur.updatedAt).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+              </div>
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" asChild>

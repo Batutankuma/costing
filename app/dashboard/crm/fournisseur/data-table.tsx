@@ -103,7 +103,7 @@ export default function DataTables({ Element }: { Element: Fournisseur[] }) {
 
     const table = useReactTable({
         data,
-        columns,
+        columns: columns as any,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         onSortingChange: setSorting,

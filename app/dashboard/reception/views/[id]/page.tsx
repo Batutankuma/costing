@@ -12,7 +12,7 @@ import { Reception } from "@/models/mvc";
 // Types locaux
 type CommandeRef = { id: string; reference?: string | null; quantite?: number; quantity?: number; unit?: string | null; currentQuantity?: number; status?: string };
 type ProduitRef = { id: string; nom: string; description?: string | null };
-type TankRef = { id: string; name: string; capacity?: number; currentLevel?: number; unit?: string };
+type EquipmentRef = { id: string; name: string; capacity?: number; currentLevel?: number; unit?: string };
 import {
   ArrowLeft,
   Edit,
@@ -30,7 +30,7 @@ import DeleteReception from "../../delete";
 // Import des actions pour récupérer les données liées
 import { findAllAction as findAllCommandes } from "@/app/dashboard/commande/actions";
 import { listProducts } from "@/app/dashboard/products/actions";
-import { findAllAction as findAllTanks } from "@/app/dashboard/tank/actions";
+import { findAllAction as findAllEquipment } from "@/app/dashboard/equipment/actions";
 
 export default function ViewReceptionPage() {
   const params = useParams();
@@ -40,13 +40,13 @@ export default function ViewReceptionPage() {
   const [reception, setReception] = useState<Reception | null>(null);
   const [commande, setCommande] = useState<CommandeRef | null>(null);
   const [produit, setProduit] = useState<ProduitRef | null>(null);
-  const [tank, setTank] = useState<TankRef | null>(null);
+  const [equipment, setEquipment] = useState<EquipmentRef | null>(null);
   const [loading, setLoading] = useState(true);
 
 
   const { executeAsync: executeCommandes } = useAction(findAllCommandes);
   const { executeAsync: executeProduits } = useAction(listProducts);
-  const { executeAsync: executeTanks } = useAction(findAllTanks);
+  const { executeAsync: executeEquipment } = useAction(findAllEquipment);
 
   useEffect(() => {
     const loadData = async () => {
@@ -57,7 +57,19 @@ export default function ViewReceptionPage() {
         const receptionResult = await findByIdAction(receptionId);
         if (receptionResult?.success && receptionResult.result) {
           const receptionData = receptionResult.result;
-          setReception(receptionData);
+          // Mapper les données Prisma vers le type Reception attendu
+          setReception({
+            id: receptionData.id,
+            reference: receptionData.reference,
+            receptionDate: receptionData.receptionDate,
+            quantity: receptionData.quantity,
+            unit: receptionData.unit as "KG" | "G" | "L" | "ML" | "TONNE" | "PIECE" | "BOITE" | "CAISSON" | "POUCE" | "METRE" | "METRE_CARRE" | "METRE_CUBE" | "METRE_LINEAIRE",
+            receptionStatus: receptionData.receptionStatus,
+            commandeId: receptionData.commandeId || undefined,
+            depotId: receptionData.depotId || undefined,
+            produitId: receptionData.produitId || undefined,
+            equipmentId: receptionData.equipmentId || undefined,
+          } as Reception);
 
           // Charger les données liées
           if (receptionData.commandeId) {
@@ -72,16 +84,22 @@ export default function ViewReceptionPage() {
             const produitsResult = await executeProduits();
             const produits = produitsResult?.data?.data ?? [];
             if (produits.length > 0) {
-              const foundProduit = produits.find((p: ProduitRef) => p.id === receptionData.produitId);
+              // Mapper les produits Prisma vers ProduitRef
+              const produitsMapped = produits.map((p: any) => ({
+                id: p.id,
+                nom: p.name || p.nom || "",
+                description: p.description || null,
+              }));
+              const foundProduit = produitsMapped.find((p: ProduitRef) => p.id === receptionData.produitId);
               setProduit(foundProduit || null);
             }
           }
 
-          if (receptionData.tankId) {
-            const tanksResult = await executeTanks();
-            if (tanksResult?.data?.success && tanksResult.data.result) {
-              const foundTank = tanksResult.data.result.find((t: TankRef) => t.id === receptionData.tankId);
-              setTank(foundTank || null);
+          if (receptionData.equipmentId) {
+            const equipmentResult = await executeEquipment();
+            if (equipmentResult?.data?.success && equipmentResult.data.result) {
+              const foundEquipment = equipmentResult.data.result.find((e: EquipmentRef) => e.id === receptionData.equipmentId);
+              setEquipment(foundEquipment || null);
             }
           }
         }
@@ -95,7 +113,7 @@ export default function ViewReceptionPage() {
     if (receptionId) {
       loadData();
     }
-  }, [receptionId, executeCommandes, executeProduits, executeTanks]);
+  }, [receptionId, executeCommandes, executeProduits, executeEquipment]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -341,7 +359,7 @@ export default function ViewReceptionPage() {
           </CardContent>
         </Card>
 
-        {/* Produit et Tank */}
+        {/* Produit et Equipment */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -369,22 +387,22 @@ export default function ViewReceptionPage() {
               )}
             </div>
 
-            {/* Tank */}
+            {/* Equipment */}
             <div>
-              <h4 className="text-sm font-medium mb-2">Tank de stockage</h4>
-              {tank ? (
+              <h4 className="text-sm font-medium mb-2">Équipement de stockage</h4>
+              {equipment ? (
                 <div className="p-3 bg-blue-50 rounded-lg">
-                  <div className="font-medium">{tank.name}</div>
+                  <div className="font-medium">{equipment.name}</div>
                   <div className="text-sm text-muted-foreground mt-1">
-                    Capacité : {tank.capacity} {tank.unit}
+                    Capacité : {equipment.capacity} {equipment.unit}
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    Niveau actuel : {tank.currentLevel} {tank.unit}
+                    Niveau actuel : {equipment.currentLevel} {equipment.unit}
                   </div>
                 </div>
               ) : (
                 <div className="text-center text-muted-foreground py-2">
-                  Aucun tank associé
+                  Aucun équipement associé
                 </div>
               )}
             </div>

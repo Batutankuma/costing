@@ -12,7 +12,7 @@ import { useRouter, useParams } from "next/navigation";
 import { updateAction, findByIdAction } from "../actions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
-import { CreateReceptionSchema, CreateReception, Commande, Produit, Tank, Reception } from "@/models/mvc";
+import { CreateReceptionSchema, CreateReception, Commande, Produit, Equipment, Reception } from "@/models/mvc";
 // Basic inline Alert components as fallback
 const Alert = ({ className = "", children }: { className?: string; children: React.ReactNode }) => (
   <div className={`p-4 rounded-md border ${className}`}>{children}</div>
@@ -25,7 +25,7 @@ import { Info, AlertTriangle, CheckCircle, Save, List, Package } from "lucide-re
 // Import des actions pour récupérer les données
 import { findAllAction as findAllCommandes } from "@/app/dashboard/commande/actions";
 import { listProducts } from "@/app/dashboard/products/actions";
-import { findAllAction as findAllTanks } from "@/app/dashboard/tank/actions";
+import { findAllAction as findAllEquipment } from "@/app/dashboard/equipment/actions";
 
 export default function EditReceptionPage() {
   const params = useParams();
@@ -33,7 +33,7 @@ export default function EditReceptionPage() {
 
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [produits, setProduits] = useState<Produit[]>([]);
-  const [tanks, setTanks] = useState<Tank[]>([]);
+  const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [reception, setReception] = useState<Reception | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedCommande, setSelectedCommande] = useState<Commande | null>(null);
@@ -41,7 +41,7 @@ export default function EditReceptionPage() {
 
   // Hooks pour les actions
   const { executeAsync: executeCommandes } = useAction(findAllCommandes);
-  const { executeAsync: executeTanks } = useAction(findAllTanks);
+  const { executeAsync: executeEquipment } = useAction(findAllEquipment);
 
 
   const { toast } = useToast();
@@ -64,9 +64,9 @@ export default function EditReceptionPage() {
       unit: z.enum(["KG", "G", "L", "ML", "TONNE", "PIECE", "BOITE", "CAISSON", "POUCE", "METRE", "METRE_CARRE", "METRE_CUBE", "METRE_LINEAIRE"]),
       notes: z.string().optional().nullable(),
       receptionStatus: z.enum(["RECEIVED", "IN_TRANSIT", "CANCELLED"]),
-      commandeId: z.string().uuid(),
-      produitId: z.string().uuid(),
-      tankId: z.string().uuid().optional().nullable(),
+      commandeId: z.string().uuid().optional().nullable(),
+      produitId: z.string().uuid().optional().nullable(),
+      equipmentId: z.string().uuid().optional().nullable(),
       stockEntryId: z.string().uuid().optional(),
       user: z.string().uuid().optional()
     })),
@@ -80,7 +80,7 @@ export default function EditReceptionPage() {
       receptionStatus: "RECEIVED",
       commandeId: "",
       produitId: "",
-      tankId: undefined,
+      equipmentId: undefined,
     }
   });
 
@@ -98,7 +98,15 @@ export default function EditReceptionPage() {
         const receptionResult = await findByIdAction(receptionId);
         if (receptionResult?.success && receptionResult.result) {
           const receptionData = receptionResult.result;
-          setReception(receptionData);
+          // Caster le type pour correspondre au type Reception attendu
+          setReception({
+            ...receptionData,
+            unit: receptionData.unit as "KG" | "G" | "L" | "ML" | "TONNE" | "PIECE" | "BOITE" | "CAISSON" | "POUCE" | "METRE" | "METRE_CARRE" | "METRE_CUBE" | "METRE_LINEAIRE",
+            produitId: receptionData.produitId || undefined,
+            commandeId: receptionData.commandeId || undefined,
+            depotId: receptionData.depotId || undefined,
+            equipmentId: receptionData.equipmentId || undefined,
+          } as Reception);
 
           // Pré-remplir le formulaire
           // Amélioration pour éviter les problèmes de fuseau horaire
@@ -108,12 +116,12 @@ export default function EditReceptionPage() {
 
           setValue("reference", receptionData.reference || "");
           setValue("quantity", receptionData.quantity);
-          setValue("unit", receptionData.unit);
-          setValue("notes", receptionData.notes || "");
+          setValue("unit", receptionData.unit as "KG" | "G" | "L" | "ML" | "TONNE" | "PIECE" | "BOITE" | "CAISSON" | "POUCE" | "METRE" | "METRE_CARRE" | "METRE_CUBE" | "METRE_LINEAIRE");
+          setValue("notes", "");
           setValue("receptionStatus", receptionData.receptionStatus);
-          setValue("commandeId", receptionData.commandeId);
-          setValue("produitId", receptionData.produitId);
-          setValue("tankId", receptionData.tankId);
+          setValue("commandeId", receptionData.commandeId || "");
+          setValue("produitId", receptionData.produitId || "");
+          setValue("equipmentId", receptionData.equipmentId || undefined);
         }
 
         // Charger les commandes
@@ -127,12 +135,16 @@ export default function EditReceptionPage() {
         // Charger les produits
         const produitsResult = await listProducts();
         const produitsData = produitsResult?.data?.data ?? [];
-        setProduits(produitsData || []);
+        // Mapper les données Prisma vers le type Produit attendu
+        setProduits(produitsData.map((p: any) => ({
+          id: p.id,
+          nom: p.name || p.nom || "",
+        })) || []);
 
-        // Charger les tanks
-        const tanksResult = await executeTanks();
-        if (tanksResult?.data?.success && tanksResult.data.result) {
-          setTanks(tanksResult.data.result || []);
+        // Charger les equipment
+        const equipmentResult = await executeEquipment();
+        if (equipmentResult?.data?.success && equipmentResult.data.result) {
+          setEquipment(equipmentResult.data.result || []);
         }
       } catch (error) {
         console.error("Erreur lors du chargement des données:", error);
@@ -149,7 +161,7 @@ export default function EditReceptionPage() {
     if (receptionId) {
       loadData();
     }
-  }, [receptionId, executeCommandes, executeTanks, setValue, toast]);
+  }, [receptionId, executeCommandes, executeEquipment, setValue, toast]);
 
   // Mettre à jour la référence quand une commande est sélectionnée
   useEffect(() => {
@@ -445,21 +457,21 @@ export default function EditReceptionPage() {
           </div>
 
           <div>
-            <Label htmlFor="tankId">Tank</Label>
-            <Select onValueChange={(value) => setValue("tankId", value === "none" ? undefined : value)}>
+            <Label htmlFor="equipmentId">Equipment</Label>
+            <Select onValueChange={(value) => setValue("equipmentId", value === "none" ? undefined : value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un tank (optionnel)" />
+                <SelectValue placeholder="Sélectionner un Equipment (optionnel)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Aucun tank</SelectItem>
-                {tanks.map((tank: Tank) => (
-                  <SelectItem key={tank.id} value={tank.id}>
-                    {tank.name}
+                <SelectItem value="none">Aucun Equipment</SelectItem>
+                {equipment.map((Equipment: Equipment) => (
+                  <SelectItem key={Equipment.id} value={Equipment.id}>
+                    {Equipment.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {errors.tankId && <p className="text-red-500 text-sm">{errors.tankId.message}</p>}
+            {errors.equipmentId && <p className="text-red-500 text-sm">{errors.equipmentId.message}</p>}
           </div>
         </div>
 

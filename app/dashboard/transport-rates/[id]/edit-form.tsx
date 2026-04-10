@@ -48,7 +48,7 @@ export default function EditForm({ id, initial }: EditFormProps) {
     setIsSubmitting(true);
     try {
       const result = await updateTransportRate({ ...data, id });
-      if (result.data?.failure) {
+      if (result?.data?.failure) {
         toast({ 
           variant: "destructive", 
           title: "Erreur", 

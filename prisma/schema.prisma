@@ -25,6 +25,7 @@ model User {
   clients        Client[]
   prospects      Prospect[]
   activities     CRMActivity[]
+  userModules    UserModule[]
 
   @@unique([email])
   @@map("user")
@@ -63,7 +64,7 @@ model Account {
 
   fournisseurs Fournisseur[]
   stocks       Stock[]
-  tanks        Tank[]
+  equipments   Equipment[]
   manualFactures ManualFacture[]
 
   @@map("account")
@@ -584,6 +585,43 @@ enum Role {
   COMMERCIAL
 }
 
+enum ModuleType {
+  FINANCE
+  CRM
+  DEPOT_AUTRES
+  DEPOT_KALEMIE
+  DEPOT_LUBUMBASHI
+  DEPOT_KINSHASA
+  OPERATION
+}
+
+// ===== Modules et Permissions =====
+model Module {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  type        ModuleType
+  description String?
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  userModules UserModule[]
+
+  @@map("module")
+}
+
+model UserModule {
+  id        String   @id @default(cuid())
+  userId    String
+  moduleId  String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, moduleId])
+  @@map("user_module")
+}
+
 enum Localisation {
   INTERNAL
   EXTERNAL
@@ -674,7 +712,7 @@ model Product {
   depotLinks DepotProduct[]
   stocks     Stock[]
   commandes  Commande[]
-  tanks      Tank[]
+  equipments Equipment[]
   receptions Reception[]
   deliveries Delivery[]
   shipments  Shipment[]
@@ -694,7 +732,7 @@ model Depot {
   products   DepotProduct[]
   stocks     Stock[]
   commandes  Commande[]
-  tanks      Tank[]
+  equipments Equipment[]
   receptions Reception[]
   deliveries Delivery[]
   shipments  Shipment[]
@@ -722,7 +760,15 @@ model DepotProduct {
 model Fournisseur {
   id        String   @id @default(cuid())
   nom       String
+  company   String?
+  email     String?
+  phone     String?
   adresse   String?
+  rccm      String?
+  idNat     String?
+  nif       String?
+  pays      String?
+  notes     String?
   accountId String?
   account   Account? @relation(fields: [accountId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
@@ -883,10 +929,17 @@ model Commande {
   quantite      Float          @default(0)
   unitPrice     Float?
   devise        Devise?        @default(USD)
+  // Champs facture
+  numeroFacture String?
+  typeFacture   String?
+  dateFacture   DateTime?
+  tva           Float?         @default(0)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
   receptions    Reception[]
+  licences      Licence[]
+  paiements     PaiementBanque[]
 
   @@map("commande")
 }
@@ -942,7 +995,7 @@ model CRMActivity {
 
 
 // ===== Tanks =====
-model Tank {
+model Equipment {
   id           String    @id @default(cuid())
   name         String
   capacity     Float     @default(0)
@@ -960,7 +1013,7 @@ model Tank {
   receptions Reception[]
   deliveries Delivery[]
 
-  @@map("tank")
+  @@map("equipment")
 }
 
 // ===== Réceptions =====
@@ -977,8 +1030,8 @@ model Reception {
   depot            Depot?          @relation(fields: [depotId], references: [id], onDelete: SetNull)
   produitId        String?
   produit          Product?        @relation(fields: [produitId], references: [id], onDelete: SetNull)
-  tankId           String?
-  tank             Tank?           @relation(fields: [tankId], references: [id], onDelete: SetNull)
+  equipmentId      String?
+  equipment        Equipment?     @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
@@ -1005,8 +1058,8 @@ model Delivery {
   depot           Depot?        @relation(fields: [depotId], references: [id], onDelete: SetNull)
   produitId       String?
   produit         Product?      @relation(fields: [produitId], references: [id], onDelete: SetNull)
-  tankId          String?
-  tank            Tank?         @relation(fields: [tankId], references: [id], onDelete: SetNull)
+  equipmentId     String?
+  equipment       Equipment?    @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -1032,4 +1085,70 @@ model Shipment {
   updatedAt       DateTime  @updatedAt
 
   @@map("shipment")
+}
+
+// ===== Banque =====
+model Banque {
+  id                String   @id @default(cuid())
+  nom               String
+  numeroCompte      String
+  devise            Devise   @default(USD)
+  swift             String?
+  mailGestionnaire  String?
+  contactGestionnaire String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  licences          Licence[]
+  paiements         PaiementBanque[]
+
+  @@map("banque")
+}
+
+// ===== Licence =====
+enum ValiditeLicence {
+  VALIDE
+  EXPIREE
+  EN_ATTENTE
+  SUSPENDUE
+}
+
+model Licence {
+  id                    String         @id @default(cuid())
+  commandeId            String
+  commande               Commande       @relation(fields: [commandeId], references: [id], onDelete: Cascade)
+  banqueId               String
+  banque                 Banque          @relation(fields: [banqueId], references: [id], onDelete: Cascade)
+  validiteLicence        ValiditeLicence @default(EN_ATTENTE)
+  numeroBulletin         String?
+  numeroLicenceImport    String?
+  numeroLettreEngagement String?
+  statusJustification    Boolean        @default(false)
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+
+  @@map("licence")
+}
+
+// ===== Paiement Banque =====
+enum StatusPaiement {
+  EN_ATTENTE
+  PAYE
+  PARTIEL
+  ANNULE
+}
+
+model PaiementBanque {
+  id                String        @id @default(cuid())
+  commandeId        String
+  commande          Commande      @relation(fields: [commandeId], references: [id], onDelete: Cascade)
+  banqueId          String
+  banque            Banque       @relation(fields: [banqueId], references: [id], onDelete: Cascade)
+  statusPaiement    StatusPaiement @default(EN_ATTENTE)
+  datePaiement      DateTime?
+  montant           Float?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@map("paiement_banque")
 }

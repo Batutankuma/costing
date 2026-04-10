@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     }
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) return new Response(JSON.stringify({ error: "introuvable" }), { status: 404 });
-    return new Response(JSON.stringify({ role: user.role }), { status: 200, headers: { "content-type": "application/json" } });
+    return new Response(JSON.stringify({ role: user.role, userId: user.id }), { status: 200, headers: { "content-type": "application/json" } });
   } catch (e) {
     const error = e instanceof Error ? e.message : "server error";
     return new Response(JSON.stringify({ error }), { status: 500 });

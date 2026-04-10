@@ -18,7 +18,7 @@ import { Upload, X, FileText, ImageIcon, File } from "lucide-react";
 // Import des actions pour récupérer les données
 import { getClients } from "@/app/dashboard/clients/actions";
 import { listDepots } from "@/app/dashboard/depots/actions";
-import { findAllAction as findAllTanks } from "@/app/dashboard/tank/actions";
+import { findAllAction as findAllEquipment } from "@/app/dashboard/equipment/actions";
 import { listProducts } from "@/app/dashboard/products/actions";
 
 interface UploadedFile {
@@ -31,12 +31,12 @@ interface UploadedFile {
 export default function CreateDeliveryPage() {
   type ClientRef = { id: string; nom?: string };
   type DepotRef = { id: string; name?: string };
-  type TankRef = { id: string; name?: string; produitId?: string | null };
+  type EquipmentRef = { id: string; name?: string; produitId?: string | null };
   type ProduitRef = { id: string; nom?: string };
 
   const [clients, setClients] = useState<ClientRef[]>([]);
   const [depots, setDepots] = useState<DepotRef[]>([]);
-  const [tanks, setTanks] = useState<TankRef[]>([]);
+  const [equipment, setEquipment] = useState<EquipmentRef[]>([]);
   const [produits, setProduits] = useState<ProduitRef[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
@@ -45,7 +45,7 @@ export default function CreateDeliveryPage() {
 
   // Hooks pour les actions de récupération
   const { executeAsync: executeDepots } = useAction(listDepots);
-  const { executeAsync: executeTanks } = useAction(findAllTanks);
+  const { executeAsync: executeEquipment } = useAction(findAllEquipment);
   const { executeAsync: executeProduits } = useAction(listProducts);
   
 
@@ -83,11 +83,11 @@ export default function CreateDeliveryPage() {
           setValue("depotId", kalemieDepot[0].id);
         }
 
-        // Charger les tanks
-        const tanksResult = await executeTanks();
+        // Charger les équipements
+        const equipmentResult = await executeEquipment();
         if (!isMounted) return;
-        const tanksData = tanksResult?.data?.success ? tanksResult.data.result : [];
-        setTanks(tanksData || []);
+        const equipmentData = equipmentResult?.data?.success ? equipmentResult.data.result : [];
+        setEquipment(equipmentData || []);
 
         // Charger les produits
         const produitsResult = await executeProduits();
@@ -131,7 +131,7 @@ export default function CreateDeliveryPage() {
       note: "",
       clientId: "",
       depotId: "",
-      tankId: "",
+      equipmentId: "",
       produitId: "",
       quantity: 0,
       unit: "L",
@@ -147,29 +147,29 @@ export default function CreateDeliveryPage() {
     }
   });
 
-  const tankId = watch("tankId");
+  const equipmentId = watch("equipmentId");
   const depotId = watch("depotId");
   const openingEter = watch("openingEter");
   const closingEter = watch("closingEter");
 
-  // Filtrer les tanks selon le dépôt sélectionné
-  const filteredTanks = depotId 
-    ? tanks.filter(tank => {
-        // Si le tank a une relation avec le dépôt, filtrer
-        // Pour l'instant, on affiche tous les tanks si pas de relation
+  // Filtrer les equipment selon le dépôt sélectionné
+  const filteredEquipment = depotId 
+    ? equipment.filter(eq => {
+        // Si l'équipement a une relation avec le dépôt, filtrer
+        // Pour l'instant, on affiche tous les équipements si pas de relation
         return true;
       })
-    : tanks;
+    : equipment;
 
-  // Récupérer le produit automatiquement selon le tank
+  // Récupérer le produit automatiquement selon l'équipement
   useEffect(() => {
-    if (tankId) {
-      const tank = tanks.find(t => t.id === tankId);
-      if (tank && tank.produitId) {
-        setValue("produitId", tank.produitId);
+    if (equipmentId) {
+      const eq = equipment.find(e => e.id === equipmentId);
+      if (eq && eq.produitId) {
+        setValue("produitId", eq.produitId);
       }
     }
-  }, [tankId, tanks, setValue]);
+  }, [equipmentId, equipment, setValue]);
 
   // Calculer automatiquement la quantité à partir des compteurs
   useEffect(() => {
@@ -292,7 +292,7 @@ export default function CreateDeliveryPage() {
         <Card>
           <CardHeader>
             <CardTitle>Relations</CardTitle>
-            <CardDescription>Client, dépôt, tank et produit associés</CardDescription>
+            <CardDescription>Client, dépôt, Equipment et produit associés</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -318,8 +318,8 @@ export default function CreateDeliveryPage() {
                 <Select 
                   onValueChange={(value) => {
                     setValue("depotId", value);
-                    // Réinitialiser le tank si le dépôt change
-                    setValue("tankId", "");
+                    // Réinitialiser le Equipment si le dépôt change
+                    setValue("equipmentId", "");
                   }}
                   value={watch("depotId") || undefined}
                   disabled={depots.length === 1}
@@ -350,26 +350,26 @@ export default function CreateDeliveryPage() {
               </div>
 
               <div>
-                <Label htmlFor="tankId">Tank</Label>
+                <Label htmlFor="equipmentId">Equipment</Label>
                 <Select 
-                  onValueChange={(value) => setValue("tankId", value)}
+                  onValueChange={(value) => setValue("equipmentId", value)}
                   disabled={!depotId && depots.length > 0}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={depotId ? "Sélectionner un tank (optionnel)" : "Sélectionnez d'abord un dépôt"} />
+                    <SelectValue placeholder={depotId ? "Sélectionner un Equipment (optionnel)" : "Sélectionnez d'abord un dépôt"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredTanks.map((tank) => (
-                      <SelectItem key={tank.id} value={tank.id}>
-                        {tank.name}
+                    {filteredEquipment.map((eq) => (
+                      <SelectItem key={eq.id} value={eq.id}>
+                        {eq.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {errors.tankId && <p className="text-red-500 text-sm">{errors.tankId.message as string}</p>}
-                {tankId && tanks.find(t => t.id === tankId)?.produitId && (
+                {errors.equipmentId && <p className="text-red-500 text-sm">{errors.equipmentId.message as string}</p>}
+                {equipmentId && equipment.find(t => t.id === equipmentId)?.produitId && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Produit associé au tank sélectionné automatiquement
+                    Produit associé au Equipment sélectionné automatiquement
                   </p>
                 )}
               </div>
@@ -379,13 +379,13 @@ export default function CreateDeliveryPage() {
                 <Select 
                   onValueChange={(value) => setValue("produitId", value)}
                   value={watch("produitId") || undefined}
-                  disabled={tankId && tanks.find(t => t.id === tankId)?.produitId ? true : false}
+                  disabled={equipmentId && equipment.find(t => t.id === equipmentId)?.produitId ? true : false}
                 >
-                  <SelectTrigger className={tankId && tanks.find(t => t.id === tankId)?.produitId ? "bg-muted" : ""}>
+                  <SelectTrigger className={equipmentId && equipment.find(t => t.id === equipmentId)?.produitId ? "bg-muted" : ""}>
                     <SelectValue 
                       placeholder={
-                        tankId && tanks.find(t => t.id === tankId)?.produitId 
-                          ? "Sélectionné automatiquement selon le tank" 
+                        equipmentId && equipment.find(t => t.id === equipmentId)?.produitId 
+                          ? "Sélectionné automatiquement selon le Equipment" 
                           : "Sélectionner un produit (optionnel)"
                       } 
                     />
@@ -403,9 +403,9 @@ export default function CreateDeliveryPage() {
                   </SelectContent>
                 </Select>
                 {errors.produitId && <p className="text-red-500 text-sm">{errors.produitId.message as string}</p>}
-                {tankId && tanks.find(t => t.id === tankId)?.produitId && (
+                {equipmentId && equipment.find(t => t.id === equipmentId)?.produitId && (
                   <p className="text-xs text-blue-600 mt-1 font-medium">
-                    ✓ Produit automatiquement sélectionné selon le tank
+                    ✓ Produit automatiquement sélectionné selon le Equipment
                   </p>
                 )}
               </div>

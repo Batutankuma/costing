@@ -71,7 +71,7 @@ import { useRouter } from "next/navigation";
 
 
 type DepotOption = { id: string; name: string };
-type CommandeLite = { id: string; produitId: string; depotId: string; fournisseurId: string; unitPrice: number; Fournisseur?: { nom?: string } };
+type CommandeLite = { id: string; produitId: string; depotId?: string; fournisseurId?: string; unitPrice: number | null; fournisseur?: { nom: string } };
 
 export default function DataTables({ Element, Depots, Commandes }: { Element: StockWithRelations[]; Depots: DepotOption[]; Commandes: CommandeLite[] }) {
     const id = useId();

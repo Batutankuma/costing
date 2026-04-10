@@ -27,7 +27,15 @@ export default function CreateFournisseurPage() {
     resolver: zodResolver(fournisseurSchema),
     defaultValues: {
       nom: "",
+      company: "",
+      email: "",
+      phone: "",
       adresse: "",
+      rccm: "",
+      idNat: "",
+      nif: "",
+      pays: "",
+      notes: "",
     }
   });
 
@@ -89,20 +97,67 @@ export default function CreateFournisseurPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Nom du fournisseur */}
-            <div className="space-y-2">
-              <Label htmlFor="nom" className="text-sm font-medium">
-                Nom du fournisseur <span className="text-destructive">*</span>
-              </Label>
-              <Input 
-                id="nom" 
-                placeholder="Ex: Entreprise ABC, Jean Dupont..." 
-                {...register("nom")}
-                className="h-10"
-              />
-              {errors.nom && (
-                <p className="text-sm text-destructive">{errors.nom.message}</p>
-              )}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Nom du fournisseur */}
+              <div className="space-y-2">
+                <Label htmlFor="nom" className="text-sm font-medium">
+                  Nom <span className="text-destructive">*</span>
+                </Label>
+                <Input 
+                  id="nom" 
+                  placeholder="Ex: Entreprise ABC, Jean Dupont..." 
+                  {...register("nom")}
+                  className="h-10"
+                />
+                {errors.nom && (
+                  <p className="text-sm text-destructive">{errors.nom.message}</p>
+                )}
+              </div>
+
+              {/* Société */}
+              <div className="space-y-2">
+                <Label htmlFor="company" className="text-sm font-medium">
+                  Société
+                </Label>
+                <Input 
+                  id="company" 
+                  placeholder="Nom de la société (optionnel)" 
+                  {...register("company")}
+                  className="h-10"
+                />
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Email */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Email
+                </Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="email@exemple.com" 
+                  {...register("email")}
+                  className="h-10"
+                />
+                {errors.email && (
+                  <p className="text-sm text-destructive">{errors.email.message}</p>
+                )}
+              </div>
+
+              {/* Téléphone */}
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-sm font-medium">
+                  Téléphone
+                </Label>
+                <Input 
+                  id="phone" 
+                  placeholder="+243 XXX XXX XXX" 
+                  {...register("phone")}
+                  className="h-10"
+                />
+              </div>
             </div>
 
             {/* Adresse */}
@@ -113,13 +168,84 @@ export default function CreateFournisseurPage() {
               <Input 
                 id="adresse" 
                 type="text" 
-                placeholder="Adresse complète du fournisseur (optionnel)" 
+                placeholder="Adresse complète (optionnel)" 
                 {...register("adresse")}
                 className="h-10"
               />
               {errors.adresse && (
                 <p className="text-sm text-destructive">{errors.adresse.message}</p>
               )}
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              {/* RCCM */}
+              <div className="space-y-2">
+                <Label htmlFor="rccm" className="text-sm font-medium">
+                  RCCM
+                </Label>
+                <Input 
+                  id="rccm" 
+                  placeholder="N° RCCM" 
+                  {...register("rccm")}
+                  className="h-10"
+                />
+              </div>
+
+              {/* ID NAT */}
+              <div className="space-y-2">
+                <Label htmlFor="idNat" className="text-sm font-medium">
+                  ID NAT
+                </Label>
+                <Input 
+                  id="idNat" 
+                  placeholder="N° ID National" 
+                  {...register("idNat")}
+                  className="h-10"
+                />
+              </div>
+
+              {/* NIF */}
+              <div className="space-y-2">
+                <Label htmlFor="nif" className="text-sm font-medium">
+                  NIF
+                </Label>
+                <Input 
+                  id="nif" 
+                  placeholder="N° NIF" 
+                  {...register("nif")}
+                  className="h-10"
+                />
+              </div>
+            </div>
+
+            {/* Pays */}
+            <div className="space-y-2">
+              <Label htmlFor="pays" className="text-sm font-medium">
+                Pays
+              </Label>
+              <Input 
+                id="pays" 
+                type="text" 
+                placeholder="Pays du fournisseur (optionnel)" 
+                {...register("pays")}
+                className="h-10"
+              />
+              {errors.pays && (
+                <p className="text-sm text-destructive">{errors.pays.message}</p>
+              )}
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-2">
+              <Label htmlFor="notes" className="text-sm font-medium">
+                Notes
+              </Label>
+              <Input 
+                id="notes" 
+                placeholder="Notes additionnelles (optionnel)" 
+                {...register("notes")}
+                className="h-10"
+              />
             </div>
 
             {/* Actions */}

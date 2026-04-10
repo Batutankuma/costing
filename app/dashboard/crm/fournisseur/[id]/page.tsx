@@ -24,7 +24,21 @@ export default async function EditFournisseurPage({ params }: { params: Promise<
         <Link href="/dashboard/crm/fournisseur" className="underline">Retour</Link>
       </div>
       <div className="bg-white rounded-lg shadow-sm border p-6">
-        <EditForm id={fournisseur.id} initial={{ nom: fournisseur.nom, adresse: fournisseur.adresse ?? "" }} />
+        <EditForm 
+          id={fournisseur.id} 
+          initial={{ 
+            nom: fournisseur.nom, 
+            company: fournisseur.company,
+            email: fournisseur.email,
+            phone: fournisseur.phone,
+            adresse: fournisseur.adresse, 
+            rccm: fournisseur.rccm,
+            idNat: fournisseur.idNat,
+            nif: fournisseur.nif,
+            pays: fournisseur.pays,
+            notes: fournisseur.notes,
+          }} 
+        />
       </div>
     </div>
   );

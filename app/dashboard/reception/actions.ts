@@ -127,7 +127,7 @@ export const createAction = actionClient
             commandeId: parsedInput.commandeId,
             depotId: depotId,
             produitId: produitId,
-            tankId: parsedInput.tankId,
+            equipmentId: parsedInput.equipmentId,
           },
         });
 
@@ -362,7 +362,7 @@ export const updateAction = actionClient
             commandeId: parsedInput.commandeId,
             depotId: depotId,
             produitId: produitId,
-            tankId: parsedInput.tankId,
+            equipmentId: parsedInput.equipmentId,
           },
         });
 

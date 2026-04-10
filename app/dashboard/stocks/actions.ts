@@ -220,8 +220,8 @@ export const createAction = actionClient
         quantite: parsedInput.quantite,
         prixUnitaireVente: null, // Non utilisé dans le système de stock
         prixUnitaireAchat: parsedInput.type === 'ENTREE' ? parsedInput.prixUnitaireAchat : (cmpHint?.operationPrixUnitaire ?? null),
-        unite: parsedInput.unite,
-        devise: parsedInput.devise,
+        unite: parsedInput.unite as "KG" | "G" | "L" | "ML" | "TONNE" | "PIECE" | "BOITE" | "CAISSON" | "POUCE" | "METRE" | "METRE_CARRE" | "METRE_CUBE" | "METRE_LINEAIRE",
+        devise: parsedInput.devise as "XOF" | "USD" | "EUR" | "CDF",
         seuilMinimum: parsedInput.seuilMinimum,
         accountId: (await prisma.account.findFirst({ select: { id: true } }))?.id ?? undefined,
         // Champs calculés CMP
@@ -311,8 +311,15 @@ export const updateAction = actionClient
 
       const { id, ...updateData } = parsedInput; // Destructurer pour exclure l'ID
       
+      // Caster les types enum pour Prisma
+      const updateDataWithTypes = {
+        ...updateData,
+        unite: updateData.unite as "KG" | "G" | "L" | "ML" | "TONNE" | "PIECE" | "BOITE" | "CAISSON" | "POUCE" | "METRE" | "METRE_CARRE" | "METRE_CUBE" | "METRE_LINEAIRE",
+        devise: updateData.devise as "XOF" | "USD" | "EUR" | "CDF",
+      };
+      
       // Mettre à jour le mouvement
-      const result = await prisma.stock.update({ where: { id }, data: updateData });
+      const result = await prisma.stock.update({ where: { id }, data: updateDataWithTypes });
       
       // Recalculer tous les CMP pour ce dépôt/produit (y compris le mouvement modifié et tous les suivants)
       await recalculateAllCMP(existingStock.depotId, existingStock.produitId);
