@@ -1,16 +1,17 @@
-import prisma from "@/lib/prisma";
+﻿import prisma from "@/lib/prisma";
 import DataTables from "./data-table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { PackageCheck } from "lucide-react";
+import { Reception } from "@/models/mvc";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function Page() {
   // Récupérer les réceptions avec les relations
-  const receptions = await prisma.reception.findMany({
+  const receptionsRaw = await prisma.reception.findMany({
     include: {
       commande: {
         select: {
@@ -24,7 +25,7 @@ export default async function Page() {
           name: true,
         }
       },
-      tank: {
+      equipment: {
         select: {
           name: true,
         }
@@ -32,6 +33,20 @@ export default async function Page() {
     },
     orderBy: { receptionDate: 'desc' }
   });
+
+  // Mapper les données Prisma vers le type Reception attendu
+  const receptions: Reception[] = receptionsRaw.map((r) => ({
+    id: r.id,
+    reference: r.reference,
+    receptionDate: r.receptionDate,
+    quantity: r.quantity,
+    unit: r.unit as "KG" | "G" | "L" | "ML" | "TONNE" | "PIECE" | "BOITE" | "CAISSON" | "POUCE" | "METRE" | "METRE_CARRE" | "METRE_CUBE" | "METRE_LINEAIRE",
+    receptionStatus: r.receptionStatus,
+    commandeId: r.commandeId || undefined,
+    depotId: r.depotId || undefined,
+    produitId: r.produitId || undefined,
+    equipmentId: r.equipmentId || undefined,
+  }));
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
