@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { ColumnDef, Row } from "@tanstack/react-table";
@@ -23,7 +23,7 @@ export type DeliveryWithRelations = Delivery & {
   client?: { id: string; nom?: string | null; name?: string | null; company?: string | null } | null;
   depot?: { id: string; name: string } | null;
   produit?: { id: string; name: string; nom?: string } | null;
-  tank?: { id: string; name: string } | null;
+  equipment?: { id: string; name: string } | null;
 };
 
 // Fonction utilitaire pour obtenir le nom du client
@@ -130,11 +130,11 @@ export const columns: ColumnDef<DeliveryWithRelations>[] = [
         size: 120,
     },
     {
-        header: "Tank",
-        accessorKey: "tankId",
+        header: "Equipment",
+        accessorKey: "equipmentId",
         cell: ({ row }) => {
             const original = row.original as DeliveryWithRelations;
-            return <span>{original.tank?.name || "-"}</span>;
+            return <span>{original.equipment?.name || "-"}</span>;
         },
         size: 100,
     },

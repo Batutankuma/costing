@@ -15,7 +15,7 @@ export default async function Page() {
       client: true,
       depot: true,
       produit: true,
-      tank: true,
+      equipment: true,
     }
   });
   
