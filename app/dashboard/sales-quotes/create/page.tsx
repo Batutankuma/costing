@@ -271,6 +271,9 @@ export default function CreateSalesQuotePage() {
       <div>
         <h1 className="text-2xl font-semibold">Devis commercial</h1>
         <p className="text-sm text-muted-foreground">Proposition DDU / DDP basée sur un Cost Build Up</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          <span className="text-destructive">*</span> Champs obligatoires
+        </p>
       </div>
 
       {/* Mobile quick totals summary */}
@@ -323,7 +326,7 @@ export default function CreateSalesQuotePage() {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Cost Build Up</Label>
+          <Label>Cost Build Up <span className="text-destructive">*</span></Label>
           <Select value={selectedId} onValueChange={(v) => setSelectedId(v)}>
             <SelectTrigger className="h-9">
               <SelectValue placeholder="Sélectionner..." />

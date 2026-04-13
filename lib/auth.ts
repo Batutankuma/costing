@@ -22,16 +22,33 @@ function getAuthSecret(): string {
     }
 }
 
-const trusted = [
-    process.env.URL,
-    "https://consting-ir0mkl38s-batutankumas-projects.vercel.app",
-    "https://consting.vercel.app",
-    "http://localhost:3000",
-    process.env.NEXT_PUBLIC_APP_URL,
-    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
-    process.env.NODE_ENV !== "production" ? "http://localhost:3000" : undefined,
-    process.env.NODE_ENV !== "production" ? "http://localhost:3000" : undefined,
-].filter((origin): origin is string => Boolean(origin));
+function toOrigin(value?: string): string | undefined {
+    if (!value) return undefined;
+    try {
+        return new URL(value).origin;
+    } catch {
+        return undefined;
+    }
+}
+
+const baseURL =
+    process.env.BETTER_AUTH_URL ||
+    process.env.URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined);
+
+const trusted = Array.from(
+    new Set(
+        [
+            toOrigin(process.env.BETTER_AUTH_URL),
+            toOrigin(process.env.URL),
+            toOrigin(process.env.NEXT_PUBLIC_APP_URL),
+            toOrigin(baseURL),
+            process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
+            process.env.NODE_ENV !== "production" ? "http://localhost:3000" : undefined,
+            process.env.NODE_ENV !== "production" ? "http://127.0.0.1:3000" : undefined,
+        ].filter((origin): origin is string => Boolean(origin))
+    )
+);
 
 const appName = process.env.APP_NAME || "AAGS";
 
@@ -92,6 +109,7 @@ async function sendResetPasswordEmail({
 export const auth = betterAuth({
     database: prismaAdapter(prisma, { provider: "postgresql" }),
     trustedOrigins: trusted,
+    baseURL,
     emailAndPassword: {
         enabled: true,
     },

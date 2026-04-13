@@ -96,6 +96,9 @@ export default function EditForm({ id, initial, onCancel, onSuccess }: EditFormP
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <p className="text-sm text-muted-foreground">
+            <span className="text-destructive">*</span> Champs obligatoires
+          </p>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="nom" className="text-sm font-medium">
@@ -104,6 +107,8 @@ export default function EditForm({ id, initial, onCancel, onSuccess }: EditFormP
               <Input 
                 id="nom" 
                 placeholder="Ex: Banque Commerciale du Congo" 
+                required
+                aria-required="true"
                 {...register("nom")}
                 className="h-10"
               />
@@ -119,6 +124,8 @@ export default function EditForm({ id, initial, onCancel, onSuccess }: EditFormP
               <Input 
                 id="numeroCompte" 
                 placeholder="Numéro de compte bancaire" 
+                required
+                aria-required="true"
                 {...register("numeroCompte")}
                 className="h-10"
               />

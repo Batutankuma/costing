@@ -101,6 +101,9 @@ export function CreateDGIFactureForm({ clients }: CreateDGIFactureFormProps) {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            <p className="text-sm text-muted-foreground">
+                <span className="text-destructive">*</span> Champs obligatoires
+            </p>
             <div className="grid gap-6 md:grid-cols-2">
                 {/* Client Details */}
                 <Card>
@@ -154,7 +157,7 @@ export function CreateDGIFactureForm({ clients }: CreateDGIFactureFormProps) {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid gap-2">
-                            <Label>Date de facturation</Label>
+                            <Label>Date de facturation <span className="text-destructive">*</span></Label>
                             <Input
                                 type="date"
                                 {...register("invoiceDate", { valueAsDate: true })}
@@ -163,7 +166,7 @@ export function CreateDGIFactureForm({ clients }: CreateDGIFactureFormProps) {
                         </div>
 
                         <div className="grid gap-2">
-                            <Label>Devise</Label>
+                            <Label>Devise <span className="text-destructive">*</span></Label>
                             <Select
                                 defaultValue="USD"
                                 onValueChange={(val) => setValue("currency", val as "USD" | "CDF")}

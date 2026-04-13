@@ -290,6 +290,9 @@ export default function CreateFacturePage() {
       </div>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <p className="text-sm text-muted-foreground">
+          <span className="text-destructive">*</span> Champs obligatoires
+        </p>
         <div className="grid gap-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between">

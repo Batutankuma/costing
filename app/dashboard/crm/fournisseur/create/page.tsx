@@ -97,6 +97,9 @@ export default function CreateFournisseurPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <p className="text-sm text-muted-foreground">
+              <span className="text-destructive">*</span> Champs obligatoires
+            </p>
             <div className="grid md:grid-cols-2 gap-6">
               {/* Nom du fournisseur */}
               <div className="space-y-2">
@@ -106,6 +109,8 @@ export default function CreateFournisseurPage() {
                 <Input 
                   id="nom" 
                   placeholder="Ex: Entreprise ABC, Jean Dupont..." 
+                  required
+                  aria-required="true"
                   {...register("nom")}
                   className="h-10"
                 />

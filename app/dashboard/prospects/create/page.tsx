@@ -121,10 +121,13 @@ export default function CreateProspectPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="grid gap-6">
+            <p className="text-sm text-muted-foreground">
+              <span className="text-destructive">*</span> Champs obligatoires
+            </p>
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="name">Nom *</Label>
-                <Input id="name" {...register("name")} />
+                <Input id="name" required aria-required="true" {...register("name")} />
                 {errors.name && <p className="text-red-500 text-sm">{errors.name.message as string}</p>}
               </div>
               <div className="space-y-2">
