@@ -174,8 +174,8 @@ Le code Prisma complet est déjà écrit et commenté dans `actions.ts` :
 
 ### **Logs de Débogage**
 ```typescript
-console.log("Création de structure de prix non-minier:", validatedData);
-console.log("Structure créée avec succès:", createdStructure);
+log("Création de structure de prix non-minier:", validatedData);
+log("Structure créée avec succès:", createdStructure);
 ```
 
 Le système de simulation permet maintenant de tester complètement l'application sans base de données ! 🎉

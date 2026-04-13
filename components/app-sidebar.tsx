@@ -164,7 +164,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         }
       })
       .catch((error) => {
-        console.error("Erreur lors du chargement des modules:", error);
+        error("Erreur lors du chargement des modules:", error);
       })
       .finally(() => {
         if (isMounted) setLoadingModules(false);

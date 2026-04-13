@@ -109,6 +109,9 @@ export default function EditForm({ id, initial }: EditFormProps) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <p className="text-sm text-muted-foreground">
+            <span className="text-destructive">*</span> Champs obligatoires
+          </p>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-sm font-medium">
@@ -117,6 +120,8 @@ export default function EditForm({ id, initial }: EditFormProps) {
               <Input 
                 id="name" 
                 placeholder="Ex: Entreprise ABC" 
+                required
+                aria-required="true"
                 {...register("name")}
                 className="h-10"
               />

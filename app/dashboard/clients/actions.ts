@@ -5,18 +5,28 @@ import { actionClient } from "@/lib/safe-action";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+const optionalNullableString = z.preprocess((value) => {
+  if (typeof value !== "string") return value;
+  const trimmed = value.trim();
+  return trimmed === "" ? null : trimmed;
+}, z.string().nullable().optional());
+
 const ClientSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1, "Nom requis"),
-  company: z.string().optional().nullable(),
-  email: z.string().email().optional().nullable(),
-  phone: z.string().optional().nullable(),
-  address: z.string().optional().nullable(),
-  rccm: z.string().optional().nullable(),
-  idNat: z.string().optional().nullable(),
-  nif: z.string().optional().nullable(),
+  company: optionalNullableString,
+  email: z.preprocess((value) => {
+    if (typeof value !== "string") return value;
+    const trimmed = value.trim();
+    return trimmed === "" ? null : trimmed;
+  }, z.string().email("Email invalide").nullable().optional()),
+  phone: optionalNullableString,
+  address: optionalNullableString,
+  rccm: optionalNullableString,
+  idNat: optionalNullableString,
+  nif: optionalNullableString,
   status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
-  notes: z.string().optional().nullable(),
+  notes: optionalNullableString,
 });
 
 const CreateClientSchema = ClientSchema.omit({ id: true });

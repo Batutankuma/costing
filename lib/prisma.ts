@@ -24,7 +24,7 @@ const pool = new pg.Pool({
 });
 
 pool.on("error", (err) => {
-  console.error("[prisma/pg] Pool error (connexion base)", err);
+  console.error("[prisma/pg] Pool console.error(connexion base)", err);
 });
 
 const adapter = new PrismaPg(pool);

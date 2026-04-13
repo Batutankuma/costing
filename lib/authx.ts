@@ -11,7 +11,7 @@ function getAuthSecret(): string {
             throw new Error("BETTER_AUTH_SECRET is required in production");
         }
         // En développement, utilise un secret par défaut (à remplacer en prod)
-        console.warn("⚠️ Using default secret for development - replace BETTER_AUTH_SECRET for production");
+        console.warn("Using default secret for development - replace BETTER_AUTH_SECRET for production");
         return "dev-secret-00000000000000000000000000000000000000000000000000";
     }
     

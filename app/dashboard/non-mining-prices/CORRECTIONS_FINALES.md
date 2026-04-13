@@ -53,7 +53,7 @@ function loadTempStorage(): any[] {
       return JSON.parse(data);
     }
   } catch (error) {
-    console.error("Erreur lors du chargement du stockage temporaire:", error);
+    error("Erreur lors du chargement du stockage temporaire:", error);
   }
   return [];
 }
@@ -63,7 +63,7 @@ function saveTempStorage(data: any[]) {
   try {
     writeFileSync(TEMP_STORAGE_PATH, JSON.stringify(data, null, 2));
   } catch (error) {
-    console.error("Erreur lors de la sauvegarde du stockage temporaire:", error);
+    error("Erreur lors de la sauvegarde du stockage temporaire:", error);
   }
 }
 ```
@@ -97,8 +97,8 @@ saveTempStorage(tempStorage); // ✅ Sauvegarde
 ```typescript
 export async function getNonMiningPriceById(id: string) {
   // Logs de débogage
-  console.log("Recherche de l'ID:", id);
-  console.log("Stockage temporaire actuel:", tempStorage.map(item => ({ 
+  log("Recherche de l'ID:", id);
+  log("Stockage temporaire actuel:", tempStorage.map(item => ({ 
     id: item.id, 
     nomStructure: item.nomStructure 
   })));
@@ -106,11 +106,11 @@ export async function getNonMiningPriceById(id: string) {
   const price = tempStorage.find(item => item.id === id);
   
   if (!price) {
-    console.log("ID non trouvé dans le stockage temporaire");
+    log("ID non trouvé dans le stockage temporaire");
     throw new Error("Structure de prix non trouvée");
   }
 
-  console.log("Structure trouvée:", price.nomStructure);
+  log("Structure trouvée:", price.nomStructure);
   return price;
 }
 ```

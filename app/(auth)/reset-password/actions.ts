@@ -19,13 +19,14 @@ export const resetPasswordAction = actionClient
     try {
       // Ici, l'infrastructure de stockage des jetons n'existe pas encore dans Prisma (passwordResetToken).
       // On log simplement la demande pour débogage et on renvoie un message explicite.
+      void token;
    
       return {
         success: false,
         failure: "La réinitialisation de mot de passe n'est pas encore entièrement configurée sur ce serveur. Veuillez contacter l'administrateur.",
       };
-    } catch (error) {
-      console.error("Erreur lors de la réinitialisation du mot de passe:", error);
+    } catch (err) {
+      console.error("Erreur lors de la réinitialisation du mot de passe:", err);
       return { success: false, failure: "Une erreur inattendue est survenue. Veuillez réessayer." };
     }
   });

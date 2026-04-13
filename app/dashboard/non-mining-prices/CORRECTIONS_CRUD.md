@@ -116,10 +116,10 @@ Liste → Clic sur "Supprimer" → Confirmation → Suppression stockage → Mis
 
 ### **Logs de Débogage Actifs**
 ```typescript
-console.log("Création de structure de prix non-minier:", validatedData);
-console.log("Structure créée avec succès:", createdStructure);
-console.log("Mise à jour de structure de prix non-minier:", data);
-console.log("Suppression de structure de prix non-minier:", id);
+log("Création de structure de prix non-minier:", validatedData);
+log("Structure créée avec succès:", createdStructure);
+log("Mise à jour de structure de prix non-minier:", data);
+log("Suppression de structure de prix non-minier:", id);
 ```
 
 ### **Gestion d'Erreurs**
@@ -173,8 +173,8 @@ if (index === -1) {
 ### **Vérification du Stockage**
 ```typescript
 // Ajouter dans getNonMiningPrices pour déboguer
-console.log("Stockage temporaire:", tempStorage);
-console.log("Recherche ID:", id);
+log("Stockage temporaire:", tempStorage);
+log("Recherche ID:", id);
 ```
 
 ## ✅ **Résultat Final**
