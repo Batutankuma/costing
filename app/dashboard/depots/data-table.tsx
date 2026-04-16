@@ -231,7 +231,7 @@ export default function DataTables({ Element }: { Element: DepotWithProducts[] }
                             </AlertDialogContent>
                         </AlertDialog>
                     )}
-                    <Button onClick={()=> router.push(`/dashboard/stock/depot/create`) } className="flex items-center gap-2">
+                    <Button onClick={()=> router.push(`/dashboard/depots/create`) } className="flex items-center gap-2">
                         <Plus className="h-4 w-4" />
                         Nouveau Dépôt
                     </Button>

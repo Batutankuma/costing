@@ -19,15 +19,15 @@ export default function Breadcrumb({ depotName }: BreadcrumbProps) {
       
       <ChevronRight className="h-4 w-4" />
       
-      <Link href="/dashboard/stock">
+      <Link href="/dashboard/depots">
         <Button variant="ghost" size="sm" className="h-auto p-1">
-          Stock
+          Dépôts
         </Button>
       </Link>
       
       <ChevronRight className="h-4 w-4" />
       
-      <Link href="/dashboard/stock/depot">
+      <Link href="/dashboard/depots">
         <Button variant="ghost" size="sm" className="h-auto p-1">
           <Warehouse className="h-4 w-4 mr-1" />
           Dépôts

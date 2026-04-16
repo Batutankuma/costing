@@ -83,7 +83,7 @@ export default function EditDepotForm({ depot }: EditFormProps) {
           description: "Dépôt modifié avec succès" 
         });
         // Rediriger vers la page de détail
-        router.push(`/dashboard/stock/depot/${depot.id}`);
+        router.push(`/dashboard/depots/views/${depot.id}`);
       } else {
         toast({ 
           variant: "destructive", 
@@ -223,7 +223,7 @@ export default function EditDepotForm({ depot }: EditFormProps) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push(`/dashboard/stock/depot/${depot.id}`)}
+              onClick={() => router.push(`/dashboard/depots/views/${depot.id}`)}
               disabled={isSubmitting}
             >
               <X className="h-4 w-4 mr-2" />

@@ -551,6 +551,20 @@ model TransportRate {
   @@map("transport_rate")
 }
 
+model Transporteur {
+  id               String   @id @default(cuid())
+  nom              String
+  description      String?
+  adresse          String?
+  contactTelephone String?
+  mail             String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  hospitalityRows  Hospitality[]
+
+  @@map("transporteur")
+}
+
 model KinshasaCosting {
   id                   String     @id @default(cuid())
   title                String
@@ -736,6 +750,7 @@ model Depot {
   receptions Reception[]
   deliveries Delivery[]
   shipments  Shipment[]
+  hospitalityRows Hospitality[]
 
   @@map("depot")
 }
@@ -776,8 +791,41 @@ model Fournisseur {
 
   stocks    Stock[]
   commandes Commande[]
+  hospitalityRows Hospitality[]
 
   @@map("fournisseur")
+}
+
+model Hospitality {
+  id                     String      @id @default(cuid())
+  driverName             String
+  supplierId             String
+  transporterId          String
+  truckNo                String
+  trailerNo              String
+  loadingDate            DateTime
+  entryDate              DateTime
+  offlDate               DateTime
+  quantityOrder          Float
+  actualQuantity20L      Float
+  offlQtyObs             Float
+  offlQty20              Float
+  depotId                String
+  stockId                String
+  varianceQty20          Float
+  transitAllowableLoss   Float
+  disAllowableLoss       Float
+  rate                   Float
+  total                  Float
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+
+  supplier    Fournisseur @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  transporter Transporteur @relation(fields: [transporterId], references: [id], onDelete: Restrict)
+  depot       Depot        @relation(fields: [depotId], references: [id], onDelete: Restrict)
+  stock       Stock        @relation(fields: [stockId], references: [id], onDelete: Restrict)
+
+  @@map("hospitality")
 }
 
 model ManualFacture {
@@ -910,6 +958,7 @@ model Stock {
   stockQuantiteFinal       Float?   @default(0)
   stockPrixUnitaireFinal   Float?
   stockValeurFinal         Float?
+  hospitalityRows          Hospitality[]
 
   @@map("stock")
 }
