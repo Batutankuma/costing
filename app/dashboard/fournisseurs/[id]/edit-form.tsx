@@ -18,7 +18,7 @@ type FormSchema = z.infer<typeof FournisseurSchema>;
 
 interface EditFormProps {
   id: string;
-  initial: { nom: string; adresse: string };
+  initial: { company: string; contactName: string; phone: string; email: string; adresse: string };
 }
 
 export default function EditForm({ id, initial }: EditFormProps) {
@@ -34,8 +34,11 @@ export default function EditForm({ id, initial }: EditFormProps) {
     resolver: zodResolver(FournisseurSchema),
     defaultValues: { 
       id,
-      nom: initial.nom, 
-      adresse: initial.adresse 
+      company: initial.company,
+      contactName: initial.contactName,
+      phone: initial.phone,
+      email: initial.email,
+      adresse: initial.adresse,
     },
   });
 
@@ -81,18 +84,35 @@ export default function EditForm({ id, initial }: EditFormProps) {
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="nom" className="text-sm font-medium">
-              Nom du fournisseur <span className="text-destructive">*</span>
+            <Label htmlFor="company" className="text-sm font-medium">
+              Société <span className="text-destructive">*</span>
             </Label>
             <Input 
-              id="nom" 
+              id="company" 
               placeholder="Ex: Entreprise ABC" 
-              {...register("nom")}
+              {...register("company")}
               className="h-10"
             />
-            {errors.nom && (
-              <p className="text-sm text-destructive">{errors.nom.message}</p>
+            {errors.company && (
+              <p className="text-sm text-destructive">{errors.company.message}</p>
             )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="contactName" className="text-sm font-medium">
+              Nom du contact
+            </Label>
+            <Input id="contactName" placeholder="Ex: Jean Dupont" {...register("contactName")} className="h-10" />
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="text-sm font-medium">Téléphone du contact</Label>
+              <Input id="phone" placeholder="+243 XXX XXX XXX" {...register("phone")} className="h-10" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium">Email du contact</Label>
+              <Input id="email" type="email" placeholder="contact@societe.com" {...register("email")} className="h-10" />
+              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+            </div>
           </div>
 
           <div className="space-y-2">

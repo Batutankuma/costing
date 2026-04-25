@@ -18,8 +18,8 @@ type FormSchema = z.infer<typeof FournisseurSchema>;
 interface EditFormProps {
   id: string;
   initial: { 
-    nom: string; 
     company?: string | null;
+    contactName?: string | null;
     email?: string | null;
     phone?: string | null;
     adresse?: string | null; 
@@ -45,8 +45,8 @@ export default function EditForm({ id, initial, onCancel, onSuccess }: EditFormP
     resolver: zodResolver(FournisseurSchema),
     defaultValues: { 
       id,
-      nom: initial.nom, 
       company: initial.company ?? "",
+      contactName: initial.contactName ?? "",
       email: initial.email ?? "",
       phone: initial.phone ?? "",
       adresse: initial.adresse ?? "",
@@ -100,31 +100,31 @@ export default function EditForm({ id, initial, onCancel, onSuccess }: EditFormP
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Nom du fournisseur */}
-            <div className="space-y-2">
-              <Label htmlFor="nom" className="text-sm font-medium">
-                Nom <span className="text-destructive">*</span>
-              </Label>
-              <Input 
-                id="nom" 
-                placeholder="Ex: Entreprise ABC" 
-                {...register("nom")}
-                className="h-10"
-              />
-              {errors.nom && (
-                <p className="text-sm text-destructive">{errors.nom.message}</p>
-              )}
-            </div>
-
             {/* Société */}
             <div className="space-y-2">
               <Label htmlFor="company" className="text-sm font-medium">
-                Société
+                Société <span className="text-destructive">*</span>
               </Label>
               <Input 
                 id="company" 
-                placeholder="Nom de la société (optionnel)" 
+                placeholder="Ex: Entreprise ABC" 
                 {...register("company")}
+                className="h-10"
+              />
+              {errors.company && (
+                <p className="text-sm text-destructive">{errors.company.message}</p>
+              )}
+            </div>
+
+            {/* Contact */}
+            <div className="space-y-2">
+              <Label htmlFor="contactName" className="text-sm font-medium">
+                Nom du contact
+              </Label>
+              <Input 
+                id="contactName" 
+                placeholder="Ex: Jean Dupont" 
+                {...register("contactName")}
                 className="h-10"
               />
             </div>
@@ -134,7 +134,7 @@ export default function EditForm({ id, initial, onCancel, onSuccess }: EditFormP
             {/* Email */}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
-                Email
+                Email du contact
               </Label>
               <Input 
                 id="email" 
@@ -151,7 +151,7 @@ export default function EditForm({ id, initial, onCancel, onSuccess }: EditFormP
             {/* Téléphone */}
             <div className="space-y-2">
               <Label htmlFor="phone" className="text-sm font-medium">
-                Téléphone
+                Téléphone du contact
               </Label>
               <Input 
                 id="phone" 

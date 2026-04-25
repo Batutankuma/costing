@@ -25,11 +25,11 @@ export default async function EditHospitalityPage({ params }: { params: Promise<
     );
   }
 
-  const [suppliers, transporters, depots, stocks] = await Promise.all([
+  const [suppliers, transporters, depots, commandes] = await Promise.all([
     prisma.fournisseur.findMany({ select: { id: true, nom: true }, orderBy: { nom: "asc" } }),
     prisma.transporteur.findMany({ select: { id: true, nom: true }, orderBy: { nom: "asc" } }),
     prisma.depot.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
-    prisma.stock.findMany({ select: { id: true, reference: true, depotId: true }, orderBy: { reference: "asc" } }),
+    prisma.commande.findMany({ select: { id: true, reference: true, depotId: true, quantite: true }, orderBy: { reference: "asc" } }),
   ]);
 
   return (
@@ -49,7 +49,7 @@ export default async function EditHospitalityPage({ params }: { params: Promise<
         suppliers={suppliers}
         transporters={transporters}
         depots={depots}
-        stocks={stocks}
+        commandes={commandes}
         initial={{
           id: hospitality.id,
           driverName: hospitality.driverName,
@@ -65,7 +65,7 @@ export default async function EditHospitalityPage({ params }: { params: Promise<
           offlQtyObs: hospitality.offlQtyObs,
           offlQty20: hospitality.offlQty20,
           depotId: hospitality.depotId,
-          stockId: hospitality.stockId,
+          commandeId: hospitality.commandeId || "",
           rate: hospitality.rate,
         }}
       />

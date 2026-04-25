@@ -80,6 +80,17 @@ const multiColumnFilterFn: FilterFn<StockWithRelations> = (row, columnId, filter
     return searchableRowContent.includes(searchTerm);
 };
 
+function isHospitalityMovement(reference: string) {
+    return reference.startsWith("HOSP-");
+}
+
+function format2(value: number) {
+    return Number(value).toLocaleString("fr-FR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+}
+
 // La définition des colonnes est mise à jour
 export const columns: ColumnDef<StockWithRelations>[] = [
     {
@@ -107,7 +118,20 @@ export const columns: ColumnDef<StockWithRelations>[] = [
     {
         header: "Référence",
         accessorKey: "reference",
-        cell: ({ row }) => <div className="font-medium">{row.getValue("reference")}</div>,
+        cell: ({ row }) => {
+            const reference = row.getValue("reference") as string;
+            const fromHospitality = isHospitalityMovement(reference);
+            return (
+                <div className="font-medium flex items-center gap-2">
+                    <span className="text-xs truncate block max-w-[120px]">{reference}</span>
+                    {fromHospitality ? (
+                        <Badge variant="outline" className="text-xs">
+                            Hospitality
+                        </Badge>
+                    ) : null}
+                </div>
+            );
+        },
         size: 180,
         filterFn: multiColumnFilterFn,
         enableHiding: false,
@@ -118,7 +142,7 @@ export const columns: ColumnDef<StockWithRelations>[] = [
         size: 150,
         cell: ({ row }) => {
             const date = row.getValue("date") as Date;
-            return <div>{date.toLocaleDateString('fr-FR')}</div>;
+            return <div className="text-xs">{date.toLocaleDateString('fr-FR')}</div>;
         },
     },
     {
@@ -137,13 +161,13 @@ export const columns: ColumnDef<StockWithRelations>[] = [
     {
         header: "Produit",
         accessorKey: "produit.nom",
-        cell: ({ row }) => <div>{row.original.produit?.nom || "N/A"}</div>,
+        cell: ({ row }) => <div className="text-xs truncate max-w-[110px]">{row.original.produit?.nom || "N/A"}</div>,
         size: 150,
     },
     {
         header: "Dépôt",
         accessorKey: "depot.name",
-        cell: ({ row }) => <div>{row.original.depot?.name || "N/A"}</div>,
+        cell: ({ row }) => <div className="text-xs truncate max-w-[110px]">{row.original.depot?.name || "N/A"}</div>,
         size: 150,
     },
     {
@@ -153,7 +177,7 @@ export const columns: ColumnDef<StockWithRelations>[] = [
         cell: ({ row }) => {
             const quantite = row.getValue("quantite") as number;
             const unite = row.original.unite;
-            return <div className="font-medium">{quantite} {unite}</div>;
+            return <div className="font-medium text-xs">{format2(quantite)} {unite}</div>;
         },
     },
     {
@@ -162,7 +186,7 @@ export const columns: ColumnDef<StockWithRelations>[] = [
         size: 120,
         cell: ({ row }) => {
             const prix = row.original.prixUnitaireAchat;
-            return <div>{prix != null ? Number(prix).toFixed(4) : "N/A"}</div>;
+            return <div className="text-xs">{prix != null ? format2(prix) : "N/A"}</div>;
         },
     },
     {
@@ -171,7 +195,7 @@ export const columns: ColumnDef<StockWithRelations>[] = [
         size: 120,
         cell: ({ row }) => {
             const qty = row.original.stockQuantiteFinal;
-            return <div className="font-medium">{qty != null ? `${qty} ${row.original.unite}` : "N/A"}</div>;
+            return <div className="font-medium text-xs">{qty != null ? `${format2(qty)} ${row.original.unite}` : "N/A"}</div>;
         },
     },
     {
@@ -180,7 +204,7 @@ export const columns: ColumnDef<StockWithRelations>[] = [
         size: 120,
         cell: ({ row }) => {
             const prix = row.original.stockPrixUnitaireFinal;
-            return <div>{prix != null ? Number(prix).toFixed(4) : "N/A"}</div>;
+            return <div className="text-xs">{prix != null ? format2(prix) : "N/A"}</div>;
         },
     },
     {
@@ -189,7 +213,7 @@ export const columns: ColumnDef<StockWithRelations>[] = [
         size: 150,
         cell: ({ row }) => {
             const valeur = row.original.stockValeurFinal;
-            return <div className="font-semibold">{valeur != null ? Number(valeur).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) : "N/A"}</div>;
+            return <div className="font-semibold text-xs">{valeur != null ? format2(valeur) : "N/A"}</div>;
         },
     },
     {

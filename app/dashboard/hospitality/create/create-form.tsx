@@ -29,7 +29,7 @@ const Schema = z.object({
   offlQtyObs: z.number().nonnegative(),
   offlQty20: z.number().nonnegative(),
   depotId: z.string().min(1),
-  stockId: z.string().min(1),
+  commandeId: z.string().min(1),
   rate: z.number().nonnegative(),
 });
 
@@ -39,12 +39,12 @@ export default function CreateHospitalityForm({
   suppliers,
   transporters,
   depots,
-  stocks,
+  commandes,
 }: {
   suppliers: Array<{ id: string; nom: string }>;
   transporters: Array<{ id: string; nom: string }>;
   depots: Array<{ id: string; name: string }>;
-  stocks: Array<{ id: string; reference: string; depotId: string | null }>;
+  commandes: Array<{ id: string; reference: string; depotId: string | null; quantite: number }>;
 }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -64,20 +64,27 @@ export default function CreateHospitalityForm({
       offlQtyObs: 0,
       offlQty20: 0,
       depotId: "",
-      stockId: "",
+      commandeId: "",
       rate: 0,
     },
   });
 
   const selectedDepotId = form.watch("depotId");
-  const availableStocks = useMemo(
-    () => stocks.filter((stock) => !selectedDepotId || stock.depotId === selectedDepotId),
-    [stocks, selectedDepotId]
+  const availableCommandes = useMemo(
+    () => commandes.filter((commande) => (!selectedDepotId || commande.depotId === selectedDepotId) && commande.quantite > 0),
+    [commandes, selectedDepotId]
   );
 
   const quantityOrder = form.watch("quantityOrder") || 0;
   const offlQty20 = form.watch("offlQty20") || 0;
+  const selectedCommandeId = form.watch("commandeId");
   const rate = form.watch("rate") || 0;
+  const selectedCommande = useMemo(
+    () => commandes.find((commande) => commande.id === selectedCommandeId),
+    [commandes, selectedCommandeId]
+  );
+  const remainingQuantity = selectedCommande?.quantite ?? 0;
+  const exceedsRemainingQuantity = Boolean(selectedCommande) && offlQty20 > remainingQuantity;
   const variance = useMemo(() => quantityOrder - offlQty20, [quantityOrder, offlQty20]);
   const transit = useMemo(() => quantityOrder * 0.003, [quantityOrder]);
   const disAllowable = useMemo(() => variance - transit, [variance, transit]);
@@ -137,7 +144,7 @@ export default function CreateHospitalityForm({
                 <Controller control={form.control} name="depotId" render={({ field }) => (
                   <Select value={field.value} onValueChange={(value) => {
                     field.onChange(value);
-                    form.setValue("stockId", "");
+                    form.setValue("commandeId", "");
                   }}>
                     <SelectTrigger><SelectValue placeholder="Selectionner..." /></SelectTrigger>
                     <SelectContent>{depots.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
@@ -145,13 +152,15 @@ export default function CreateHospitalityForm({
                 )} />
               </div>
               <div className="space-y-2">
-                <Label>Stock <span className="text-destructive">*</span></Label>
-                <Controller control={form.control} name="stockId" render={({ field }) => (
+                <Label>Bon de commande <span className="text-destructive">*</span></Label>
+                <Controller control={form.control} name="commandeId" render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger><SelectValue placeholder="Selectionner..." /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Selectionner un bon..." /></SelectTrigger>
                     <SelectContent>
-                      {availableStocks.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>{s.reference}</SelectItem>
+                      {availableCommandes.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.reference} - Reste: {c.quantite}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -175,9 +184,17 @@ export default function CreateHospitalityForm({
               <div><Label>Dis-Allowable LOSS</Label><Input value={disAllowable} readOnly /></div>
               <div><Label>Total ($)</Label><Input value={total} readOnly /></div>
             </div>
+            {selectedCommande ? (
+              <p className={exceedsRemainingQuantity ? "text-sm text-destructive font-medium" : "text-sm text-muted-foreground"}>
+                Reliquat commande: {remainingQuantity} | OFFL QTY @20 saisi: {offlQty20}
+              </p>
+            ) : null}
 
             <div className="flex gap-3 pt-4 border-t">
-              <Button type="submit" className="flex-1 gap-2"><Save className="h-4 w-4" />Enregistrer</Button>
+              <Button type="submit" className="flex-1 gap-2" disabled={exceedsRemainingQuantity}>
+                <Save className="h-4 w-4" />
+                Enregistrer
+              </Button>
               <Button type="button" variant="outline" onClick={() => router.back()}>Annuler</Button>
             </div>
           </form>

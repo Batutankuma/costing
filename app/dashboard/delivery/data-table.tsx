@@ -64,17 +64,43 @@ import {
     ListFilter,
     Trash,
 } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { columns } from "./columns";
 import { DeliveryWithRelations } from "./columns";
 import ExportExcel from "@/components/exportExcel";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import ImportDeliveryExcel from "./import-excel";
+import { deleteDelivery } from "./actions";
+import { useAction } from "next-safe-action/hooks";
+import { useToast } from "@/hooks/use-toast";
 
-export default function DataTables({ Element }: { Element: DeliveryWithRelations[] }) {
+type TemplateOptions = {
+    clients: Array<{ id: string; name: string }>;
+    transporters: Array<{ id: string; nom: string }>;
+    depots: Array<{ id: string; name: string }>;
+    products: Array<{ id: string; nom: string }>;
+    clientOrders: Array<{
+        id: string;
+        reference: string;
+        clientId: string;
+        produitId: string;
+        unitPrice: number;
+        clientName: string;
+        productName: string;
+    }>;
+};
+
+export default function DataTables({ Element, templateOptions }: { Element: DeliveryWithRelations[]; templateOptions?: TemplateOptions }) {
     const id = useId();
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
     const router = useRouter(); 
+    const { toast } = useToast();
+    const { executeAsync: executeDeleteDelivery } = useAction(deleteDelivery);
+    const pathname = usePathname();
+    const basePath = pathname.startsWith("/dashboard/delivery-lbb")
+        ? "/dashboard/delivery-lbb"
+        : "/dashboard/delivery";
     const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10, });
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -84,14 +110,40 @@ export default function DataTables({ Element }: { Element: DeliveryWithRelations
     useEffect(() => { 
         setData(Element); 
     }, [Element]);
+    const summary = useMemo(() => {
+        const totals = data.reduce(
+            (acc, item) => {
+                acc.purchase += Number(item.purchaseTotal || 0);
+                acc.sale += Number(item.saleTotal || 0);
+                acc.profit += Number(item.profit || 0);
+                return acc;
+            },
+            { purchase: 0, sale: 0, profit: 0 },
+        );
+        const margin = totals.sale > 0 ? (totals.profit / totals.sale) * 100 : 0;
+        return { ...totals, margin };
+    }, [data]);
 
-    const handleDeleteRows = () => {
+    const handleDeleteRows = async () => {
         const selectedRows = table.getSelectedRowModel().rows;
-        const updatedData = data.filter((item) => !selectedRows.some((row) => row.original.id === item.id),);
-        setData(updatedData);
+        if (selectedRows.length === 0) return;
+        const ids = selectedRows.map((row) => row.original.id);
+        const results = await Promise.all(ids.map((idValue) => executeDeleteDelivery({ id: idValue })));
+        const failed = results.filter((result) => !result?.data?.success).length;
+        if (failed > 0) {
+            toast({
+                variant: "destructive",
+                title: "Suppression partielle",
+                description: `${ids.length - failed} supprimee(s), ${failed} en echec.`,
+            });
+        } else {
+            toast({
+                title: "Suppression reussie",
+                description: `${ids.length} livraison(s) supprimee(s).`,
+            });
+        }
         table.resetRowSelection();
-        // NOTE: Pour une application full-stack, cette suppression devrait également appeler une Server Action
-        // ou une API route pour supprimer les données de la base de données.
+        router.refresh();
     };
 
     const table = useReactTable({
@@ -113,6 +165,26 @@ export default function DataTables({ Element }: { Element: DeliveryWithRelations
     
     return (
         <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div className="rounded-lg border bg-background p-3">
+                    <p className="text-xs text-muted-foreground">Cout total</p>
+                    <p className="text-sm font-semibold">{summary.purchase.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                </div>
+                <div className="rounded-lg border bg-background p-3">
+                    <p className="text-xs text-muted-foreground">Vente totale</p>
+                    <p className="text-sm font-semibold">{summary.sale.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                </div>
+                <div className="rounded-lg border bg-background p-3">
+                    <p className="text-xs text-muted-foreground">Benefice total</p>
+                    <p className={`text-sm font-semibold ${summary.profit >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                        {summary.profit.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                </div>
+                <div className="rounded-lg border bg-background p-3">
+                    <p className="text-xs text-muted-foreground">Marge moyenne</p>
+                    <p className="text-sm font-semibold">{summary.margin.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</p>
+                </div>
+            </div>
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                     <div className="relative">
@@ -222,13 +294,14 @@ export default function DataTables({ Element }: { Element: DeliveryWithRelations
                             </AlertDialogContent>
                         </AlertDialog>
                     )}
-                    <Button onClick={()=> router.push(`/dashboard/delivery/create`) }>Create</Button>
+                    <Button onClick={()=> router.push(`${basePath}/create`) }>Create</Button>
+                    {templateOptions ? <ImportDeliveryExcel options={templateOptions} /> : null}
                     <ExportExcel data={data} filename="delivery" />
                 </div>
             </div>
 
             <div className="overflow-x-auto rounded-lg border border-border bg-background">
-                <Table className="table-fixed">
+                <Table className="table-fixed text-xs">
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id} className="hover:bg-transparent">

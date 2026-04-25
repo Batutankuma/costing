@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter, useParams } from "next/navigation";
+import { usePathname, useRouter, useParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useAction } from "next-safe-action/hooks";
 import { Button } from "@/components/ui/button";
@@ -66,6 +66,10 @@ export default function EditDeliveryPage() {
   const [loadingData, setLoadingData] = useState(true);
 
   const router = useRouter();
+  const pathname = usePathname();
+  const basePath = pathname.startsWith("/dashboard/delivery-lbb")
+    ? "/dashboard/delivery-lbb"
+    : "/dashboard/delivery";
   const params = useParams();
   const { toast } = useToast();
 
@@ -197,7 +201,7 @@ export default function EditDeliveryPage() {
             title: "Erreur",
             description: msg,
           });
-          setTimeout(() => router.push(`/dashboard/delivery`), 2000);
+          setTimeout(() => router.push(basePath), 2000);
         }
       } catch (error) {
         console.error("Erreur lors du chargement de la livraison:", error);
@@ -207,7 +211,7 @@ export default function EditDeliveryPage() {
           title: "Erreur",
           description: "Impossible de charger la livraison.",
         });
-        setTimeout(() => router.push(`/dashboard/delivery`), 2000);
+        setTimeout(() => router.push(basePath), 2000);
       } finally {
         setIsLoading(false);
       }
@@ -245,7 +249,7 @@ export default function EditDeliveryPage() {
         throw new Error(result?.data?.failure || "Une erreur est survenue lors de la mise à jour.");
       }
       toast({ title: "Succès", description: "Livraison modifiée avec succès !" });
-      router.push(`/dashboard/delivery`);
+      router.push(basePath);
     } catch (e: unknown) {
       console.error("Erreur lors de la mise à jour:", e);
       toast({
@@ -273,7 +277,7 @@ export default function EditDeliveryPage() {
         <div className="text-destructive bg-destructive/10 p-4 rounded-md">
           <p className="font-medium">{errorMessage}</p>
         </div>
-        <Button variant="outline" onClick={() => router.push(`/dashboard/delivery`)}>
+        <Button variant="outline" onClick={() => router.push(basePath)}>
           Retour à la liste
         </Button>
       </div>
@@ -548,7 +552,7 @@ export default function EditDeliveryPage() {
           <Button type="submit" disabled={isSubmitting} className="px-8">
             {isSubmitting ? "Mise à jour..." : "Mettre à jour la livraison"}
           </Button>
-          <Button type="button" variant="outline" onClick={() => router.push('/dashboard/delivery')}>
+          <Button type="button" variant="outline" onClick={() => router.push(basePath)}>
             Annuler
           </Button>
         </div>

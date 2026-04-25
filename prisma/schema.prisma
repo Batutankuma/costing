@@ -282,6 +282,7 @@ model SalesQuote {
 model Client {
   id        String   @id @default(cuid())
   name      String
+  contactName String?
   company   String?
   email     String?
   phone     String?
@@ -298,10 +299,12 @@ model Client {
   salesQuotes SalesQuote[]
   stocks    Stock[]
   deliveries Delivery[]
+  deliveriesAsDestination Delivery[] @relation("DeliveryDestination")
   shipments  Shipment[]
   activities CRMActivity[]
   contacts   Contact[]
   dgiFactures DGIFacture[]
+  clientOrders ClientOrder[]
 
   @@map("client")
 }
@@ -561,6 +564,7 @@ model Transporteur {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   hospitalityRows  Hospitality[]
+  deliveries       Delivery[]
 
   @@map("transporteur")
 }
@@ -731,6 +735,7 @@ model Product {
   deliveries Delivery[]
   shipments  Shipment[]
   kinshasaCostings KinshasaCosting[]
+  clientOrders ClientOrder[]
 
   @@map("product")
 }
@@ -751,6 +756,7 @@ model Depot {
   deliveries Delivery[]
   shipments  Shipment[]
   hospitalityRows Hospitality[]
+  clientOrders ClientOrder[]
 
   @@map("depot")
 }
@@ -775,6 +781,7 @@ model DepotProduct {
 model Fournisseur {
   id        String   @id @default(cuid())
   nom       String
+  contactName String?
   company   String?
   email     String?
   phone     String?
@@ -811,7 +818,8 @@ model Hospitality {
   offlQtyObs             Float
   offlQty20              Float
   depotId                String
-  stockId                String
+  stockId                String?
+  commandeId             String?
   varianceQty20          Float
   transitAllowableLoss   Float
   disAllowableLoss       Float
@@ -823,7 +831,8 @@ model Hospitality {
   supplier    Fournisseur @relation(fields: [supplierId], references: [id], onDelete: Restrict)
   transporter Transporteur @relation(fields: [transporterId], references: [id], onDelete: Restrict)
   depot       Depot        @relation(fields: [depotId], references: [id], onDelete: Restrict)
-  stock       Stock        @relation(fields: [stockId], references: [id], onDelete: Restrict)
+  stock       Stock?       @relation(fields: [stockId], references: [id], onDelete: SetNull)
+  commande    Commande?    @relation(fields: [commandeId], references: [id], onDelete: SetNull)
 
   @@map("hospitality")
 }
@@ -959,6 +968,8 @@ model Stock {
   stockPrixUnitaireFinal   Float?
   stockValeurFinal         Float?
   hospitalityRows          Hospitality[]
+  deliveryId              String?      @unique
+  delivery                Delivery?    @relation(fields: [deliveryId], references: [id], onDelete: SetNull)
 
   @@map("stock")
 }
@@ -987,10 +998,32 @@ model Commande {
   updatedAt     DateTime       @updatedAt
 
   receptions    Reception[]
+  hospitalityRows Hospitality[]
   licences      Licence[]
   paiements     PaiementBanque[]
 
   @@map("commande")
+}
+
+model ClientOrder {
+  id         String         @id @default(cuid())
+  reference  String         @unique
+  date       DateTime       @default(now())
+  status     CommandeStatus @default(DRAFT)
+  clientId   String
+  client     Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  produitId  String
+  produit    Product        @relation(fields: [produitId], references: [id], onDelete: Cascade)
+  depotId    String?
+  depot      Depot?         @relation(fields: [depotId], references: [id], onDelete: SetNull)
+  quantity   Float          @default(0)
+  unitPrice  Float          @default(0)
+  devise     Devise         @default(USD)
+  notes      String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@map("client_order")
 }
 
 // ===== CRM: Activities =====
@@ -1090,25 +1123,51 @@ model Reception {
 // ===== Livraisons =====
 model Delivery {
   id              String        @id @default(cuid())
+  commandNumber   String?
   reference       String?
   deliveryDate    DateTime      @default(now())
+  loadingDate     DateTime?
+  dateOffloaded   DateTime?
+  departureDate   DateTime?
+  etaDate         DateTime?
+  ataDate         DateTime?
   quantity        Float         @default(0)
+  qLoaded         Float         @default(0)
+  qOffloaded      Float         @default(0)
+  q20             Float         @default(0)
+  temperature     Float?
+  density         Float?
   unit            String
+  truckTrailerNo  String?
+  driverName      String?
+  truckCapacity   Float?
   openingEter     Float?
   closingEter     Float?
+  eod             String?
   prixUnitaire    Float?
   paiement        TypePaiement? @default(DIRECT)
+  varianceQty20   Float         @default(0)
+  transitAllowableLoss Float    @default(0)
+  disAllowableLoss Float        @default(0)
+  rate            Float         @default(0)
+  total           Float         @default(0)
   typeAircraft    String?
   flightNumber    String?
   note            String?
+  remarks         String?
   clientId        String?
   client          Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  destinationClientId String?
+  destinationClient Client?     @relation("DeliveryDestination", fields: [destinationClientId], references: [id], onDelete: SetNull)
+  transporterId   String?
+  transporter     Transporteur? @relation(fields: [transporterId], references: [id], onDelete: SetNull)
   depotId         String?
   depot           Depot?        @relation(fields: [depotId], references: [id], onDelete: SetNull)
   produitId       String?
   produit         Product?      @relation(fields: [produitId], references: [id], onDelete: SetNull)
   equipmentId     String?
   equipment       Equipment?    @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+  stockMovements  Stock[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ChangeEvent } from "react";
+import { useMemo, useRef, useState, type ChangeEvent } from "react";
 import * as XLSX from "xlsx";
 import { Upload, Loader2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { importHospitalityRows } from "./actions";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -20,10 +21,6 @@ import {
 
 type ParsedHospitalityRow = {
   driverName: string;
-  supplierName: string;
-  transporterName: string;
-  depotName: string;
-  stockReference?: string;
   truckNo: string;
   trailerNo: string;
   loadingDate: string;
@@ -34,6 +31,13 @@ type ParsedHospitalityRow = {
   offlQtyObs: number;
   offlQty20: number;
   rate: number;
+};
+
+type TemplateOptions = {
+  suppliers: Array<{ id: string; nom: string }>;
+  transporters: Array<{ id: string; nom: string }>;
+  depots: Array<{ id: string; name: string }>;
+  commandes: Array<{ id: string; reference: string; depotId: string | null }>;
 };
 
 function asNumber(value: unknown) {
@@ -66,62 +70,93 @@ function pick(row: Record<string, unknown>, keys: string[]) {
   return "";
 }
 
-export default function ImportHospitalityExcel() {
+export default function ImportHospitalityExcel({ options }: { options: TemplateOptions }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<ParsedHospitalityRow[]>([]);
   const [fileName, setFileName] = useState("");
+  const [selectedSupplierId, setSelectedSupplierId] = useState("");
+  const [selectedTransporterId, setSelectedTransporterId] = useState("");
+  const [selectedDepotId, setSelectedDepotId] = useState("");
+  const [selectedCommandeId, setSelectedCommandeId] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const router = useRouter();
+  const availableCommandes = useMemo(
+    () => options.commandes.filter((item) => !selectedDepotId || item.depotId === selectedDepotId),
+    [options.commandes, selectedDepotId]
+  );
 
   const reset = () => {
     setRows([]);
     setFileName("");
+    setSelectedSupplierId("");
+    setSelectedTransporterId("");
+    setSelectedDepotId("");
+    setSelectedCommandeId("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const downloadTemplate = () => {
-    const headers = [
-      "Driver s name",
-      "SUPPLIER",
-      "TRANSPORTER",
-      "Depot",
-      "Stock (optionnel)",
-      "Truck No.",
-      "Trailer No.",
-      "LOADING DATE",
-      "ENTRY DATE",
-      "OFFL DATE",
-      "Quantity Order",
-      "Actual quantity @20 (L)",
-      "OFFL QTY @OBS",
-      "OFFL QTY @20",
-      "Rate ($)",
-    ];
+    const generate = async () => {
+      const ExcelJS = await import("exceljs");
+      const workbook = new ExcelJS.Workbook();
+      const template = workbook.addWorksheet("HospitalityTemplate");
+      const refs = workbook.addWorksheet("ListesReference");
 
-    const sampleRow = {
-      "Driver s name": "MUKADI",
-      SUPPLIER: "FOURNISSEUR DEMO",
-      TRANSPORTER: "TRANSPORTEUR DEMO",
-      Depot: "DEPOT LUBUMBASHI",
-      "Stock (optionnel)": "",
-      "Truck No.": "TRK-120",
-      "Trailer No.": "TRL-450",
-      "LOADING DATE": "2026-04-13",
-      "ENTRY DATE": "2026-04-14",
-      "OFFL DATE": "2026-04-15",
-      "Quantity Order": 35000,
-      "Actual quantity @20 (L)": 34980,
-      "OFFL QTY @OBS": 34970,
-      "OFFL QTY @20": 34960,
-      "Rate ($)": 0.25,
+      const headers = [
+        "Driver s name",
+        "Truck No.",
+        "Trailer No.",
+        "LOADING DATE",
+        "ENTRY DATE",
+        "OFFL DATE",
+        "Quantity Order",
+        "Actual quantity @20 (L)",
+        "OFFL QTY @OBS",
+        "OFFL QTY @20",
+        "Rate ($)",
+      ];
+      template.addRow(headers);
+      template.addRow([
+        "",
+        "TRK-120",
+        "TRL-450",
+        "2026-04-13",
+        "2026-04-14",
+        "2026-04-15",
+        35000,
+        34980,
+        34970,
+        34960,
+        0.25,
+      ]);
+
+      refs.addRow(["SUPPLIER", "TRANSPORTER", "Depot", "Commande"]);
+      const maxLen = Math.max(options.suppliers.length, options.transporters.length, options.depots.length, options.commandes.length);
+      for (let i = 0; i < maxLen; i += 1) {
+        refs.addRow([
+          options.suppliers[i]?.nom || "",
+          options.transporters[i]?.nom || "",
+          options.depots[i]?.name || "",
+          options.commandes[i]?.reference || "",
+        ]);
+      }
+
+      refs.state = "veryHidden";
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "hospitality-import-template.xlsx";
+      a.click();
+      URL.revokeObjectURL(url);
     };
 
-    const worksheet = XLSX.utils.json_to_sheet([sampleRow], { header: headers });
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "HospitalityTemplate");
-    XLSX.writeFile(workbook, "hospitality-import-template.xlsx");
+    void generate();
   };
 
   const handleFileSelect = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -147,10 +182,6 @@ export default function ImportHospitalityExcel() {
       const parsedRows: ParsedHospitalityRow[] = rawRows.map((raw, index) => {
         const rowNo = index + 2;
         const driverName = String(pick(raw, ["Driver s name", "DRIVER", "driverName"])).trim();
-        const supplierName = String(pick(raw, ["SUPPLIER", "Supplier"])).trim();
-        const transporterName = String(pick(raw, ["TRANSPORTER", "Transporter"])).trim();
-        const depotName = String(pick(raw, ["Depot", "DEPOT"])).trim();
-        const stockReference = String(pick(raw, ["Stock", "STOCK", "Stock (optionnel)"])).trim();
         const truckNo = String(pick(raw, ["Truck No.", "Truck No", "TRUCK NO"])).trim();
         const trailerNo = String(pick(raw, ["Trailer No.", "Trailer No", "TRAILER NO"])).trim();
         const loadingDate = asDateString(pick(raw, ["LOADING DATE", "Loading Date"]));
@@ -163,7 +194,7 @@ export default function ImportHospitalityExcel() {
         const rate = asNumber(pick(raw, ["Rate ($)", "RATE"]));
 
         if (
-          !driverName || !supplierName || !transporterName || !depotName ||
+          !driverName ||
           !truckNo || !trailerNo || !loadingDate || !entryDate || !offlDate ||
           !Number.isFinite(quantityOrder) || !Number.isFinite(actualQuantity20L) ||
           !Number.isFinite(offlQtyObs) || !Number.isFinite(offlQty20) || !Number.isFinite(rate)
@@ -173,10 +204,6 @@ export default function ImportHospitalityExcel() {
 
         return {
           driverName,
-          supplierName,
-          transporterName,
-          depotName,
-          stockReference,
           truckNo,
           trailerNo,
           loadingDate,
@@ -208,10 +235,37 @@ export default function ImportHospitalityExcel() {
 
   const handleImport = async () => {
     if (rows.length === 0) return;
+    const selectedSupplier = options.suppliers.find((item) => item.id === selectedSupplierId);
+    const selectedTransporter = options.transporters.find((item) => item.id === selectedTransporterId);
+    const selectedDepot = options.depots.find((item) => item.id === selectedDepotId);
+    const selectedCommande = options.commandes.find((item) => item.id === selectedCommandeId);
+    if (!selectedSupplier || !selectedTransporter || !selectedDepot || !selectedCommande) {
+      toast({
+        variant: "destructive",
+        title: "Sélection incomplète",
+        description: "Veuillez sélectionner supplier, transporter, dépôt et bon de commande avant l'import.",
+      });
+      return;
+    }
+    if (selectedCommande.depotId && selectedCommande.depotId !== selectedDepotId) {
+      toast({
+        variant: "destructive",
+        title: "Incohérence dépôt/commande",
+        description: "Le bon de commande sélectionné n'appartient pas au dépôt choisi.",
+      });
+      return;
+    }
     setLoading(true);
     console.info("[hospitality/import] Début import. Lignes:", rows.length);
     try {
-      const result = await importHospitalityRows(rows);
+      const payload = rows.map((row) => ({
+        ...row,
+        supplierName: selectedSupplier.nom,
+        transporterName: selectedTransporter.nom,
+        depotName: selectedDepot.name,
+        commandeReference: selectedCommande.reference,
+      }));
+      const result = await importHospitalityRows(payload);
       console.info("[hospitality/import] Réponse action:", result);
       if (!result?.data?.success) {
         throw new Error(result?.data?.failure ?? "Import impossible");
@@ -260,11 +314,63 @@ export default function ImportHospitalityExcel() {
         <DialogHeader>
           <DialogTitle>Import Hospitality</DialogTitle>
           <DialogDescription>
-            Importez un fichier Excel/CSV avec les colonnes hospitality (supplier, transporter, depot, stock optionnel).
+            Sélectionnez supplier/transporter/dépôt/commande dans l&apos;application, puis importez le fichier Excel.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label>Supplier</Label>
+              <Select value={selectedSupplierId} onValueChange={setSelectedSupplierId}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+                <SelectContent>
+                  {options.suppliers.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>{item.nom}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Transporter</Label>
+              <Select value={selectedTransporterId} onValueChange={setSelectedTransporterId}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+                <SelectContent>
+                  {options.transporters.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>{item.nom}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Dépôt</Label>
+              <Select
+                value={selectedDepotId}
+                onValueChange={(value) => {
+                  setSelectedDepotId(value);
+                  setSelectedCommandeId("");
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+                <SelectContent>
+                  {options.depots.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Bon de commande</Label>
+              <Select value={selectedCommandeId} onValueChange={setSelectedCommandeId}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+                <SelectContent>
+                  {availableCommandes.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>{item.reference}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <Button type="button" variant="secondary" onClick={downloadTemplate} className="w-full gap-2">
             <Download className="h-4 w-4" />
             Télécharger le template Excel

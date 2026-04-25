@@ -25,7 +25,7 @@ export type HospitalityWithRelations = {
   supplier: { id: string; nom: string };
   transporter: { id: string; nom: string };
   depot: { id: string; name: string };
-  stock: { id: string; reference: string };
+  commande?: { id: string; reference: string } | null;
   quantityOrder: number;
   offlQty20: number;
   varianceQty20: number;
@@ -40,6 +40,13 @@ const multiColumnFilterFn: FilterFn<HospitalityWithRelations> = (row, columnId, 
   const searchable = `${row.original.driverName} ${row.original.truckNo} ${row.original.trailerNo}`.toLowerCase();
   return searchable.includes((filterValue ?? "").toLowerCase());
 };
+
+function format2(value: number) {
+  return Number(value).toLocaleString("fr-FR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
 
 export const columns: ColumnDef<HospitalityWithRelations>[] = [
   {
@@ -62,16 +69,16 @@ export const columns: ColumnDef<HospitalityWithRelations>[] = [
     enableSorting: false,
     enableHiding: false,
   },
-  { header: "Driver s name", accessorKey: "driverName", filterFn: multiColumnFilterFn, enableHiding: false, size: 180 },
-  { header: "Supplier", id: "supplier", cell: ({ row }) => row.original.supplier.nom, size: 150 },
-  { header: "Transporter", id: "transporter", cell: ({ row }) => row.original.transporter.nom, size: 150 },
-  { header: "Stock", id: "stock", cell: ({ row }) => row.original.stock.reference, size: 140 },
-  { header: "Truck No.", accessorKey: "truckNo", size: 120 },
-  { header: "Trailer No.", accessorKey: "trailerNo", size: 120 },
-  { header: "Depot", id: "depot", cell: ({ row }) => row.original.depot.name, size: 140 },
-  { header: "QTY Order", accessorKey: "quantityOrder", size: 120 },
-  { header: "OFFL QTY @20", accessorKey: "offlQty20", size: 120 },
-  { header: "Variance", accessorKey: "varianceQty20", size: 120 },
+  { header: "Driver s name", accessorKey: "driverName", filterFn: multiColumnFilterFn, enableHiding: false, size: 150, cell: ({ row }) => <span className="text-xs truncate block max-w-[140px]">{row.original.driverName}</span> },
+  { header: "Supplier", id: "supplier", cell: ({ row }) => <span className="text-xs truncate block max-w-[120px]">{row.original.supplier.nom}</span>, size: 130 },
+  { header: "Transporter", id: "transporter", cell: ({ row }) => <span className="text-xs truncate block max-w-[120px]">{row.original.transporter.nom}</span>, size: 130 },
+  { header: "Commande", id: "commande", cell: ({ row }) => <span className="text-xs truncate block max-w-[130px]">{row.original.commande?.reference ?? "N/A"}</span>, size: 140 },
+  { header: "Truck No.", accessorKey: "truckNo", size: 105, cell: ({ row }) => <span className="text-xs">{row.original.truckNo}</span> },
+  { header: "Trailer No.", accessorKey: "trailerNo", size: 105, cell: ({ row }) => <span className="text-xs">{row.original.trailerNo}</span> },
+  { header: "Depot", id: "depot", cell: ({ row }) => <span className="text-xs truncate block max-w-[120px]">{row.original.depot.name}</span>, size: 130 },
+  { header: "QTY Order", accessorKey: "quantityOrder", size: 110, cell: ({ row }) => <span className="text-xs">{format2(row.original.quantityOrder)}</span> },
+  { header: "OFFL QTY @20", accessorKey: "offlQty20", size: 110, cell: ({ row }) => <span className="text-xs">{format2(row.original.offlQty20)}</span> },
+  { header: "Variance", accessorKey: "varianceQty20", size: 110, cell: ({ row }) => <span className="text-xs">{format2(row.original.varianceQty20)}</span> },
   {
     header: "Dis-Allowable LOSS",
     accessorKey: "disAllowableLoss",
@@ -80,13 +87,13 @@ export const columns: ColumnDef<HospitalityWithRelations>[] = [
       const value = row.original.disAllowableLoss;
       return (
         <span className={value > 0 ? "text-destructive font-semibold" : ""}>
-          {value}
+          {format2(value)}
         </span>
       );
     },
   },
-  { header: "Rate ($)", accessorKey: "rate", size: 100 },
-  { header: "Total ($)", accessorKey: "total", size: 120 },
+  { header: "Rate ($)", accessorKey: "rate", size: 95, cell: ({ row }) => <span className="text-xs">{format2(row.original.rate)}</span> },
+  { header: "Total ($)", accessorKey: "total", size: 110, cell: ({ row }) => <span className="text-xs">{format2(row.original.total)}</span> },
   {
     id: "actions",
     header: () => <span className="sr-only">Actions</span>,

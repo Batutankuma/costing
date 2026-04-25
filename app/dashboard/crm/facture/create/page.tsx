@@ -14,7 +14,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useAction } from "next-safe-action/hooks";
-import { createFactureAction, getNextInvoiceNumberAction } from "../actions";
+import {
+  createFactureAction,
+  getAutoFactureFromCommandeAction,
+  getNextInvoiceNumberAction,
+  listCommandeReferencesAction,
+} from "../actions";
 import { Plus, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -74,7 +79,12 @@ export default function CreateFacturePage() {
   const { toast } = useToast();
   const { executeAsync, status } = useAction(createFactureAction);
   const { executeAsync: getNextInvoiceNumber } = useAction(getNextInvoiceNumberAction);
+  const { executeAsync: listCommandeReferences } = useAction(listCommandeReferencesAction);
+  const { executeAsync: getAutoFactureFromCommande, status: autoLoadStatus } = useAction(getAutoFactureFromCommandeAction);
   const [clients, setClients] = useState<Client[]>([]);
+  const [commandeRefs, setCommandeRefs] = useState<string[]>([]);
+  const [billingMode, setBillingMode] = useState<"manual" | "auto">("manual");
+  const [selectedCommandeRef, setSelectedCommandeRef] = useState<string>("");
   const [clientId, setClientId] = useState<string>("");
   const [printMode, setPrintMode] = useState<boolean>(false);
   const [deliveryNotes, setDeliveryNotes] = useState<string[]>([""]);
@@ -111,16 +121,28 @@ export default function CreateFacturePage() {
   useEffect(() => {
     (async () => {
       try {
-        const r = await fetch("/api/clients", { cache: "no-store" });
-        if (r.ok) {
-          const data = await r.json();
+        const [clientsResponse, commandesResponse] = await Promise.all([
+          fetch("/api/clients", { cache: "no-store" }),
+          listCommandeReferences(),
+        ]);
+        if (clientsResponse.ok) {
+          const data = await clientsResponse.json();
           setClients(Array.isArray(data) ? data : []);
+        }
+        const refs = commandesResponse?.data?.success;
+        if (Array.isArray(refs)) {
+          setCommandeRefs(
+            refs
+              .map((item) => String(item.reference || "").trim())
+              .filter(Boolean),
+          );
         }
       } catch {
         setClients([]);
+        setCommandeRefs([]);
       }
     })();
-  }, []);
+  }, [listCommandeReferences]);
 
   // Générer le numéro de facture automatiquement (X-MM/YY, ex: 1-12/25)
   useEffect(() => {
@@ -168,7 +190,7 @@ export default function CreateFacturePage() {
     }
   }, [clientId, clients, form]);
 
-  const { fields, append, remove } = useFieldArray({ control: form.control, name: "lines" });
+  const { fields, append, remove, replace } = useFieldArray({ control: form.control, name: "lines" });
 
   const totals = form.watch("lines").reduce(
     (acc, line) => {
@@ -241,6 +263,46 @@ export default function CreateFacturePage() {
     const sign = value < 0 ? "moins " : "";
     const currency = form.watch("currency") === "USD" ? "dollars américains" : form.watch("currency");
     return `${sign}${dStr} ${currency}${cents ? " et " + cStr + " cents" : ""}`;
+  };
+
+  const loadAutomaticFromCommande = async () => {
+    if (!selectedCommandeRef) {
+      toast({ variant: "destructive", title: "Bon de commande requis", description: "Sélectionnez un bon de commande." });
+      return;
+    }
+    const result = await getAutoFactureFromCommande({ reference: selectedCommandeRef });
+    if (!result?.data?.success) {
+      toast({
+        variant: "destructive",
+        title: "Chargement automatique impossible",
+        description: result?.data?.failure || "Aucune livraison liée à ce bon de commande.",
+      });
+      return;
+    }
+
+    const autoData = result.data.success;
+    replace(
+      autoData.lines.map((line) => ({
+        description: line.description || "",
+        unit: line.unit || "Litre",
+        quantity: Number(line.quantity || 0),
+        unitPrice: Number(line.unitPrice || 0),
+      })),
+    );
+    setDeliveryNotes(autoData.lines.map((line) => line.dn || ""));
+    form.setValue("purchaseOrder", autoData.purchaseOrder);
+
+    if (autoData.client) {
+      setClientId(autoData.client.id);
+      form.setValue("clientName", autoData.client.name || "");
+      form.setValue("clientAddress", autoData.client.address || "");
+      form.setValue("clientTaxNumber", autoData.client.taxNumber || "");
+    }
+
+    toast({
+      title: "Facture automatique prête",
+      description: `${autoData.lines.length} livraison(s) ajoutée(s) à la facture.`,
+    });
   };
 
   const onSubmit = async (data: FormData) => {
@@ -335,6 +397,51 @@ export default function CreateFacturePage() {
             {!clientId && form.formState.errors.clientName && (
               <p className="text-sm text-destructive">Veuillez sélectionner un client</p>
             )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Mode de facturation</Label>
+              <Select value={billingMode} onValueChange={(value: "manual" | "auto") => setBillingMode(value)}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Sélectionner le mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manual">Manuelle</SelectItem>
+                  <SelectItem value="auto">Automatique depuis bon de commande</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {billingMode === "auto" ? (
+              <div className="space-y-2">
+                <Label>Bon de commande</Label>
+                <div className="flex gap-2">
+                  <Select value={selectedCommandeRef} onValueChange={setSelectedCommandeRef}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Choisir un numéro de commande" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {commandeRefs.map((ref) => (
+                        <SelectItem key={ref} value={ref}>
+                          {ref}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={loadAutomaticFromCommande}
+                    disabled={autoLoadStatus === "executing"}
+                  >
+                    Charger
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Le système ajoute automatiquement toutes les livraisons liées au bon de commande.
+                </p>
+              </div>
+            ) : null}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

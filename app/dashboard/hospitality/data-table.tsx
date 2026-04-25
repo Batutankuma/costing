@@ -34,7 +34,14 @@ import { useRouter } from "next/navigation";
 import ExportExcel from "@/components/exportExcel";
 import ImportHospitalityExcel from "./import-excel";
 
-export default function DataTables({ Element }: { Element: HospitalityWithRelations[] }) {
+type TemplateOptions = {
+  suppliers: Array<{ id: string; nom: string }>;
+  transporters: Array<{ id: string; nom: string }>;
+  depots: Array<{ id: string; name: string }>;
+  commandes: Array<{ id: string; reference: string; depotId: string | null }>;
+};
+
+export default function DataTables({ Element, templateOptions }: { Element: HospitalityWithRelations[]; templateOptions: TemplateOptions }) {
   const id = useId();
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -119,7 +126,7 @@ export default function DataTables({ Element }: { Element: HospitalityWithRelati
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={() => router.push("/dashboard/hospitality/create")}>Nouvelle ligne</Button>
-          <ImportHospitalityExcel />
+          <ImportHospitalityExcel options={templateOptions} />
           <ExportExcel
             data={data}
             filename="hospitality-lubumbashi"
@@ -143,7 +150,7 @@ export default function DataTables({ Element }: { Element: HospitalityWithRelati
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-border bg-background">
-        <Table className="table-fixed">
+        <Table className="table-fixed text-xs">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="hover:bg-transparent">

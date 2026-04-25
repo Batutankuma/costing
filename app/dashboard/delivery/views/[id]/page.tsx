@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { usePathname, useRouter, useParams } from "next/navigation";
 import { z } from "zod";
 import { useAction } from "next-safe-action/hooks";
 import { Badge } from "@/components/ui/badge";
@@ -160,6 +160,10 @@ export default function ViewDeliveryPage() {
 
   const { toast } = useToast();
   const router = useRouter();
+  const pathname = usePathname();
+  const basePath = pathname.startsWith("/dashboard/delivery-lbb")
+    ? "/dashboard/delivery-lbb"
+    : "/dashboard/delivery";
   const params = useParams();
 
   useEffect(() => {
@@ -214,7 +218,7 @@ export default function ViewDeliveryPage() {
         <div className="text-destructive bg-destructive/10 p-4 rounded-md">
           <p className="font-medium">{error}</p>
         </div>
-        <Button variant="outline" onClick={() => router.push(`/dashboard/delivery`)}>
+        <Button variant="outline" onClick={() => router.push(basePath)}>
           Retour à la liste
         </Button>
       </div>
@@ -225,7 +229,7 @@ export default function ViewDeliveryPage() {
     return (
       <div className="p-6 space-y-4 max-w-xl mx-auto">
         <p className="text-gray-700">Aucune donnée de livraison disponible pour cet ID.</p>
-        <Button variant="outline" onClick={() => router.push(`/dashboard/delivery`)}>
+        <Button variant="outline" onClick={() => router.push(basePath)}>
           Retour à la liste
         </Button>
       </div>
@@ -242,7 +246,7 @@ export default function ViewDeliveryPage() {
           </Button>
           <h1 className="text-3xl font-bold">Détails de la Livraison Aviation</h1>
         </div>
-        <Button onClick={() => router.push(`/dashboard/delivery/${delivery.id}`)}>
+        <Button onClick={() => router.push(`${basePath}/${delivery.id}`)}>
           <Edit className="h-4 w-4 mr-2" />
           Modifier
         </Button>

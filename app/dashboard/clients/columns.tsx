@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 export type ClientWithRelations = {
     id: string;
     name: string;
+    contactName?: string | null;
     company?: string | null;
     email?: string | null;
     phone?: string | null;
@@ -41,7 +42,7 @@ export type ClientWithRelations = {
 
 // La fonction de filtre utilise des champs disponibles avec relations
 const multiColumnFilterFn: FilterFn<ClientWithRelations> = (row, columnId, filterValue) => {
-    const searchableRowContent = `${row.original.name} ${row.original.company || ''} ${row.original.email || ''} ${row.original.phone || ''}`.toLowerCase();
+    const searchableRowContent = `${row.original.company || row.original.name} ${row.original.contactName || ''} ${row.original.email || ''} ${row.original.phone || ''}`.toLowerCase();
     const searchTerm = (filterValue ?? "").toLowerCase();
     return searchableRowContent.includes(searchTerm);
 };
@@ -71,17 +72,17 @@ export const columns: ColumnDef<ClientWithRelations>[] = [
         enableHiding: false,
     },
     {
-        header: "Nom",
-        accessorKey: "name",
-        cell: ({ row }) => <div className="font-medium">{row.getValue("name")}</div>,
+        header: "Société",
+        accessorKey: "company",
+        cell: ({ row }) => <div className="font-medium">{row.original.company || row.original.name}</div>,
         size: 180,
         filterFn: multiColumnFilterFn,
         enableHiding: false,
     },
     {
-        header: "Société",
-        accessorKey: "company",
-        cell: ({ row }) => <div>{row.original.company || "N/A"}</div>,
+        header: "Contact",
+        accessorKey: "contactName",
+        cell: ({ row }) => <div>{row.original.contactName || "N/A"}</div>,
         size: 150,
     },
     {
@@ -169,7 +170,7 @@ function RowActions({ row }: { row: Row<ClientWithRelations> }) {
                     <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
                 </DropdownMenuItem>
             </DropdownMenuContent>
-            <RemoveDialog open={openRemoveDialog} setOpen={setOpenRemoveDialog} Id={row.original.id} nameClient={row.original.name} />
+            <RemoveDialog open={openRemoveDialog} setOpen={setOpenRemoveDialog} Id={row.original.id} nameClient={row.original.company || row.original.name} />
         </DropdownMenu>
     );
 }

@@ -23,8 +23,9 @@ export const createAction = actionClient
       }
       const created = await prisma.fournisseur.create({
         data: {
-          nom: parsedInput.nom,
-          company: parsedInput.company ?? null,
+          nom: parsedInput.company,
+          company: parsedInput.company,
+          contactName: parsedInput.contactName ?? null,
           email: parsedInput.email && parsedInput.email !== "" ? parsedInput.email : null,
           phone: parsedInput.phone ?? null,
           adresse: parsedInput.adresse ?? null,
@@ -89,8 +90,9 @@ export const updateAction = actionClient
       const result = await prisma.fournisseur.update({
         where: { id: parsedInput.id },
         data: {
-          nom: parsedInput.nom,
-          company: parsedInput.company ?? null,
+          nom: parsedInput.company,
+          company: parsedInput.company,
+          contactName: parsedInput.contactName ?? null,
           email: parsedInput.email && parsedInput.email !== "" ? parsedInput.email : null,
           phone: parsedInput.phone ?? null,
           adresse: parsedInput.adresse ?? null,

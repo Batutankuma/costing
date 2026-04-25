@@ -10,15 +10,32 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function HospitalityPage() {
-  const data = await prisma.hospitality.findMany({
-    include: {
-      supplier: { select: { id: true, nom: true } },
-      transporter: { select: { id: true, nom: true } },
-      depot: { select: { id: true, name: true } },
-      stock: { select: { id: true, reference: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  }) as HospitalityWithRelations[];
+  const [data, suppliers, transporters, depots, commandes] = await Promise.all([
+    prisma.hospitality.findMany({
+      include: {
+        supplier: { select: { id: true, nom: true } },
+        transporter: { select: { id: true, nom: true } },
+        depot: { select: { id: true, name: true } },
+        commande: { select: { id: true, reference: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    }) as Promise<HospitalityWithRelations[]>,
+    prisma.fournisseur.findMany({ select: { id: true, nom: true }, orderBy: { nom: "asc" } }),
+    prisma.transporteur.findMany({ select: { id: true, nom: true }, orderBy: { nom: "asc" } }),
+    prisma.depot.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.commande.findMany({
+      where: { quantite: { gt: 0 } },
+      select: { id: true, reference: true, depotId: true },
+      orderBy: { reference: "asc" },
+    }),
+  ]);
+
+  const templateOptions = {
+    suppliers,
+    transporters,
+    depots,
+    commandes,
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -43,7 +60,7 @@ export default async function HospitalityPage() {
           <CardDescription>Visualisez et gérez les données du tableau transport/hospitality.</CardDescription>
         </CardHeader>
         <CardContent>
-          <DataTables Element={data} />
+          <DataTables Element={data} templateOptions={templateOptions} />
         </CardContent>
       </Card>
     </div>

@@ -26,6 +26,18 @@ export async function getTransporteurById(id: string) {
   }
 }
 
+export async function getTransporteurs() {
+  try {
+    return await prisma.transporteur.findMany({
+      select: { id: true, nom: true },
+      orderBy: { nom: "asc" },
+    });
+  } catch (error) {
+    console.error("Erreur lors de la récupération des transporteurs:", error);
+    return [];
+  }
+}
+
 export const createTransporteur = actionClient
   .schema(CreateTransporteurSchema)
   .action(async ({ parsedInput }) => {

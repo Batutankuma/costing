@@ -37,7 +37,7 @@ export default async function ViewClientPage({ params }: { params: Promise<{ id:
             <div>
               <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
                 <Users className="h-8 w-8 text-primary" />
-                Détails du Client: {client.name}
+                Détails du Client: {client.company ?? client.name}
               </h1>
               <p className="text-muted-foreground">Visualisation complète du client</p>
             </div>
@@ -59,19 +59,19 @@ export default async function ViewClientPage({ params }: { params: Promise<{ id:
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label className="text-sm font-medium text-muted-foreground">Nom</Label>
-              <p className="text-lg font-semibold">{client.name}</p>
-            </div>
-            <div>
               <Label className="text-sm font-medium text-muted-foreground">Société</Label>
-              <p className="text-lg">{client.company ?? "N/A"}</p>
+              <p className="text-lg font-semibold">{client.company ?? client.name}</p>
             </div>
             <div>
-              <Label className="text-sm font-medium text-muted-foreground">Email</Label>
+              <Label className="text-sm font-medium text-muted-foreground">Nom du contact</Label>
+              <p className="text-lg">{client.contactName ?? "N/A"}</p>
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-muted-foreground">Email du contact</Label>
               <p className="text-lg">{client.email ?? "N/A"}</p>
             </div>
             <div>
-              <Label className="text-sm font-medium text-muted-foreground">Téléphone</Label>
+              <Label className="text-sm font-medium text-muted-foreground">Téléphone du contact</Label>
               <p className="text-lg">{client.phone ?? "N/A"}</p>
             </div>
             <div className="md:col-span-2">

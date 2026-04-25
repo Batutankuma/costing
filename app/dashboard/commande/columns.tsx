@@ -31,6 +31,7 @@ export type Commande = {
   fournisseur?: { nom: string } | null;
   depot?: { name: string } | null;
   receptions?: Array<{ quantity: number }>;
+  hospitalityRows?: Array<{ offlQty20: number }>;
   currentQuantity?: number;
   unit?: string;
 };
@@ -46,17 +47,40 @@ const multiColumnFilterFn: FilterFn<Commande> = (row, columnId, filterValue) => 
     return searchableRowContent.includes(searchTerm);
 };
 
+function format2(value: number) {
+    return Number(value || 0).toLocaleString("fr-FR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+}
+
+function getReceivedQuantity(commande: Commande) {
+    const receptionsQty =
+        commande.receptions?.reduce((sum, reception) => sum + (reception.quantity || 0), 0) || 0;
+    const hospitalityQty =
+        commande.hospitalityRows?.reduce((sum, row) => sum + (row.offlQty20 || 0), 0) || 0;
+    return receptionsQty + hospitalityQty;
+}
+
+function getOrderedQuantity(commande: Commande) {
+    // quantite is currently reduced by Hospitality usages; add them back to show invoice quantity.
+    const currentQuantity = commande.quantite || 0;
+    const hospitalityQty =
+        commande.hospitalityRows?.reduce((sum, row) => sum + (row.offlQty20 || 0), 0) || 0;
+    return currentQuantity + hospitalityQty;
+}
+
 // Composants optimisés qui utilisent les données déjà chargées
 function ProduitName({ produitId, produitName }: { produitId: string; produitName?: string }) {
-    return <div className="font-medium">{produitName || produitId}</div>;
+    return <div className="font-medium text-xs truncate max-w-[130px]">{produitName || produitId}</div>;
 }
 
 function FournisseurName({ fournisseurId, fournisseurName }: { fournisseurId: string; fournisseurName?: string }) {
-    return <div className="font-medium">{fournisseurName || fournisseurId}</div>;
+    return <div className="font-medium text-xs truncate max-w-[130px]">{fournisseurName || fournisseurId}</div>;
 }
 
 function DepotName({ depotId, depotName }: { depotId: string; depotName?: string }) {
-    return <div className="font-medium">{depotName || depotId}</div>;
+    return <div className="font-medium text-xs truncate max-w-[120px]">{depotName || depotId}</div>;
 }
 
 // La définition des colonnes est mise à jour pour correspondre au modèle Commande
@@ -86,7 +110,7 @@ export const columns: ColumnDef<Commande>[] = [
     {
         header: "Référence",
         accessorKey: "reference",
-        cell: ({ row }) => <div className="font-medium">{row.getValue("reference")}</div>,
+        cell: ({ row }) => <div className="font-medium text-xs truncate max-w-[150px]">{row.getValue("reference")}</div>,
         size: 180,
         filterFn: multiColumnFilterFn,
         enableHiding: false,
@@ -122,13 +146,35 @@ export const columns: ColumnDef<Commande>[] = [
         },
     },
     {
-        header: "Quantités",
+        header: "Qté commandée",
         accessorKey: "quantite",
-        size: 180,
+        size: 140,
         cell: ({ row }) => {
-            const quantity = row.getValue("quantite") as number;
+            const orderedQuantity = getOrderedQuantity(row.original);
             const unit = row.original.produit?.unit || "L";
-            return <div className="font-semibold">{quantity} {unit}</div>;
+            return <div className="font-semibold text-xs">{format2(orderedQuantity)} {unit}</div>;
+        },
+    },
+    {
+        header: "Qté réceptionnée",
+        id: "receivedQuantity",
+        size: 140,
+        cell: ({ row }) => {
+            const receivedQuantity = getReceivedQuantity(row.original);
+            const unit = row.original.produit?.unit || "L";
+            return <div className="font-semibold text-xs">{format2(receivedQuantity)} {unit}</div>;
+        },
+    },
+    {
+        header: "Reliquat",
+        id: "remainingQuantity",
+        size: 120,
+        cell: ({ row }) => {
+            const orderedQuantity = getOrderedQuantity(row.original);
+            const receivedQuantity = getReceivedQuantity(row.original);
+            const remainingQuantity = Math.max(0, orderedQuantity - receivedQuantity);
+            const unit = row.original.produit?.unit || "L";
+            return <div className="font-semibold text-xs">{format2(remainingQuantity)} {unit}</div>;
         },
     },
     {
@@ -136,9 +182,9 @@ export const columns: ColumnDef<Commande>[] = [
         accessorKey: "unitPrice",
         size: 120,
         cell: ({ row }) => {
-            const unitPrice = row.getValue("unitPrice") as number;
+            const unitPrice = (row.getValue("unitPrice") as number) || 0;
             const devise = row.original.devise;
-            return <div className="font-medium">{unitPrice} {devise}</div>;
+            return <div className="font-medium text-xs">{format2(unitPrice)} {devise ?? ""}</div>;
         },
     },
     {

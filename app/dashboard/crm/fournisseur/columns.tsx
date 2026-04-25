@@ -19,6 +19,7 @@ import RemoveDialog from "./delete";
 type Fournisseur = {
     id: string;
     nom: string;
+    contactName: string | null;
     company: string | null;
     email: string | null;
     phone: string | null;
@@ -35,7 +36,7 @@ type Fournisseur = {
 
 // La fonction de filtre est mise à jour pour utiliser tous les champs
 const multiColumnFilterFn: FilterFn<Fournisseur> = (row, columnId, filterValue) => {
-    const searchableRowContent = `${row.original.nom} ${row.original.company ?? ''} ${row.original.email ?? ''} ${row.original.phone ?? ''} ${row.original.adresse ?? ''} ${row.original.rccm ?? ''} ${row.original.idNat ?? ''} ${row.original.nif ?? ''} ${row.original.pays ?? ''} ${row.original.notes ?? ''}`.toLowerCase();
+    const searchableRowContent = `${row.original.company ?? row.original.nom} ${row.original.contactName ?? ''} ${row.original.email ?? ''} ${row.original.phone ?? ''} ${row.original.adresse ?? ''} ${row.original.rccm ?? ''} ${row.original.idNat ?? ''} ${row.original.nif ?? ''} ${row.original.pays ?? ''} ${row.original.notes ?? ''}`.toLowerCase();
     const searchTerm = (filterValue ?? "").toLowerCase();
     return searchableRowContent.includes(searchTerm);
 };
@@ -65,27 +66,27 @@ export const columns: ColumnDef<Fournisseur>[] = [
         enableHiding: false,
     },
     {
-        header: "Nom",
-        accessorKey: "nom",
-        cell: ({ row }) => <div className="font-medium">{row.getValue("nom")}</div>,
+        header: "Société",
+        accessorKey: "company",
+        cell: ({ row }) => <div className="font-medium">{row.original.company ?? row.original.nom}</div>,
         size: 180,
         filterFn: multiColumnFilterFn,
         enableHiding: false,
     },
     {
-        header: "Société",
-        accessorKey: "company",
-        cell: ({ row }) => <div>{row.getValue("company") || "-"}</div>,
+        header: "Contact",
+        accessorKey: "contactName",
+        cell: ({ row }) => <div>{row.original.contactName || "-"}</div>,
         size: 150,
     },
     {
-        header: "Email",
+        header: "Email contact",
         accessorKey: "email",
         cell: ({ row }) => <div>{row.getValue("email") || "-"}</div>,
         size: 200,
     },
     {
-        header: "Téléphone",
+        header: "Tél. contact",
         accessorKey: "phone",
         cell: ({ row }) => <div>{row.getValue("phone") || "-"}</div>,
         size: 150,
@@ -145,7 +146,7 @@ function RowActions({ row }: { row: Row<Fournisseur> }) {
                     <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
                 </DropdownMenuItem>
             </DropdownMenuContent>
-            <RemoveDialog open={openRemoveDialog} setOpen={setOpenRemoveDialog} Id={row.original.id} nameClient={row.original.nom} />
+            <RemoveDialog open={openRemoveDialog} setOpen={setOpenRemoveDialog} Id={row.original.id} nameClient={row.original.company ?? row.original.nom} />
         </DropdownMenu>
     );
 }

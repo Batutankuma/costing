@@ -32,27 +32,25 @@ export default async function ViewFournisseurPage({ params }: { params: Promise<
           <div className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <Label htmlFor="nom">Nom</Label>
-                <p id="nom" className="text-lg font-semibold">{fournisseur.nom}</p>
+                <Label htmlFor="company">Société</Label>
+                <p id="company" className="text-lg font-semibold">{fournisseur.company ?? fournisseur.nom}</p>
               </div>
-              {fournisseur.company && (
-                <div>
-                  <Label htmlFor="company">Société</Label>
-                  <p id="company" className="text-lg">{fournisseur.company}</p>
-                </div>
-              )}
+              <div>
+                <Label htmlFor="contactName">Nom du contact</Label>
+                <p id="contactName" className="text-lg">{fournisseur.contactName ?? "-"}</p>
+              </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
               {fournisseur.email && (
                 <div>
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Email du contact</Label>
                   <p id="email" className="text-lg">{fournisseur.email}</p>
                 </div>
               )}
               {fournisseur.phone && (
                 <div>
-                  <Label htmlFor="phone">Téléphone</Label>
+                  <Label htmlFor="phone">Téléphone du contact</Label>
                   <p id="phone" className="text-lg">{fournisseur.phone}</p>
                 </div>
               )}

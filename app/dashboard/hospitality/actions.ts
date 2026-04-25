@@ -5,6 +5,95 @@ import { actionClient } from "@/lib/safe-action";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+function getHospitalityMovementReference(hospitalityId: string) {
+  return `HOSP-${hospitalityId}`;
+}
+
+async function createOrUpdateHospitalityStockMovement(
+  tx: Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
+  params: {
+    hospitalityId: string;
+    commandeId: string;
+    quantity: number;
+    movementDate: Date;
+    supplierId: string;
+  }
+) {
+  const sourceCommande = await tx.commande.findUnique({
+    where: { id: params.commandeId },
+    select: {
+      depotId: true,
+      produitId: true,
+      devise: true,
+      unitPrice: true,
+      fournisseurId: true,
+    },
+  });
+
+  if (!sourceCommande) {
+    throw new Error("Commande source introuvable pour créer le mouvement Hospitality.");
+  }
+
+  const produit = await tx.product.findUnique({
+    where: { id: sourceCommande.produitId },
+    select: { unit: true },
+  });
+  if (!produit) {
+    throw new Error("Produit introuvable pour la commande sélectionnée.");
+  }
+
+  const movementReference = getHospitalityMovementReference(params.hospitalityId);
+  const movementPayload = {
+    date: params.movementDate,
+    reference: movementReference,
+    type: "ENTREE" as const,
+    depotId: sourceCommande.depotId,
+    produitId: sourceCommande.produitId,
+    quantite: params.quantity,
+    unite: produit.unit,
+    devise: sourceCommande.devise ?? "USD",
+    fournisseurId: params.supplierId || sourceCommande.fournisseurId || null,
+    prixUnitaireAchat: sourceCommande.unitPrice,
+    seuilMinimum: 0,
+    accountId: null,
+    clientId: null,
+    prixUnitaireVente: null,
+  };
+
+  const existingMovement = await tx.stock.findFirst({
+    where: { reference: movementReference },
+    select: { id: true },
+  });
+
+  if (existingMovement) {
+    await tx.stock.update({
+      where: { id: existingMovement.id },
+      data: movementPayload,
+    });
+    return existingMovement.id;
+  }
+
+  const createdMovement = await tx.stock.create({
+    data: movementPayload,
+    select: { id: true },
+  });
+  return createdMovement.id;
+}
+
+async function deleteHospitalityStockMovement(
+  tx: Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
+  hospitalityId: string
+) {
+  const movementReference = getHospitalityMovementReference(hospitalityId);
+  const existingMovement = await tx.stock.findFirst({
+    where: { reference: movementReference },
+    select: { id: true },
+  });
+
+  if (!existingMovement) return;
+  await tx.stock.delete({ where: { id: existingMovement.id } });
+}
+
 const HospitalitySchema = z.object({
   id: z.string().optional(),
   driverName: z.string().min(1, "Driver name requis"),
@@ -20,7 +109,7 @@ const HospitalitySchema = z.object({
   offlQtyObs: z.number().nonnegative(),
   offlQty20: z.number().nonnegative(),
   depotId: z.string().min(1, "Depot requis"),
-  stockId: z.string().min(1, "Stock requis"),
+  commandeId: z.string().min(1, "Commande requise"),
   rate: z.number().nonnegative(),
 });
 
@@ -73,6 +162,7 @@ export async function getHospitalityById(id: string) {
         transporter: { select: { id: true, nom: true } },
         depot: { select: { id: true, name: true } },
         stock: { select: { id: true, reference: true } },
+        commande: { select: { id: true, reference: true, quantite: true } },
       },
     });
   } catch (error) {
@@ -87,23 +177,43 @@ export const createHospitality = actionClient
     try {
       const computed = computeValues(parsedInput.quantityOrder, parsedInput.offlQty20, parsedInput.rate);
       const created = await prisma.$transaction(async (tx) => {
+        const commande = await tx.commande.findUnique({
+          where: { id: parsedInput.commandeId },
+          select: { id: true, quantite: true },
+        });
+        if (!commande) throw new Error("Commande introuvable.");
+        if (commande.quantite < parsedInput.offlQty20) {
+          throw new Error("Quantité insuffisante sur le bon de commande.");
+        }
+
         const createdHospitality = await tx.hospitality.create({
           data: {
             ...parsedInput,
+            stockId: null,
             ...computed,
           },
         });
-        await tx.stock.update({
-          where: { id: parsedInput.stockId },
+
+        await createOrUpdateHospitalityStockMovement(tx, {
+          hospitalityId: createdHospitality.id,
+          commandeId: parsedInput.commandeId,
+          quantity: parsedInput.offlQty20,
+          movementDate: parsedInput.entryDate,
+          supplierId: parsedInput.supplierId,
+        });
+
+        await tx.commande.update({
+          where: { id: parsedInput.commandeId },
           data: {
             quantite: {
-              increment: parsedInput.offlQty20,
+              decrement: parsedInput.offlQty20,
             },
           },
         });
         return createdHospitality;
       });
       revalidatePath("/dashboard/hospitality");
+      revalidatePath("/dashboard/stocks");
       return { success: created };
     } catch (error) {
       console.error("Erreur lors de la création de hospitality:", error);
@@ -121,42 +231,58 @@ export const updateHospitality = actionClient
       const result = await prisma.$transaction(async (tx) => {
         const previous = await tx.hospitality.findUnique({
           where: { id },
-          select: { stockId: true, offlQty20: true },
+          select: { offlQty20: true, commandeId: true },
         });
-        if (!previous) {
-          throw new Error("Entrée hospitality introuvable.");
+        if (!previous) throw new Error("Entrée hospitality introuvable.");
+        if (!previous.commandeId) throw new Error("Cette ligne hospitality n'est liée à aucune commande.");
+
+        const newCommande = await tx.commande.findUnique({
+          where: { id: data.commandeId },
+          select: { id: true, quantite: true },
+        });
+        if (!newCommande) throw new Error("Commande introuvable.");
+
+        if (previous.commandeId === data.commandeId) {
+          const delta = data.offlQty20 - previous.offlQty20;
+          if (delta > 0 && newCommande.quantite < delta) {
+            throw new Error("Quantité insuffisante sur le bon de commande.");
+          }
+        } else if (newCommande.quantite < data.offlQty20) {
+          throw new Error("Quantité insuffisante sur le nouveau bon de commande.");
         }
 
-        // Revert old qty from previous stock
-        await tx.stock.update({
-          where: { id: previous.stockId },
-          data: {
-            quantite: {
-              decrement: previous.offlQty20,
-            },
-          },
-        });
-
-        // Apply new qty to selected stock
-        await tx.stock.update({
-          where: { id: data.stockId },
-          data: {
-            quantite: {
-              increment: data.offlQty20,
-            },
-          },
-        });
-
-        return tx.hospitality.update({
+        const updatedHospitality = await tx.hospitality.update({
           where: { id },
           data: {
             ...data,
+            stockId: null,
             ...computed,
           },
         });
+
+        await createOrUpdateHospitalityStockMovement(tx, {
+          hospitalityId: id,
+          commandeId: data.commandeId,
+          quantity: data.offlQty20,
+          movementDate: data.entryDate,
+          supplierId: data.supplierId,
+        });
+
+        await tx.commande.update({
+          where: { id: previous.commandeId },
+          data: { quantite: { increment: previous.offlQty20 } },
+        });
+
+        await tx.commande.update({
+          where: { id: data.commandeId },
+          data: { quantite: { decrement: data.offlQty20 } },
+        });
+
+        return updatedHospitality;
       });
       revalidatePath("/dashboard/hospitality");
       revalidatePath(`/dashboard/hospitality/${id}`);
+      revalidatePath("/dashboard/stocks");
       return { success: result };
     } catch (error) {
       console.error("Erreur lors de la mise à jour de hospitality:", error);
@@ -171,22 +297,20 @@ export const deleteHospitality = actionClient
       await prisma.$transaction(async (tx) => {
         const existing = await tx.hospitality.findUnique({
           where: { id: parsedInput.id },
-          select: { stockId: true, offlQty20: true },
+          select: { id: true, commandeId: true, offlQty20: true },
         });
-        if (!existing) {
-          throw new Error("Entrée hospitality introuvable.");
-        }
-        await tx.stock.update({
-          where: { id: existing.stockId },
-          data: {
-            quantite: {
-              decrement: existing.offlQty20,
-            },
-          },
+        if (!existing) throw new Error("Entrée hospitality introuvable.");
+        if (!existing.commandeId) throw new Error("Cette ligne hospitality n'est liée à aucune commande.");
+
+        await deleteHospitalityStockMovement(tx, existing.id);
+        await tx.commande.update({
+          where: { id: existing.commandeId },
+          data: { quantite: { increment: existing.offlQty20 } },
         });
         await tx.hospitality.delete({ where: { id: parsedInput.id } });
       });
       revalidatePath("/dashboard/hospitality");
+      revalidatePath("/dashboard/stocks");
       return { success: true };
     } catch (error) {
       console.error("Erreur lors de la suppression de hospitality:", error);
@@ -199,7 +323,7 @@ const HospitalityImportRowSchema = z.object({
   supplierName: z.string().min(1),
   transporterName: z.string().min(1),
   depotName: z.string().min(1),
-  stockReference: z.string().optional().default(""),
+  commandeReference: z.string().min(1),
   truckNo: z.string().min(1),
   trailerNo: z.string().min(1),
   loadingDate: z.string().min(1),
@@ -217,27 +341,24 @@ export const importHospitalityRows = actionClient
   .action(async ({ parsedInput }) => {
     try {
       console.info("[hospitality/import] Début traitement serveur. Lignes reçues:", parsedInput.length);
-      const [suppliers, transporters, depots, stocks] = await Promise.all([
+      const [suppliers, transporters, depots] = await Promise.all([
         prisma.fournisseur.findMany({ select: { id: true, nom: true } }),
         prisma.transporteur.findMany({ select: { id: true, nom: true } }),
         prisma.depot.findMany({ select: { id: true, name: true } }),
-        prisma.stock.findMany({ select: { id: true, reference: true, depotId: true } }),
       ]);
+      const commandes = await prisma.commande.findMany({
+        select: { id: true, reference: true, depotId: true, quantite: true },
+      });
       console.info("[hospitality/import] Référentiels chargés:", {
         suppliers: suppliers.length,
         transporters: transporters.length,
         depots: depots.length,
-        stocks: stocks.length,
       });
 
       const supplierByName = new Map(suppliers.map((item) => [normalizeKey(item.nom), item.id]));
       const transporterByName = new Map(transporters.map((item) => [normalizeKey(item.nom), item.id]));
       const depotByName = new Map(depots.map((item) => [normalizeKey(item.name), item.id]));
-      const stockByRef = new Map(stocks.map((item) => [normalizeKey(item.reference), item]));
-
-      if (stocks.length === 0) {
-        console.warn("[hospitality/import] Aucun stock trouvé en base.");
-      }
+      const commandeByRef = new Map(commandes.map((item) => [normalizeKey(item.reference), item]));
 
       const errors: Array<{ row: number; error: string }> = [];
       let imported = 0;
@@ -273,23 +394,14 @@ export const importHospitalityRows = actionClient
           const depotId = depotResolved;
           if (!depotId) throw new Error(`Depot introuvable: ${row.depotName}`);
 
-          let resolvedStock = null as (typeof stocks)[number] | null;
-          const stockReference = row.stockReference?.trim() ?? "";
-          if (stockReference) {
-            resolvedStock = stockByRef.get(normalizeKey(stockReference)) ?? null;
-            if (!resolvedStock) throw new Error(`Stock introuvable: ${stockReference}`);
-            if (resolvedStock.depotId && resolvedStock.depotId !== depotId) {
-              throw new Error(`Le stock ${stockReference} n'appartient pas au depot ${row.depotName}`);
-            }
-          } else {
-            const stocksForDepot = stocks.filter((item) => item.depotId === depotId);
-            if (stocksForDepot.length === 0) {
-              throw new Error(`Aucun stock trouvé pour le depot ${row.depotName}`);
-            }
-            if (stocksForDepot.length > 1) {
-              throw new Error(`Plusieurs stocks existent pour ${row.depotName}, renseignez la colonne Stock`);
-            }
-            resolvedStock = stocksForDepot[0];
+          const commandeReference = row.commandeReference.trim();
+          const resolvedCommande = commandeByRef.get(normalizeKey(commandeReference)) ?? null;
+          if (!resolvedCommande) throw new Error(`Commande introuvable: ${commandeReference}`);
+          if (resolvedCommande.depotId && resolvedCommande.depotId !== depotId) {
+            throw new Error(`La commande ${commandeReference} n'appartient pas au depot ${row.depotName}`);
+          }
+          if (resolvedCommande.quantite < row.offlQty20) {
+            throw new Error(`Quantité insuffisante sur la commande ${commandeReference}`);
           }
 
           const loadingDate = parseDateValue(row.loadingDate, rowNumber, "LOADING DATE");
@@ -298,7 +410,7 @@ export const importHospitalityRows = actionClient
           const computed = computeValues(row.quantityOrder, row.offlQty20, row.rate);
 
           await prisma.$transaction(async (tx) => {
-            await tx.hospitality.create({
+            const createdHospitality = await tx.hospitality.create({
               data: {
                 driverName: row.driverName,
                 supplierId,
@@ -313,15 +425,24 @@ export const importHospitalityRows = actionClient
                 offlQtyObs: row.offlQtyObs,
                 offlQty20: row.offlQty20,
                 depotId,
-                stockId: resolvedStock.id,
+                stockId: null,
+                commandeId: resolvedCommande.id,
                 rate: row.rate,
                 ...computed,
               },
             });
 
-            await tx.stock.update({
-              where: { id: resolvedStock.id },
-              data: { quantite: { increment: row.offlQty20 } },
+            await createOrUpdateHospitalityStockMovement(tx, {
+              hospitalityId: createdHospitality.id,
+              commandeId: resolvedCommande.id,
+              quantity: row.offlQty20,
+              movementDate: entryDate,
+              supplierId,
+            });
+
+            await tx.commande.update({
+              where: { id: resolvedCommande.id },
+              data: { quantite: { decrement: row.offlQty20 } },
             });
           });
 
@@ -337,6 +458,7 @@ export const importHospitalityRows = actionClient
 
       if (imported > 0) {
         revalidatePath("/dashboard/hospitality");
+        revalidatePath("/dashboard/stocks");
       }
       console.info("[hospitality/import] Fin traitement:", {
         imported,

@@ -12,7 +12,7 @@ export default async function HospitalityViewPage({ params }: { params: Promise<
       supplier: { select: { nom: true } },
       transporter: { select: { nom: true } },
       depot: { select: { name: true } },
-      stock: { select: { reference: true } },
+      commande: { select: { reference: true } },
     },
   });
 
@@ -42,7 +42,7 @@ export default async function HospitalityViewPage({ params }: { params: Promise<
           <p><strong>Supplier:</strong> {row.supplier.nom}</p>
           <p><strong>Transporter:</strong> {row.transporter.nom}</p>
           <p><strong>Depot:</strong> {row.depot.name}</p>
-          <p><strong>Stock:</strong> {row.stock.reference}</p>
+          <p><strong>Bon de commande:</strong> {row.commande?.reference ?? "N/A"}</p>
           <p><strong>Truck No.:</strong> {row.truckNo}</p>
           <p><strong>Trailer No.:</strong> {row.trailerNo}</p>
           <p><strong>Loading Date:</strong> {row.loadingDate.toLocaleDateString("fr-FR")}</p>
