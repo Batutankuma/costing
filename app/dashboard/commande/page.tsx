@@ -16,6 +16,13 @@ export default async function Page() {
         produit: true,
         depot: true,
         fournisseur: true,
+        receptions: {
+          where: { receptionStatus: { not: "CANCELLED" } },
+          select: { quantity: true },
+        },
+        hospitalityRows: {
+          select: { offlQty20: true },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });

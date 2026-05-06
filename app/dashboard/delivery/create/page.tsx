@@ -8,10 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAction } from "next-safe-action/hooks";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createAction } from "../actions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEffect, useState, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, X, FileText, ImageIcon, File } from "lucide-react";
 
@@ -31,7 +32,13 @@ interface UploadedFile {
 export default function CreateDeliveryPage() {
   type ClientRef = { id: string; nom?: string };
   type DepotRef = { id: string; name?: string };
-  type EquipmentRef = { id: string; name?: string; produitId?: string | null };
+  type EquipmentRef = {
+    id: string;
+    name?: string;
+    produitId?: string | null;
+    depotId?: string | null;
+    depot?: { id: string; name?: string } | null;
+  };
   type ProduitRef = { id: string; nom?: string };
 
   const [clients, setClients] = useState<ClientRef[]>([]);
@@ -42,6 +49,43 @@ export default function CreateDeliveryPage() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const isDeliveryLBB = pathname.startsWith("/dashboard/delivery-lbb");
+  const basePath = isDeliveryLBB ? "/dashboard/delivery-lbb" : "/dashboard/delivery";
+  const depotParamRef = useRef<string | undefined>(
+    searchParams.get("depot")?.toLowerCase() ?? (isDeliveryLBB ? "lubumbashi" : undefined)
+  );
+
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors },
+    setValue,
+    watch
+  } = useForm({
+    resolver: zodResolver(CreateDeliverySchema),
+    defaultValues: {
+      reference: "",
+      deliveryDate: new Date(),
+      note: "",
+      clientId: "",
+      depotId: "",
+      equipmentId: "",
+      produitId: "",
+      quantity: 0,
+      unit: "L",
+      openingEter: null,
+      closingEter: null,
+      timeStart: "",
+      timeEnd: "",
+      prixUnitaire: null,
+      paiement: "DIRECT",
+      typeAircraft: "",
+      flightNumber: "",
+      linkDoc: "",
+    }
+  });
 
   // Hooks pour les actions de récupération
   const { executeAsync: executeDepots } = useAction(listDepots);
@@ -68,19 +112,22 @@ export default function CreateDeliveryPage() {
         }));
         setClients(mappedClients);
 
-        // Charger les dépôts - Filtrer pour ne garder que Kalemie
+        // Charger les dépôts - filtrage selon le contexte
         const depotsResult = await executeDepots();
         if (!isMounted) return;
         const depotsData = depotsResult?.data?.data ?? [];
-        // Filtrer pour ne garder que le dépôt Kalemie
-        const kalemieDepot = depotsData.filter((depot: DepotRef) => 
-          depot.name?.toLowerCase().includes("kalemie")
-        );
-        setDepots(kalemieDepot || []);
-        
-        // Pré-sélectionner Kalemie si trouvé
-        if (kalemieDepot.length > 0) {
-          setValue("depotId", kalemieDepot[0].id);
+        const scopedDepots = depotParamRef.current
+          ? depotsData.filter((depot: DepotRef) =>
+              depot.name?.toLowerCase().includes(depotParamRef.current as string)
+            )
+          : depotsData.filter((depot: DepotRef) =>
+              depot.name?.toLowerCase().includes("kalemie")
+            );
+        setDepots(scopedDepots || []);
+
+        // Pré-sélectionner le dépôt de contexte si trouvé
+        if (scopedDepots.length > 0) {
+          setValue("depotId", scopedDepots[0].id);
         }
 
         // Charger les équipements
@@ -114,38 +161,10 @@ export default function CreateDeliveryPage() {
     return () => {
       isMounted = false;
     };
+    // Les dépendances useAction/useSearchParams peuvent être instables et provoquer
+    // des relances en boucle sur cette page; on charge uniquement au montage.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Charger une seule fois au montage
-
-  const { 
-    register, 
-    handleSubmit, 
-    formState: { errors },
-    setValue,
-    watch
-  } = useForm({
-    resolver: zodResolver(CreateDeliverySchema),
-    defaultValues: {
-      reference: "",
-      deliveryDate: new Date(),
-      note: "",
-      clientId: "",
-      depotId: "",
-      equipmentId: "",
-      produitId: "",
-      quantity: 0,
-      unit: "L",
-      openingEter: null,
-      closingEter: null,
-      timeStart: "",
-      timeEnd: "",
-      prixUnitaire: null,
-      paiement: "DIRECT",
-      typeAircraft: "",
-      flightNumber: "",
-      linkDoc: "",
-    }
-  });
 
   const equipmentId = watch("equipmentId");
   const depotId = watch("depotId");
@@ -153,13 +172,18 @@ export default function CreateDeliveryPage() {
   const closingEter = watch("closingEter");
 
   // Filtrer les equipment selon le dépôt sélectionné
-  const filteredEquipment = depotId 
-    ? equipment.filter(eq => {
-        // Si l'équipement a une relation avec le dépôt, filtrer
-        // Pour l'instant, on affiche tous les équipements si pas de relation
-        return true;
-      })
+  const filteredEquipment = depotId
+    ? equipment.filter((eq) => (eq.depotId ?? eq.depot?.id) === depotId)
     : equipment;
+
+  const allowedProduitIds = new Set(
+    filteredEquipment
+      .map((eq) => eq.produitId)
+      .filter((id): id is string => Boolean(id))
+  );
+  const filteredProduits = depotId && allowedProduitIds.size > 0
+    ? produits.filter((produit) => allowedProduitIds.has(produit.id))
+    : produits;
 
   // Récupérer le produit automatiquement selon l'équipement
   useEffect(() => {
@@ -170,6 +194,20 @@ export default function CreateDeliveryPage() {
       }
     }
   }, [equipmentId, equipment, setValue]);
+
+  // Garantir la cohérence des champs si le dépôt courant change
+  useEffect(() => {
+    if (!depotId) return;
+
+    if (equipmentId && !filteredEquipment.some((eq) => eq.id === equipmentId)) {
+      setValue("equipmentId", "");
+    }
+
+    const currentProduitId = watch("produitId");
+    if (currentProduitId && allowedProduitIds.size > 0 && !allowedProduitIds.has(currentProduitId)) {
+      setValue("produitId", "");
+    }
+  }, [allowedProduitIds, depotId, equipmentId, filteredEquipment, setValue, watch]);
 
   // Calculer automatiquement la quantité à partir des compteurs
   useEffect(() => {
@@ -217,7 +255,7 @@ export default function CreateDeliveryPage() {
         throw new Error(result?.data?.failure || "Erreur inconnue lors de l'enregistrement.");
       }
       toast({ title: "Succès", description: "Livraison ajoutée avec succès !" });
-      router.push('/dashboard/delivery');
+      router.push(basePath);
     } catch (e: unknown) {
       console.error("Erreur lors de la soumission du formulaire:", e);
       toast({ 
@@ -344,7 +382,7 @@ export default function CreateDeliveryPage() {
                 {errors.depotId && <p className="text-red-500 text-sm">{errors.depotId.message as string}</p>}
                 {depots.length === 1 && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Dépôt Kalemie pré-sélectionné
+                    Dépôt pré-sélectionné selon le module
                   </p>
                 )}
               </div>
@@ -391,10 +429,10 @@ export default function CreateDeliveryPage() {
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {produits.length === 0 ? (
-                      <SelectItem value="" disabled>Aucun produit disponible</SelectItem>
+                    {filteredProduits.length === 0 ? (
+                      <SelectItem value="__no_product_available__" disabled>Aucun produit disponible</SelectItem>
                     ) : (
-                      produits.map((produit) => (
+                      filteredProduits.map((produit) => (
                         <SelectItem key={produit.id} value={produit.id}>
                           {produit.nom || "Produit sans nom"}
                         </SelectItem>
@@ -672,7 +710,7 @@ export default function CreateDeliveryPage() {
           <Button type="submit" disabled={isPending || uploading} className="px-8">
             {isPending ? "Enregistrement..." : "Enregistrer la livraison"}
           </Button>
-          <Button type="button" variant="outline" onClick={() => router.push('/dashboard/delivery')}>
+          <Button type="button" variant="outline" onClick={() => router.push(basePath)}>
             Annuler
           </Button>
         </div>

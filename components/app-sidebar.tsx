@@ -97,7 +97,7 @@ const moduleNavigation: ModuleNav = {
     { title: "Mouvement Caisse", url: "/dashboard/mouvement-caisse", icon: RiMoneyDollarCircleLine, disabled: true },
   ],
   DEPOT_LUBUMBASHI: [
-    { title: "Delivery", url: "/dashboard/delivery?depot=lubumbashi", icon: RiFlightTakeoffLine },
+    { title: "DeliveryLBB", url: "/dashboard/delivery-lbb", icon: RiFlightTakeoffLine },
     { title: "Stock Summary", url: "/dashboard/stocks?depot=lubumbashi", icon: RiDatabaseLine },
     { title: "Hospitality", url: "/dashboard/hospitality", icon: RiLuggageDepositLine },
     { title: "Transport", url: "/dashboard/transport", icon: RiTruckLine },
@@ -110,6 +110,7 @@ const moduleNavigation: ModuleNav = {
   ],
   OPERATION: [
     { title: "Commandes", url: "/dashboard/commande", icon: RiShoppingCart2Line },
+    { title: "Bon commande client", url: "/dashboard/client-orders", icon: RiFileListLine },
     { title: "Licences", url: "/dashboard/licence", icon: RiFileTextLine },
     { title: "Paiements Banque", url: "/dashboard/paiement-banque", icon: RiMoneyDollarCircleLine },
     { title: "Produits", url: "/dashboard/products", icon: RiShoppingBagLine },
@@ -164,7 +165,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         }
       })
       .catch((error) => {
-        error("Erreur lors du chargement des modules:", error);
+        console.error("Erreur lors du chargement des modules:", error);
       })
       .finally(() => {
         if (isMounted) setLoadingModules(false);

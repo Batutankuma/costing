@@ -78,28 +78,54 @@ export const createDepot = actionClient
   .schema(CreateDepotSchema)
   .action(async ({ parsedInput }) => {
     const { name, type, location, products } = parsedInput;
-    const productRecords = await Promise.all(
-      products.map(async (p) => {
-        const existing = await prisma.product.findFirst({ where: { name: p.name, unit: p.unit } });
-        if (existing) return { productId: existing.id, quantity: p.quantity };
-        const created = await prisma.product.create({ data: { name: p.name, unit: p.unit } });
-        return { productId: created.id, quantity: p.quantity };
-      })
-    );
+    const createdDepot = await prisma.$transaction(async (tx) => {
+      const productRecords = await Promise.all(
+        products.map(async (p) => {
+          const existing = await tx.product.findFirst({ where: { name: p.name, unit: p.unit } });
+          if (existing) return { productId: existing.id, quantity: p.quantity, unit: p.unit };
+          const created = await tx.product.create({ data: { name: p.name, unit: p.unit } });
+          return { productId: created.id, quantity: p.quantity, unit: p.unit };
+        })
+      );
 
-    const createdDepot = await prisma.depot.create({
-      data: {
-        name,
-        type,
-        location: location ?? null,
-        products: {
-          create: productRecords.map((r) => ({ productId: r.productId, quantity: r.quantity })),
+      const depot = await tx.depot.create({
+        data: {
+          name,
+          type,
+          location: location ?? null,
+          products: {
+            create: productRecords.map((r) => ({ productId: r.productId, quantity: r.quantity })),
+          },
         },
-      },
-      include: { products: { include: { product: true } } },
+        include: { products: { include: { product: true } } },
+      });
+
+      // Crée les mouvements de stock d'entrée initiaux pour le dépôt
+      const nowRef = Date.now();
+      await Promise.all(
+        productRecords
+          .filter((r) => r.quantity > 0)
+          .map((r, index) =>
+            tx.stock.create({
+              data: {
+                reference: `DEPOT-${depot.id.slice(0, 6)}-${nowRef}-${index + 1}`,
+                depotId: depot.id,
+                type: "ENTREE",
+                produitId: r.productId,
+                quantite: r.quantity,
+                unite: r.unit,
+                devise: "USD",
+                seuilMinimum: 0,
+              },
+            })
+          )
+      );
+
+      return depot;
     });
 
     revalidatePath("/dashboard/depots");
+    revalidatePath("/dashboard/stocks");
     return { success: createdDepot };
   });
 

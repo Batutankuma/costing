@@ -18,8 +18,13 @@ import {
 } from "@/components/chart";
 import { CustomTooltipContent } from "@/components/charts-extra";
 import { Badge } from "@/components/badge";
-// Subscriber data for the last 12 months
-const chartData = [
+type ActivityChartPoint = {
+  month: string;
+  actual: number;
+  projected: number;
+};
+
+const fallbackData: ActivityChartPoint[] = [
   { month: "Jan 2025", actual: 5000, projected: 2000 },
   { month: "Feb 2025", actual: 10000, projected: 8000 },
   { month: "Mar 2025", actual: 15000, projected: 22000 },
@@ -36,11 +41,11 @@ const chartData = [
 
 const chartConfig = {
   actual: {
-    label: "Actual",
+    label: "Réel",
     color: "var(--chart-1)",
   },
   projected: {
-    label: "Projected",
+    label: "Prévision",
     color: "var(--chart-3)",
   },
 } satisfies ChartConfig;
@@ -87,19 +92,28 @@ function CustomCursor(props: CustomCursorProps) {
   );
 }
 
-export function Chart02() {
+type Chart02Props = {
+  data?: ActivityChartPoint[];
+};
+
+export function Chart02({ data }: Chart02Props) {
   const id = useId();
+  const chartData = data && data.length > 0 ? data : fallbackData;
+  const totalValue = chartData.reduce((sum, item) => sum + Number(item.actual || 0), 0);
+  const previousValue = chartData.reduce((sum, item) => sum + Number(item.projected || 0), 0);
+  const growthPct = previousValue > 0 ? ((totalValue - previousValue) / previousValue) * 100 : 0;
 
   return (
     <Card className="gap-4">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-0.5">
-            <CardTitle>Active Subscribers</CardTitle>
+            <CardTitle>Activité client</CardTitle>
             <div className="flex items-start gap-2">
-              <div className="font-semibold text-2xl">142,869</div>
+              <div className="font-semibold text-2xl">{Math.round(totalValue).toLocaleString("fr-FR")}</div>
               <Badge className="mt-1.5 bg-emerald-500/24 text-emerald-500 border-none">
-                +24.7%
+                {growthPct >= 0 ? "+" : ""}
+                {growthPct.toFixed(1)}%
               </Badge>
             </div>
           </div>
@@ -110,7 +124,7 @@ export function Chart02() {
                 className="size-1.5 shrink-0 rounded-xs bg-chart-1"
               ></div>
               <div className="text-[13px]/3 text-muted-foreground/50">
-                Actual
+                Réel
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -119,7 +133,7 @@ export function Chart02() {
                 className="size-1.5 shrink-0 rounded-xs bg-chart-3"
               ></div>
               <div className="text-[13px]/3 text-muted-foreground/50">
-                Projected
+                Prévision
               </div>
             </div>
           </div>
@@ -178,8 +192,8 @@ export function Chart02() {
                     projected: "var(--chart-3)",
                   }}
                   labelMap={{
-                    actual: "Actual",
-                    projected: "Projected",
+                    actual: "Réel",
+                    projected: "Prévision",
                   }}
                   dataKeys={["actual", "projected"]}
                   valueFormatter={(value) => `$${value.toLocaleString()}`}

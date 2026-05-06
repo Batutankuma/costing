@@ -26,8 +26,8 @@ export default function CreateFournisseurPage() {
   } = useForm<FournisseurFormData>({
     resolver: zodResolver(fournisseurSchema),
     defaultValues: {
-      nom: "",
       company: "",
+      contactName: "",
       email: "",
       phone: "",
       adresse: "",
@@ -101,6 +101,7 @@ export default function CreateFournisseurPage() {
               <span className="text-destructive">*</span> Champs obligatoires
             </p>
             <div className="grid md:grid-cols-2 gap-6">
+<<<<<<< HEAD
               {/* Nom du fournisseur */}
               <div className="space-y-2">
                 <Label htmlFor="nom" className="text-sm font-medium">
@@ -119,15 +120,33 @@ export default function CreateFournisseurPage() {
                 )}
               </div>
 
+=======
+>>>>>>> Autre-Lubumbashi
               {/* Société */}
               <div className="space-y-2">
                 <Label htmlFor="company" className="text-sm font-medium">
-                  Société
+                  Société <span className="text-destructive">*</span>
                 </Label>
                 <Input 
                   id="company" 
-                  placeholder="Nom de la société (optionnel)" 
+                  placeholder="Ex: Entreprise ABC" 
                   {...register("company")}
+                  className="h-10"
+                />
+                {errors.company && (
+                  <p className="text-sm text-destructive">{errors.company.message}</p>
+                )}
+              </div>
+
+              {/* Contact */}
+              <div className="space-y-2">
+                <Label htmlFor="contactName" className="text-sm font-medium">
+                  Nom du contact
+                </Label>
+                <Input 
+                  id="contactName" 
+                  placeholder="Ex: Jean Dupont" 
+                  {...register("contactName")}
                   className="h-10"
                 />
               </div>
@@ -137,7 +156,7 @@ export default function CreateFournisseurPage() {
               {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
-                  Email
+                  Email du contact
                 </Label>
                 <Input 
                   id="email" 
@@ -154,7 +173,7 @@ export default function CreateFournisseurPage() {
               {/* Téléphone */}
               <div className="space-y-2">
                 <Label htmlFor="phone" className="text-sm font-medium">
-                  Téléphone
+                  Téléphone du contact
                 </Label>
                 <Input 
                   id="phone" 

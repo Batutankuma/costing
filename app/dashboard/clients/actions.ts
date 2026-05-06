@@ -13,8 +13,8 @@ const optionalNullableString = z.preprocess((value) => {
 
 const ClientSchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(1, "Nom requis"),
-  company: optionalNullableString,
+  company: z.string().min(1, "Société requise"),
+  contactName: optionalNullableString,
   email: z.preprocess((value) => {
     if (typeof value !== "string") return value;
     const trimmed = value.trim();
@@ -68,7 +68,19 @@ export const createClient = actionClient
   .action(async ({ parsedInput }) => {
     try {
       const created = await prisma.client.create({
-        data: parsedInput,
+        data: {
+          name: parsedInput.company,
+          company: parsedInput.company,
+          contactName: parsedInput.contactName ?? null,
+          email: parsedInput.email ?? null,
+          phone: parsedInput.phone ?? null,
+          address: parsedInput.address ?? null,
+          rccm: parsedInput.rccm ?? null,
+          idNat: parsedInput.idNat ?? null,
+          nif: parsedInput.nif ?? null,
+          status: parsedInput.status,
+          notes: parsedInput.notes ?? null,
+        },
       });
       revalidatePath("/dashboard/clients");
       return { success: created };
@@ -90,7 +102,19 @@ export const updateClient = actionClient
       
       const result = await prisma.client.update({
         where: { id },
-        data,
+        data: {
+          name: data.company,
+          company: data.company,
+          contactName: data.contactName ?? null,
+          email: data.email ?? null,
+          phone: data.phone ?? null,
+          address: data.address ?? null,
+          rccm: data.rccm ?? null,
+          idNat: data.idNat ?? null,
+          nif: data.nif ?? null,
+          status: data.status,
+          notes: data.notes ?? null,
+        },
       });
       revalidatePath("/dashboard/clients");
       revalidatePath(`/dashboard/clients/${id}`);

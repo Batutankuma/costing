@@ -17,13 +17,22 @@ import { useState } from "react";
 import RemoveDialog from "./delete";
 import { Badge } from "@/components/ui/badge";
 import { Delivery } from "@/models/mvc";
+import { usePathname } from "next/navigation";
 
 // Type étendu pour inclure les relations chargées depuis Prisma
 export type DeliveryWithRelations = Delivery & {
   client?: { id: string; nom?: string | null; name?: string | null; company?: string | null } | null;
+  destinationClient?: { id: string; nom?: string | null; name?: string | null; company?: string | null } | null;
+  transporter?: { id: string; nom?: string | null } | null;
   depot?: { id: string; name: string } | null;
   produit?: { id: string; name: string; nom?: string } | null;
   equipment?: { id: string; name: string } | null;
+  saleUnitPrice?: number;
+  purchaseUnitPrice?: number;
+  saleTotal?: number;
+  purchaseTotal?: number;
+  profit?: number;
+  profitMargin?: number;
 };
 
 // Fonction utilitaire pour obtenir le nom du client
@@ -32,10 +41,21 @@ function getClientName(client: DeliveryWithRelations['client']): string {
   return client.nom || client.name || client.company || "-";
 }
 
+function getTransporterName(transporter: DeliveryWithRelations["transporter"]): string {
+  return transporter?.nom || "-";
+}
+
 // Fonction utilitaire pour obtenir le nom du produit
 function getProduitName(produit: DeliveryWithRelations['produit']): string {
   if (!produit) return "-";
   return produit.nom || produit.name || "-";
+}
+
+function format2(value: number) {
+  return Number(value || 0).toLocaleString("fr-FR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 // Fonction pour obtenir la couleur du badge de paiement
@@ -85,11 +105,11 @@ export const columns: ColumnDef<DeliveryWithRelations>[] = [
         enableHiding: false,
     },
     {
-        header: "Référence",
-        accessorKey: "reference",
+        header: "Num Commande",
+        accessorKey: "commandNumber",
         cell: ({ row }) => {
-            const reference = row.getValue("reference") as string | null;
-            return <div className="font-medium">{reference || "-"}</div>;
+            const commandNumber = row.getValue("commandNumber") as string | null;
+            return <div className="font-medium text-xs truncate max-w-[120px]">{commandNumber || "-"}</div>;
         },
         size: 120,
     },
@@ -98,7 +118,7 @@ export const columns: ColumnDef<DeliveryWithRelations>[] = [
         accessorKey: "deliveryDate",
         cell: ({ row }) => {
             const date = row.getValue("deliveryDate") as string | Date;
-            return <span>{date ? new Date(date).toLocaleDateString('fr-FR') : "-"}</span>;
+            return <span className="text-xs">{date ? new Date(date).toLocaleDateString('fr-FR') : "-"}</span>;
         },
         size: 100,
     },
@@ -107,7 +127,7 @@ export const columns: ColumnDef<DeliveryWithRelations>[] = [
         accessorKey: "clientId",
         cell: ({ row }) => {
             const original = row.original as DeliveryWithRelations;
-            return <span>{getClientName(original.client)}</span>;
+            return <span className="text-xs truncate block max-w-[120px]">{getClientName(original.client)}</span>;
         },
         size: 120,
     },
@@ -116,97 +136,152 @@ export const columns: ColumnDef<DeliveryWithRelations>[] = [
         accessorKey: "depotId",
         cell: ({ row }) => {
             const original = row.original as DeliveryWithRelations;
-            return <span>{original.depot?.name || "-"}</span>;
+            return <span className="text-xs truncate block max-w-[120px]">{original.depot?.name || "-"}</span>;
         },
         size: 120,
     },
     {
-        header: "Produit",
-        accessorKey: "produitId",
+        header: "Transporter",
+        accessorKey: "transporterId",
         cell: ({ row }) => {
             const original = row.original as DeliveryWithRelations;
-            return <span>{getProduitName(original.produit)}</span>;
+            return <span className="text-xs truncate block max-w-[120px]">{getTransporterName(original.transporter)}</span>;
         },
         size: 120,
     },
     {
-        header: "Equipment",
-        accessorKey: "equipmentId",
+        header: "Destination",
+        accessorKey: "destinationClientId",
         cell: ({ row }) => {
             const original = row.original as DeliveryWithRelations;
-            return <span>{original.equipment?.name || "-"}</span>;
-        },
-        size: 100,
-    },
-    {
-        header: "Quantité",
-        accessorKey: "quantity",
-        cell: ({ row }) => {
-            const original = row.original as DeliveryWithRelations;
-            const quantity = original.quantity || 0;
-            const unit = original.unit || "";
-            return <span>{quantity.toFixed(2)} {unit}</span>;
-        },
-        size: 100,
-    },
-    {
-        header: "Compteurs",
-        cell: ({ row }) => {
-            const original = row.original as DeliveryWithRelations;
-            const openingEter = original.openingEter || 0;
-            const closingEter = original.closingEter || 0;
-            const difference = closingEter - openingEter;
-            return (
-                <div className="text-xs">
-                    <div>Ouv: {openingEter}</div>
-                    <div>Ferm: {closingEter}</div>
-                    <div className="font-medium text-blue-600">Diff: {difference}</div>
-                </div>
-            );
-        },
-        size: 100,
-    },
-    {
-        header: "Prix unitaire",
-        accessorKey: "prixUnitaire",
-        cell: ({ row }) => {
-            const original = row.original as DeliveryWithRelations;
-            const prix = original.prixUnitaire || 0;
-            return <span>{prix ? `${prix.toFixed(2)} USD` : "-"}</span>;
+            return <span className="text-xs truncate block max-w-[120px]">{getClientName(original.destinationClient)}</span>;
         },
         size: 120,
     },
     {
-        header: "Paiement",
-        accessorKey: "paiement",
+        header: "Q Loaded",
+        accessorKey: "qLoaded",
         cell: ({ row }) => {
             const original = row.original as DeliveryWithRelations;
-            const paiement = original.paiement || "CREDIT";
-            return (
-                <Badge className={getPaiementColor(paiement)}>
-                    {getPaiementText(paiement)}
-                </Badge>
-            );
+            return <span className="text-xs">{format2(original.qLoaded || 0)}</span>;
         },
         size: 100,
     },
     {
-        header: "Type avion",
-        accessorKey: "typeAircraft",
+        header: "Q @20",
+        accessorKey: "q20",
         cell: ({ row }) => {
             const original = row.original as DeliveryWithRelations;
-            const typeAircraft = original.typeAircraft || "-";
-            return <span>{typeAircraft}</span>;
+            return <span className="text-xs">{format2(original.q20 || 0)}</span>;
+        },
+        size: 100,
+    },
+    {
+        header: "Q Offloaded",
+        accessorKey: "qOffloaded",
+        cell: ({ row }) => {
+            const original = row.original as DeliveryWithRelations;
+            return <span className="text-xs">{format2(original.qOffloaded || 0)}</span>;
+        },
+        size: 100,
+    },
+    {
+        header: "Variance",
+        accessorKey: "varianceQty20",
+        cell: ({ row }) => {
+            const original = row.original as DeliveryWithRelations;
+            return <span className="text-xs">{format2(original.varianceQty20 || 0)}</span>;
+        },
+        size: 100,
+    },
+    {
+        header: "Transit Loss",
+        accessorKey: "transitAllowableLoss",
+        cell: ({ row }) => {
+            const original = row.original as DeliveryWithRelations;
+            return <span className="text-xs">{format2(original.transitAllowableLoss || 0)}</span>;
         },
         size: 120,
     },
     {
-        header: "Vol",
-        accessorKey: "flightNumber",
+        header: "Dis Loss",
+        accessorKey: "disAllowableLoss",
         cell: ({ row }) => {
             const original = row.original as DeliveryWithRelations;
-            const flightNumber = original.flightNumber || "-";
-            return <span>{flightNumber}</span>;
+            return <span className="text-xs">{format2(original.disAllowableLoss || 0)}</span>;
+        },
+        size: 100,
+    },
+    {
+        header: "Rate ($)",
+        accessorKey: "rate",
+        cell: ({ row }) => {
+            const original = row.original as DeliveryWithRelations;
+            return <span className="text-xs">{format2(original.rate || 0)}</span>;
+        },
+        size: 120,
+    },
+    {
+        header: "Total ($)",
+        accessorKey: "total",
+        cell: ({ row }) => {
+            const original = row.original as DeliveryWithRelations;
+            return <span className="text-xs font-semibold">{format2(original.total || 0)}</span>;
+        },
+        size: 100,
+    },
+    {
+        header: "Prix achat",
+        accessorKey: "purchaseUnitPrice",
+        cell: ({ row }) => {
+            const original = row.original as DeliveryWithRelations;
+            return <span className="text-xs">{format2(original.purchaseUnitPrice || 0)}</span>;
+        },
+        size: 110,
+    },
+    {
+        header: "Prix vente",
+        accessorKey: "saleUnitPrice",
+        cell: ({ row }) => {
+            const original = row.original as DeliveryWithRelations;
+            return <span className="text-xs">{format2(original.saleUnitPrice || 0)}</span>;
+        },
+        size: 110,
+    },
+    {
+        header: "Cout total",
+        accessorKey: "purchaseTotal",
+        cell: ({ row }) => {
+            const original = row.original as DeliveryWithRelations;
+            return <span className="text-xs">{format2(original.purchaseTotal || 0)}</span>;
+        },
+        size: 120,
+    },
+    {
+        header: "Vente totale",
+        accessorKey: "saleTotal",
+        cell: ({ row }) => {
+            const original = row.original as DeliveryWithRelations;
+            return <span className="text-xs">{format2(original.saleTotal || 0)}</span>;
+        },
+        size: 120,
+    },
+    {
+        header: "Benefice",
+        accessorKey: "profit",
+        cell: ({ row }) => {
+            const original = row.original as DeliveryWithRelations;
+            const profit = Number(original.profit || 0);
+            return <span className={`text-xs font-semibold ${profit >= 0 ? "text-emerald-700" : "text-red-600"}`}>{format2(profit)}</span>;
+        },
+        size: 110,
+    },
+    {
+        header: "Marge %",
+        accessorKey: "profitMargin",
+        cell: ({ row }) => {
+            const original = row.original as DeliveryWithRelations;
+            return <span className="text-xs">{format2(original.profitMargin || 0)}%</span>;
         },
         size: 100,
     },
@@ -215,7 +290,7 @@ export const columns: ColumnDef<DeliveryWithRelations>[] = [
         accessorKey: "note",
         cell: ({ row }) => {
             const note = row.getValue("note") as string | null;
-            return <div className="max-w-xs truncate" title={note || undefined}>{note || "-"}</div>;
+            return <div className="text-xs max-w-[150px] truncate" title={note || undefined}>{note || "-"}</div>;
         },
         size: 150,
         filterFn: (row, columnId, filterValue) => {
@@ -237,6 +312,10 @@ export const columns: ColumnDef<DeliveryWithRelations>[] = [
 
 function RowActions({ row }: { row: Row<DeliveryWithRelations> }) {
     const [openRemoveDialog, setOpenRemoveDialog] = useState(false);
+    const pathname = usePathname();
+    const basePath = pathname.startsWith("/dashboard/delivery-lbb")
+      ? "/dashboard/delivery-lbb"
+      : "/dashboard/delivery";
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -249,12 +328,12 @@ function RowActions({ row }: { row: Row<DeliveryWithRelations> }) {
             <DropdownMenuContent align="end">
                 <DropdownMenuGroup>
                     <DropdownMenuItem asChild>
-                        <Link href={`/dashboard/delivery/views/${row.original.id}`}>
+                        <Link href={`${basePath}/views/${row.original.id}`}>
                             Voir
                         </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                        <Link href={`/dashboard/delivery/${row.original.id}`}>
+                        <Link href={`${basePath}/${row.original.id}`}>
                             Modifier
                         </Link>
                     </DropdownMenuItem>

@@ -258,7 +258,7 @@ export default function DataTables({ Element }: { Element: Commande[] }) {
             </div>
 
             <div className="overflow-x-auto rounded-lg border border-border bg-background">
-                <Table className="table-fixed">
+                <Table className="table-fixed text-xs">
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id} className="hover:bg-transparent">

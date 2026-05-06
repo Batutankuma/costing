@@ -36,30 +36,34 @@ function getBaseURL(): string {
 
 // Fonction pour les origines de confiance
 function getTrustedOrigins(): string[] {
-    const baseURL = getBaseURL();
     const origins = new Set<string>();
-    
-    // Ajoute l'URL de base
-    origins.add(baseURL);
-    
-    // Ajoute les variantes localhost en développement
-    if (process.env.NODE_ENV !== "production") {
-        origins.add("http://localhost:3000");
-        origins.add("http://127.0.0.1:3000");
-    }
-    
-    // Ajoute les URLs supplémentaires depuis les variables d'environnement
-    if (process.env.NEXT_PUBLIC_APP_URL) {
-        origins.add(process.env.NEXT_PUBLIC_APP_URL);
-    }
-    
+    const addOrigin = (value?: string) => {
+        if (!value || typeof value !== "string") return;
+        const normalized = value.trim().replace(/\/+$/, "");
+        if (normalized) origins.add(normalized);
+    };
+
+    addOrigin(getBaseURL());
+    addOrigin(process.env.URL_LOCAL);
+    addOrigin(process.env.URL);
+    addOrigin(process.env.NEXT_PUBLIC_APP_URL);
+    addOrigin(process.env.BETTER_AUTH_URL);
+    addOrigin("http://localhost:3000");
+    addOrigin("http://127.0.0.1:3000");
+
     if (process.env.VERCEL_URL) {
-        origins.add(`https://${process.env.VERCEL_URL}`);
+        addOrigin(`https://${process.env.VERCEL_URL}`);
     }
-    
-    return Array.from(origins).filter(origin => 
-        origin && typeof origin === "string" && origin.length > 0
-    );
+
+    // Optional comma-separated override list in env
+    const extraOrigins = process.env.BETTER_AUTH_TRUSTED_ORIGINS;
+    if (extraOrigins) {
+        for (const origin of extraOrigins.split(",")) {
+            addOrigin(origin);
+        }
+    }
+
+    return Array.from(origins);
 }
 
 export const auth = betterAuth({

@@ -145,6 +145,80 @@ export const getNextInvoiceNumberAction = actionClient
     }
   });
 
+export const listCommandeReferencesAction = actionClient
+  .schema(z.void())
+  .action(async () => {
+    try {
+      const commandes = await prisma.commande.findMany({
+        select: { reference: true, date: true },
+        orderBy: { date: "desc" },
+        take: 300,
+      });
+      return { success: commandes };
+    } catch (error) {
+      return { failure: handlePrismaError(error) };
+    }
+  });
+
+export const getAutoFactureFromCommandeAction = actionClient
+  .schema(z.object({ reference: z.string().min(1, "Référence commande requise") }))
+  .action(async ({ parsedInput }) => {
+    try {
+      const [deliveries, clientOrder] = await Promise.all([
+        prisma.delivery.findMany({
+          where: { commandNumber: parsedInput.reference },
+          orderBy: { deliveryDate: "asc" },
+          include: {
+            client: {
+              select: { id: true, name: true, company: true, address: true, nif: true },
+            },
+            produit: { select: { name: true, unit: true } },
+          },
+        }),
+        prisma.clientOrder.findUnique({
+          where: { reference: parsedInput.reference },
+          select: { unitPrice: true, devise: true },
+        }),
+      ]);
+
+      if (deliveries.length === 0) {
+        return {
+          failure: `Aucune livraison liée au bon de commande ${parsedInput.reference}.`,
+        };
+      }
+
+      const lines = deliveries.map((delivery) => ({
+        description:
+          delivery.produit?.name ||
+          delivery.remarks ||
+          `Livraison ${delivery.reference || delivery.id}`,
+        unit: delivery.unit || delivery.produit?.unit || "L",
+        quantity: Number(delivery.qOffloaded ?? delivery.quantity ?? 0),
+        unitPrice: Number(delivery.prixUnitaire ?? clientOrder?.unitPrice ?? 0),
+        dn: delivery.reference || delivery.id,
+      }));
+
+      const firstClient = deliveries.find((d) => d.client)?.client ?? null;
+
+      return {
+        success: {
+          purchaseOrder: parsedInput.reference,
+          lines,
+          client: firstClient
+            ? {
+                id: firstClient.id,
+                name: firstClient.company || firstClient.name || "",
+                address: firstClient.address || "",
+                taxNumber: firstClient.nif || "",
+              }
+            : null,
+        },
+      };
+    } catch (error) {
+      return { failure: handlePrismaError(error) };
+    }
+  });
+
 export async function findFactureById(id: string) {
   try {
     if (!id) throw new Error("Identifiant facture manquant");

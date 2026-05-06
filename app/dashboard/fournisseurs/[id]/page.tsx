@@ -44,7 +44,13 @@ export default async function EditFournisseurPage({ params }: { params: Promise<
       
       <EditForm 
         id={fournisseur.id} 
-        initial={{ nom: fournisseur.nom, adresse: fournisseur.adresse ?? "" }} 
+        initial={{
+          company: fournisseur.company ?? fournisseur.nom,
+          contactName: fournisseur.contactName ?? "",
+          phone: fournisseur.phone ?? "",
+          email: fournisseur.email ?? "",
+          adresse: fournisseur.adresse ?? "",
+        }} 
       />
     </div>
   );

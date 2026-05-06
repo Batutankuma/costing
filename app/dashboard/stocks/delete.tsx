@@ -4,28 +4,32 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { CircleAlert } from "lucide-react";
-import { removeByIdAction } from "./actions"; // Importe l'action du serveur
+import { deleteStock } from "./actions";
+import { useAction } from "next-safe-action/hooks";
+import { useToast } from "@/hooks/use-toast";
 
 export default function RemoveDialog({ open, setOpen, Id, nameClient }: { open: boolean; setOpen: (value: boolean) => void; Id: string; nameClient: string; }) {
-  const [inputValue, setInputValue] = useState("");
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
+  const { executeAsync, status } = useAction(deleteStock);
 
   useEffect(() => { setIsMounted(true); }, []);
 
   if (!isMounted) return null;
 
   async function deleteElement() {
-    const { failure } = await removeByIdAction(Id);
-    if (!failure) {
+    const result = await executeAsync({ id: Id });
+    if (result?.data?.success) {
+      toast({ title: "Suppression reussie", description: "Le mouvement de stock a ete supprime." });
       router.push(`/dashboard/stocks`);
       setOpen(false);
+      router.refresh();
     } else {
+      const failure = result?.data?.failure || "Suppression impossible";
       console.error("Erreur lors de la suppression du stock:", failure);
-      // Vous pouvez ajouter un toast ici pour afficher l'erreur à l'utilisateur
+      toast({ variant: "destructive", title: "Erreur", description: failure });
     }
   }
 
@@ -45,14 +49,9 @@ export default function RemoveDialog({ open, setOpen, Id, nameClient }: { open: 
         </div>
 
         <div className="space-y-4">
-          <Label htmlFor="clientName">Nom du stock</Label>
-          <Input
-            id="clientName"
-            type="text"
-            placeholder={`Tapez ${nameClient} pour confirmer`}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-          />
+          <div className="text-sm text-muted-foreground">
+            {nameClient ? `Element: ${nameClient}` : "Confirmez la suppression de ce mouvement."}
+          </div>
         </div>
 
         <DialogFooter className="flex justify-end gap-2">
@@ -61,10 +60,10 @@ export default function RemoveDialog({ open, setOpen, Id, nameClient }: { open: 
           </Button>
           <Button
             className="bg-red-600 text-white"
-            disabled={inputValue.trim() !== nameClient}
+            disabled={status === "executing"}
             onClick={deleteElement}
           >
-            Supprimer
+            {status === "executing" ? "Suppression..." : "Supprimer"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -45,7 +45,16 @@ export const createFournisseur = actionClient
       const account = await prisma.account.findFirst({ select: { id: true } });
       const created = await prisma.fournisseur.create({
         data: {
-          nom: parsedInput.nom,
+          nom: parsedInput.company,
+          company: parsedInput.company,
+          contactName: parsedInput.contactName ?? null,
+          email: parsedInput.email || null,
+          phone: parsedInput.phone || null,
+          rccm: parsedInput.rccm || null,
+          idNat: parsedInput.idNat || null,
+          nif: parsedInput.nif || null,
+          pays: parsedInput.pays || null,
+          notes: parsedInput.notes || null,
           adresse: parsedInput.adresse ?? null,
           accountId: account?.id ?? null,
         },
@@ -68,7 +77,16 @@ export const updateFournisseur = actionClient
       const result = await prisma.fournisseur.update({
         where: { id: parsedInput.id },
         data: {
-          nom: parsedInput.nom,
+          nom: parsedInput.company,
+          company: parsedInput.company,
+          contactName: parsedInput.contactName ?? null,
+          email: parsedInput.email || null,
+          phone: parsedInput.phone || null,
+          rccm: parsedInput.rccm || null,
+          idNat: parsedInput.idNat || null,
+          nif: parsedInput.nif || null,
+          pays: parsedInput.pays || null,
+          notes: parsedInput.notes || null,
           adresse: parsedInput.adresse ?? null,
         },
       });

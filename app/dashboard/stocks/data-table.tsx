@@ -68,6 +68,9 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { columns, StockWithRelations } from "./columns";
 import ExportExcel from "@/components/exportExcel";
 import { useRouter } from "next/navigation";
+import { deleteStock } from "./actions";
+import { useAction } from "next-safe-action/hooks";
+import { useToast } from "@/hooks/use-toast";
 
 
 type DepotOption = { id: string; name: string };
@@ -78,6 +81,8 @@ export default function DataTables({ Element, Depots, Commandes }: { Element: St
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
     const router = useRouter();
+    const { toast } = useToast();
+    const { executeAsync: executeDeleteStock } = useAction(deleteStock);
     const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10, });
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -100,13 +105,26 @@ export default function DataTables({ Element, Depots, Commandes }: { Element: St
         });
     }, [data, selectedDepot, startDate, endDate, selectedType]);
 
-    const handleDeleteRows = () => {
+    const handleDeleteRows = async () => {
         const selectedRows = table.getSelectedRowModel().rows;
-        const updatedData = data.filter((item) => !selectedRows.some((row) => row.original.id === item.id),);
-        setData(updatedData);
+        if (selectedRows.length === 0) return;
+        const ids = selectedRows.map((row) => row.original.id);
+        const results = await Promise.all(ids.map((idValue) => executeDeleteStock({ id: idValue })));
+        const failed = results.filter((result) => !result?.data?.success).length;
+        if (failed > 0) {
+            toast({
+                variant: "destructive",
+                title: "Suppression partielle",
+                description: `${ids.length - failed} supprime(s), ${failed} en echec.`,
+            });
+        } else {
+            toast({
+                title: "Suppression reussie",
+                description: `${ids.length} mouvement(s) supprime(s).`,
+            });
+        }
         table.resetRowSelection();
-        // NOTE: Pour une application full-stack, cette suppression devrait également appeler une Server Action
-        // ou une API route pour supprimer les données de la base de données.
+        router.refresh();
     };
 
     const table = useReactTable({
@@ -326,7 +344,7 @@ export default function DataTables({ Element, Depots, Commandes }: { Element: St
             </div>
 
             <div className="overflow-x-auto rounded-lg border border-border bg-background">
-                <Table className="table-fixed">
+                <Table className="table-fixed text-xs">
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id} className="hover:bg-transparent">

@@ -36,7 +36,7 @@ export default async function ViewFournisseurPage({ params }: { params: Promise<
             <div>
               <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
                 <Building2 className="h-8 w-8 text-primary" />
-                Détails du Fournisseur: {fournisseur.nom}
+                Détails du Fournisseur: {fournisseur.company ?? fournisseur.nom}
               </h1>
               <p className="text-muted-foreground">Visualisation complète du fournisseur</p>
             </div>
@@ -58,8 +58,20 @@ export default async function ViewFournisseurPage({ params }: { params: Promise<
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label className="text-sm font-medium text-muted-foreground">Nom</Label>
-              <p className="text-lg font-semibold">{fournisseur.nom}</p>
+              <Label className="text-sm font-medium text-muted-foreground">Société</Label>
+              <p className="text-lg font-semibold">{fournisseur.company ?? fournisseur.nom}</p>
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-muted-foreground">Contact</Label>
+              <p className="text-lg">{fournisseur.contactName ?? "N/A"}</p>
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-muted-foreground">Téléphone du contact</Label>
+              <p className="text-lg">{fournisseur.phone ?? "N/A"}</p>
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-muted-foreground">Email du contact</Label>
+              <p className="text-lg">{fournisseur.email ?? "N/A"}</p>
             </div>
             <div>
               <Label className="text-sm font-medium text-muted-foreground">Adresse</Label>

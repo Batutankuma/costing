@@ -39,6 +39,10 @@ type StockWithRelations = {
   client?: { id: string; name: string } | null;
 };
 
+function isHospitalityMovement(reference: string) {
+  return reference.startsWith("HOSP-");
+}
+
 export default function ViewStocksPage() {
   const [stockId, setStockId] = useState<string | null>(null);
   const [stock, setStock] = useState<StockWithRelations | null>(null);
@@ -172,6 +176,7 @@ export default function ViewStocksPage() {
     if (value == null) return "N/A";
     return `${Number(value).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} ${currency}`;
   };
+  const fromHospitality = isHospitalityMovement(stock.reference);
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
@@ -216,6 +221,9 @@ export default function ViewStocksPage() {
                 <p className="text-lg font-semibold flex items-center gap-2">
                   <Hash className="h-4 w-4 text-muted-foreground" />
                   {stock.reference}
+                  {fromHospitality ? (
+                    <Badge variant="outline">Hospitality</Badge>
+                  ) : null}
                 </p>
               </div>
               <div>

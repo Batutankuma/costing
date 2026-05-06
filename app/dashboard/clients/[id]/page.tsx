@@ -45,8 +45,8 @@ export default async function EditClientPage({ params }: { params: Promise<{ id:
       <EditForm 
         id={client.id} 
         initial={{ 
-          name: client.name, 
-          company: client.company ?? "", 
+          company: client.company ?? client.name, 
+          contactName: client.contactName ?? "",
           email: client.email ?? "", 
           phone: client.phone ?? "", 
           address: client.address ?? "", 

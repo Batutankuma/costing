@@ -14,8 +14,8 @@ import { ArrowLeft, Users, Save } from "lucide-react";
 import Link from "next/link";
 
 const CreateClientSchema = z.object({
-  name: z.string().min(1, "Nom requis"),
-  company: z.string().optional(),
+  company: z.string().min(1, "Société requise"),
+  contactName: z.string().optional(),
   email: z.string().email("Email invalide").optional().or(z.literal("")),
   phone: z.string().optional(),
   address: z.string().optional(),
@@ -38,8 +38,8 @@ export default function CreateClientPage() {
   } = useForm<ClientFormData>({
     resolver: zodResolver(CreateClientSchema),
     defaultValues: {
-      name: "",
       company: "",
+      contactName: "",
       email: "",
       phone: "",
       address: "",
@@ -111,30 +111,30 @@ export default function CreateClientPage() {
             </p>
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-medium">
-                  Nom <span className="text-destructive">*</span>
+                <Label htmlFor="company" className="text-sm font-medium">
+                  Société <span className="text-destructive">*</span>
                 </Label>
                 <Input 
-                  id="name" 
-                  placeholder="Ex: Entreprise ABC, Jean Dupont..." 
+                  id="company" 
+                  placeholder="Ex: Entreprise ABC" 
                   required
                   aria-required="true"
-                  {...register("name")}
+                  {...register("company")}
                   className="h-10"
                 />
-                {errors.name && (
-                  <p className="text-sm text-destructive">{errors.name.message}</p>
+                {errors.company && (
+                  <p className="text-sm text-destructive">{errors.company.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="company" className="text-sm font-medium">
-                  Société
+                <Label htmlFor="contactName" className="text-sm font-medium">
+                  Nom du contact
                 </Label>
                 <Input 
-                  id="company" 
-                  placeholder="Nom de la société (optionnel)" 
-                  {...register("company")}
+                  id="contactName" 
+                  placeholder="Ex: Jean Dupont" 
+                  {...register("contactName")}
                   className="h-10"
                 />
               </div>
@@ -143,7 +143,7 @@ export default function CreateClientPage() {
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
-                  Email
+                  Email du contact
                 </Label>
                 <Input 
                   id="email" 
@@ -159,7 +159,7 @@ export default function CreateClientPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="phone" className="text-sm font-medium">
-                  Téléphone
+                  Téléphone du contact
                 </Label>
                 <Input 
                   id="phone" 

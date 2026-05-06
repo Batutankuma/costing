@@ -15,8 +15,8 @@ import { useState } from "react";
 
 const ClientSchema = z.object({
   id: z.string(),
-  name: z.string().min(1, "Nom requis"),
-  company: z.string().optional(),
+  company: z.string().min(1, "Société requise"),
+  contactName: z.string().optional(),
   email: z.string().email("Email invalide").optional().or(z.literal("")),
   phone: z.string().optional(),
   address: z.string().optional(),
@@ -31,8 +31,8 @@ type FormSchema = z.infer<typeof ClientSchema>;
 interface EditFormProps {
   id: string;
   initial: { 
-    name: string; 
     company: string; 
+    contactName: string;
     email: string; 
     phone: string; 
     address: string; 
@@ -56,8 +56,8 @@ export default function EditForm({ id, initial }: EditFormProps) {
     resolver: zodResolver(ClientSchema),
     defaultValues: { 
       id,
-      name: initial.name, 
       company: initial.company,
+      contactName: initial.contactName,
       email: initial.email,
       phone: initial.phone,
       address: initial.address,
@@ -114,30 +114,30 @@ export default function EditForm({ id, initial }: EditFormProps) {
           </p>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm font-medium">
-                Nom <span className="text-destructive">*</span>
+              <Label htmlFor="company" className="text-sm font-medium">
+                Société <span className="text-destructive">*</span>
               </Label>
               <Input 
-                id="name" 
+                id="company" 
                 placeholder="Ex: Entreprise ABC" 
                 required
                 aria-required="true"
-                {...register("name")}
+                {...register("company")}
                 className="h-10"
               />
-              {errors.name && (
-                <p className="text-sm text-destructive">{errors.name.message}</p>
+              {errors.company && (
+                <p className="text-sm text-destructive">{errors.company.message}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="company" className="text-sm font-medium">
-                Société
+              <Label htmlFor="contactName" className="text-sm font-medium">
+                Nom du contact
               </Label>
               <Input 
-                id="company" 
-                placeholder="Nom de la société (optionnel)" 
-                {...register("company")}
+                id="contactName" 
+                placeholder="Ex: Jean Dupont" 
+                {...register("contactName")}
                 className="h-10"
               />
             </div>
@@ -146,7 +146,7 @@ export default function EditForm({ id, initial }: EditFormProps) {
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
-                Email
+                Email du contact
               </Label>
               <Input 
                 id="email" 
@@ -162,7 +162,7 @@ export default function EditForm({ id, initial }: EditFormProps) {
 
             <div className="space-y-2">
               <Label htmlFor="phone" className="text-sm font-medium">
-                Téléphone
+                Téléphone du contact
               </Label>
               <Input 
                 id="phone" 
