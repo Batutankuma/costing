@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CircleAlert } from "lucide-react";
 import { deleteHospitality } from "./actions";
+import { useAction } from "next-safe-action/hooks";
+import { useToast } from "@/hooks/use-toast";
 
 export default function RemoveDialog({
   open,
@@ -23,6 +25,8 @@ export default function RemoveDialog({
   const [inputValue, setInputValue] = useState("");
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
+  const { executeAsync, status } = useAction(deleteHospitality);
 
   useEffect(() => {
     setIsMounted(true);
@@ -31,12 +35,17 @@ export default function RemoveDialog({
   if (!isMounted) return null;
 
   async function deleteElement() {
-    const result = await deleteHospitality({ id: Id });
+    const result = await executeAsync({ id: Id });
     if (result?.data?.success) {
+      toast({ title: "Suppression reussie", description: "La ligne hospitality a ete supprimee." });
       router.push("/dashboard/hospitality");
       router.refresh();
       setOpen(false);
+      return;
     }
+    const failure = result?.data?.failure || "Suppression impossible";
+    console.error("Erreur lors de la suppression de hospitality:", failure);
+    toast({ variant: "destructive", title: "Erreur", description: failure });
   }
 
   return (
@@ -69,8 +78,12 @@ export default function RemoveDialog({
           <Button variant="outline" onClick={() => setOpen(false)}>
             Annuler
           </Button>
-          <Button className="bg-red-600 text-white" disabled={inputValue.trim() !== nameClient} onClick={deleteElement}>
-            Supprimer
+          <Button
+            className="bg-red-600 text-white"
+            disabled={inputValue.trim() !== nameClient || status === "executing"}
+            onClick={deleteElement}
+          >
+            {status === "executing" ? "Suppression..." : "Supprimer"}
           </Button>
         </DialogFooter>
       </DialogContent>

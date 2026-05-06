@@ -12,7 +12,14 @@ import {
 import { CustomTooltipContent } from "@/components/charts-extra";
 import { Badge } from "@/components/badge";
 
-const chartData = [
+type ClientFlowChartPoint = {
+  month: string;
+  individual: number;
+  team: number;
+  enterprise: number;
+};
+
+const fallbackData: ClientFlowChartPoint[] = [
   { month: "Jan 2025", individual: 2000, team: 1000, enterprise: 1000 },
   { month: "Feb 2025", individual: 800, team: 4500, enterprise: 1700 },
   { month: "Mar 2025", individual: 400, team: 4600, enterprise: 1000 },
@@ -29,21 +36,29 @@ const chartData = [
 
 const chartConfig = {
   individual: {
-    label: "Individual",
+    label: "Commande client",
     color: "var(--chart-4)",
   },
   team: {
-    label: "Team",
+    label: "Livre/Vendu",
     color: "var(--chart-1)",
   },
   enterprise: {
-    label: "Enterprise",
+    label: "Restant/Perte",
     color: "var(--chart-6)",
   },
 } satisfies ChartConfig;
 
-export function Chart05() {
+type Chart05Props = {
+  data?: ClientFlowChartPoint[];
+};
+
+export function Chart05({ data }: Chart05Props) {
   const id = useId();
+  const chartData = data && data.length > 0 ? data : fallbackData;
+  const totalOrdered = chartData.reduce((sum, item) => sum + Number(item.individual || 0), 0);
+  const totalDelivered = chartData.reduce((sum, item) => sum + Number(item.team || 0), 0);
+  const deliveryRate = totalOrdered > 0 ? (totalDelivered / totalOrdered) * 100 : 0;
 
   // Get first and last month with type assertions
   const firstMonth = chartData[0]?.month as string;
@@ -54,11 +69,11 @@ export function Chart05() {
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-0.5">
-            <CardTitle>Subscriptions Sold</CardTitle>
+            <CardTitle>Flux clients (Commande vs Vente)</CardTitle>
             <div className="flex items-start gap-2">
-              <div className="font-semibold text-2xl">12,296</div>
+              <div className="font-semibold text-2xl">{Math.round(totalDelivered).toLocaleString("fr-FR")} L</div>
               <Badge className="mt-1.5 bg-emerald-500/24 text-emerald-500 border-none">
-                +11.9%
+                {deliveryRate.toFixed(1)}% livre
               </Badge>
             </div>
           </div>
@@ -69,7 +84,7 @@ export function Chart05() {
                 className="size-1.5 shrink-0 rounded-xs bg-chart-4"
               ></div>
               <div className="text-[13px]/3 text-muted-foreground/50">
-                Individual
+                Commande client
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -77,7 +92,7 @@ export function Chart05() {
                 aria-hidden="true"
                 className="size-1.5 shrink-0 rounded-xs bg-chart-1"
               ></div>
-              <div className="text-[13px]/3 text-muted-foreground/50">Team</div>
+              <div className="text-[13px]/3 text-muted-foreground/50">Livre/Vendu</div>
             </div>
             <div className="flex items-center gap-2">
               <div
@@ -85,7 +100,7 @@ export function Chart05() {
                 className="size-1.5 shrink-0 rounded-xs bg-chart-6"
               ></div>
               <div className="text-[13px]/3 text-muted-foreground/50">
-                Enterprise
+                Restant/Perte
               </div>
             </div>
           </div>
@@ -136,12 +151,12 @@ export function Chart05() {
                     enterprise: "var(--chart-6)",
                   }}
                   labelMap={{
-                    individual: "Individual",
-                    team: "Team",
-                    enterprise: "Enterprise",
+                    individual: "Commande client",
+                    team: "Livre/Vendu",
+                    enterprise: "Restant/Perte",
                   }}
                   dataKeys={["individual", "team", "enterprise"]}
-                  valueFormatter={(value) => `$${value.toLocaleString()}`}
+                  valueFormatter={(value) => `${value.toLocaleString("fr-FR")} L`}
                 />
               }
             />

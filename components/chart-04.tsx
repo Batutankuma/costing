@@ -18,8 +18,13 @@ import {
 } from "@/components/chart";
 import { CustomTooltipContent } from "@/components/charts-extra";
 import { Badge } from "@/components/badge";
-// Subscriber data for the last 12 months
-const chartData = [
+type SupplyChartPoint = {
+  month: string;
+  actual: number;
+  projected: number;
+};
+
+const fallbackData: SupplyChartPoint[] = [
   { month: "Jan 2025", actual: 1000, projected: 500 },
   { month: "Feb 2025", actual: 3500, projected: 2000 },
   { month: "Mar 2025", actual: 10000, projected: 3500 },
@@ -36,11 +41,11 @@ const chartData = [
 
 const chartConfig = {
   actual: {
-    label: "Actual",
+    label: "Commande",
     color: "var(--chart-4)",
   },
   projected: {
-    label: "Projected",
+    label: "Reception",
     color: "var(--chart-3)",
   },
 } satisfies ChartConfig;
@@ -87,19 +92,27 @@ function CustomCursor(props: CustomCursorProps) {
   );
 }
 
-export function Chart04() {
+type Chart04Props = {
+  data?: SupplyChartPoint[];
+};
+
+export function Chart04({ data }: Chart04Props) {
   const id = useId();
+  const chartData = data && data.length > 0 ? data : fallbackData;
+  const orderedQty = chartData.reduce((sum, item) => sum + Number(item.actual || 0), 0);
+  const receivedQty = chartData.reduce((sum, item) => sum + Number(item.projected || 0), 0);
+  const coveragePct = orderedQty > 0 ? (receivedQty / orderedQty) * 100 : 0;
 
   return (
     <Card className="gap-4">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-0.5">
-            <CardTitle>Refunds</CardTitle>
+            <CardTitle>Approvisionnement (Toutes depots)</CardTitle>
             <div className="flex items-start gap-2">
-              <div className="font-semibold text-2xl">$42,379</div>
+              <div className="font-semibold text-2xl">{Math.round(receivedQty).toLocaleString("fr-FR")} L</div>
               <Badge className="mt-1.5 bg-rose-500/24 text-rose-500 border-none">
-                +3.9%
+                {coveragePct.toFixed(1)}% recoit
               </Badge>
             </div>
           </div>
@@ -110,7 +123,7 @@ export function Chart04() {
                 className="size-1.5 shrink-0 rounded-xs bg-chart-4"
               ></div>
               <div className="text-[13px]/3 text-muted-foreground/50">
-                Actual
+                Quantite commandee
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -119,7 +132,7 @@ export function Chart04() {
                 className="size-1.5 shrink-0 rounded-xs bg-chart-3"
               ></div>
               <div className="text-[13px]/3 text-muted-foreground/50">
-                Projected
+                Quantite recue
               </div>
             </div>
           </div>
@@ -157,8 +170,8 @@ export function Chart04() {
               axisLine={false}
               tickLine={false}
               tickFormatter={(value) => {
-                if (value === 0) return "$0";
-                return `$${value / 1000}k`;
+                if (value === 0) return "0";
+                return `${(value / 1000).toFixed(0)}k`;
               }}
               interval="preserveStartEnd"
             />
@@ -178,11 +191,11 @@ export function Chart04() {
                     projected: "var(--chart-3)",
                   }}
                   labelMap={{
-                    actual: "Actual",
-                    projected: "Projected",
+                    actual: "Quantite commandee",
+                    projected: "Quantite recue",
                   }}
                   dataKeys={["actual", "projected"]}
-                  valueFormatter={(value) => `$${value.toLocaleString()}`}
+                  valueFormatter={(value) => `${value.toLocaleString("fr-FR")} L`}
                 />
               }
               cursor={<CustomCursor fill="var(--chart-4)" />}

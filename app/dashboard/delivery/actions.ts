@@ -28,6 +28,7 @@ function normalizeKey(value: string) {
 }
 
 async function createDeliveryWithStock(tx: any, parsedInput: z.infer<typeof CreateDeliverySchema>) {
+  let cmpWarning: string | null = null;
   const created = await tx.delivery.create({
     data: {
       commandNumber: parsedInput.commandNumber,
@@ -87,6 +88,7 @@ async function createDeliveryWithStock(tx: any, parsedInput: z.infer<typeof Crea
     } catch (error) {
       // Ne bloque pas l'import/creation si le CMP ne peut pas être calculé.
       // La sortie stock est quand même tracée avec valeurs CMP nulles.
+      cmpWarning = error instanceof Error ? error.message : "CMP indisponible pour cette sortie";
       console.warn("[delivery] CMP indisponible, sortie enregistrée sans CMP:", error);
     }
 
@@ -122,7 +124,7 @@ async function createDeliveryWithStock(tx: any, parsedInput: z.infer<typeof Crea
     });
   }
 
-  return created;
+  return { created, cmpWarning };
 }
 
 /**
@@ -208,7 +210,11 @@ export const createAction = actionClient
       revalidatePath("/dashboard/delivery");
       revalidatePath("/dashboard/delivery-lbb");
       revalidatePath("/dashboard/stocks");
-      return { success: result };
+      revalidatePath("/dashboard/client-orders");
+      return {
+        success: result.created,
+        warning: result.cmpWarning ?? undefined,
+      };
     } catch (error) {
       if (error instanceof z.ZodError) {
         return { failure: "Validation failed: " + (error as unknown as { errors: Array<{ message: string }> }).errors.map((e) => e instanceof Error ? e.message : "Erreur inconnue").join(", ") };
@@ -341,6 +347,7 @@ export const importDeliveryRows = actionClient
       if (imported > 0) {
         revalidatePath("/dashboard/delivery");
         revalidatePath("/dashboard/delivery-lbb");
+        revalidatePath("/dashboard/client-orders");
       }
       console.info("[delivery/import] Fin traitement:", { imported, errors: errors.length });
 
@@ -566,6 +573,7 @@ export const updateAction = actionClient
       revalidatePath(`/dashboard/delivery/${parsedInput.id}`);
       revalidatePath(`/dashboard/delivery/views/${parsedInput.id}`);
       revalidatePath("/dashboard/stocks");
+      revalidatePath("/dashboard/client-orders");
       return { success: result };
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -647,6 +655,7 @@ export async function removeByIdAction(id: string) {
     revalidatePath("/dashboard/delivery");
     revalidatePath("/dashboard/delivery-lbb");
     revalidatePath("/dashboard/stocks");
+    revalidatePath("/dashboard/client-orders");
     return { success: true, message: "Delivery supprimé avec succès." };
   } catch (error) {
     return { success: false, failure: handlePrismaError(error) };
@@ -725,6 +734,7 @@ export const deleteDelivery = actionClient
       revalidatePath("/dashboard/delivery");
       revalidatePath("/dashboard/delivery-lbb");
       revalidatePath("/dashboard/stocks");
+      revalidatePath("/dashboard/client-orders");
       return { success: true };
     } catch (error) {
       console.error("Erreur lors de la suppression de la livraison:", error);

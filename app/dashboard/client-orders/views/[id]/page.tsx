@@ -1,4 +1,5 @@
 import Link from "next/link";
+import prisma from "@/lib/prisma";
 import { getClientOrderById } from "../../actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,18 @@ export default async function ViewClientOrderPage({ params }: { params: Promise<
       </div>
     );
   }
+
+  const deliveries = await prisma.delivery.findMany({
+    where: { commandNumber: clientOrder.reference },
+    select: { qOffloaded: true, quantity: true },
+  });
+  const orderedQty = Number(clientOrder.quantity || 0);
+  const receivedQty = deliveries.reduce(
+    (sum, delivery) => sum + Number(delivery.qOffloaded ?? delivery.quantity ?? 0),
+    0
+  );
+  const remainingQty = Math.max(0, orderedQty - receivedQty);
+  const overDeliveredQty = Math.max(0, receivedQty - orderedQty);
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
@@ -61,6 +74,9 @@ export default async function ViewClientOrderPage({ params }: { params: Promise<
           <div><Label className="text-sm font-medium text-muted-foreground">Client</Label><p className="text-lg">{clientOrder.client.company || clientOrder.client.name || "-"}</p></div>
           <div><Label className="text-sm font-medium text-muted-foreground">Produit</Label><p className="text-lg">{clientOrder.produit.name}</p></div>
           <div><Label className="text-sm font-medium text-muted-foreground">Quantite commandee</Label><p className="text-lg">{Number(clientOrder.quantity || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p></div>
+          <div><Label className="text-sm font-medium text-muted-foreground">Quantite recue</Label><p className="text-lg">{receivedQty.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p></div>
+          <div><Label className="text-sm font-medium text-muted-foreground">Quantite restante</Label><p className="text-lg">{remainingQty.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p></div>
+          <div><Label className="text-sm font-medium text-muted-foreground">Sur-livraison</Label><p className="text-lg">{overDeliveredQty.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p></div>
           <div><Label className="text-sm font-medium text-muted-foreground">Prix unitaire</Label><p className="text-lg">{Number(clientOrder.unitPrice || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {clientOrder.devise}</p></div>
           <div><Label className="text-sm font-medium text-muted-foreground">Statut</Label><p className="text-lg">{clientOrder.status}</p></div>
           <div><Label className="text-sm font-medium text-muted-foreground">Notes</Label><p className="text-lg">{clientOrder.notes || "N/A"}</p></div>

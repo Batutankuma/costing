@@ -55,19 +55,24 @@ function format2(value: number) {
 }
 
 function getReceivedQuantity(commande: Commande) {
-    const receptionsQty =
-        commande.receptions?.reduce((sum, reception) => sum + (reception.quantity || 0), 0) || 0;
-    const hospitalityQty =
-        commande.hospitalityRows?.reduce((sum, row) => sum + (row.offlQty20 || 0), 0) || 0;
-    return receptionsQty + hospitalityQty;
+    return commande.receptions?.reduce((sum, reception) => sum + (reception.quantity || 0), 0) || 0;
 }
 
-function getOrderedQuantity(commande: Commande) {
-    // quantite is currently reduced by Hospitality usages; add them back to show invoice quantity.
-    const currentQuantity = commande.quantite || 0;
-    const hospitalityQty =
-        commande.hospitalityRows?.reduce((sum, row) => sum + (row.offlQty20 || 0), 0) || 0;
-    return currentQuantity + hospitalityQty;
+function getHospitalityQuantity(commande: Commande) {
+    return commande.hospitalityRows?.reduce((sum, row) => sum + (row.offlQty20 || 0), 0) || 0;
+}
+
+function getInvoiceOrderedQuantity(commande: Commande) {
+    // Quantité facture statique = quantité actuelle + consommations hospitality déjà déduites.
+    return Number(commande.quantite || 0) + getHospitalityQuantity(commande);
+}
+
+function getOperationalRemainingQuantity(commande: Commande) {
+    // quantite est déjà diminuée par Hospitality dans le module hospitality/actions.ts
+    // Le restant opérationnel doit donc soustraire uniquement les réceptions.
+    const currentCommandeQty = Number(commande.quantite || 0);
+    const receptionsQty = getReceivedQuantity(commande);
+    return Math.max(0, currentCommandeQty - receptionsQty);
 }
 
 // Composants optimisés qui utilisent les données déjà chargées
@@ -150,7 +155,7 @@ export const columns: ColumnDef<Commande>[] = [
         accessorKey: "quantite",
         size: 140,
         cell: ({ row }) => {
-            const orderedQuantity = getOrderedQuantity(row.original);
+            const orderedQuantity = getInvoiceOrderedQuantity(row.original);
             const unit = row.original.produit?.unit || "L";
             return <div className="font-semibold text-xs">{format2(orderedQuantity)} {unit}</div>;
         },
@@ -166,13 +171,21 @@ export const columns: ColumnDef<Commande>[] = [
         },
     },
     {
-        header: "Reliquat",
+        header: "Qté hospitality",
+        id: "hospitalityQuantity",
+        size: 130,
+        cell: ({ row }) => {
+            const hospitalityQty = getHospitalityQuantity(row.original);
+            const unit = row.original.produit?.unit || "L";
+            return <div className="font-semibold text-xs">{format2(hospitalityQty)} {unit}</div>;
+        },
+    },
+    {
+        header: "Restant",
         id: "remainingQuantity",
         size: 120,
         cell: ({ row }) => {
-            const orderedQuantity = getOrderedQuantity(row.original);
-            const receivedQuantity = getReceivedQuantity(row.original);
-            const remainingQuantity = Math.max(0, orderedQuantity - receivedQuantity);
+            const remainingQuantity = getOperationalRemainingQuantity(row.original);
             const unit = row.original.produit?.unit || "L";
             return <div className="font-semibold text-xs">{format2(remainingQuantity)} {unit}</div>;
         },

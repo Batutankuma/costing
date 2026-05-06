@@ -163,13 +163,40 @@ export default function DeliveryLBBCreatePage() {
   };
 
   const onSubmit = async (data: unknown) => {
-    const result = await (executeCreate as (payload: unknown) => Promise<{ data?: { success?: boolean; failure?: string } }>)(data);
-    if (result?.data?.success) {
-      toast({ title: "Succès", description: "DeliveryLBB enregistrée." });
-      router.push("/dashboard/delivery-lbb");
-      return;
+    const payload = data as Record<string, unknown>;
+    console.info("[DeliveryLBB][create] submit started", {
+      commandNumber: payload.commandNumber,
+      clientId: payload.clientId,
+      depotId: payload.depotId,
+      equipmentId: payload.equipmentId,
+      deliveryDate: payload.deliveryDate,
+    });
+
+    try {
+      const result = await (executeCreate as (payload: unknown) => Promise<{ data?: { success?: boolean; failure?: string; warning?: string } }>)(data);
+      console.info("[DeliveryLBB][create] submit result", result);
+
+      if (result?.data?.success) {
+        if (result?.data?.warning) {
+          toast({
+            variant: "destructive",
+            title: "Attention",
+            description: result.data.warning,
+          });
+        }
+        toast({ title: "Succès", description: "DeliveryLBB enregistrée." });
+        router.push("/dashboard/delivery-lbb");
+        return;
+      }
+
+      toast({ variant: "destructive", title: "Erreur", description: result?.data?.failure || "Échec d'enregistrement" });
+    } catch (error) {
+      console.error("[DeliveryLBB][create] submit failed", {
+        error,
+        payload,
+      });
+      toast({ variant: "destructive", title: "Erreur", description: "Une erreur inattendue est survenue" });
     }
-    toast({ variant: "destructive", title: "Erreur", description: result?.data?.failure || "Échec d'enregistrement" });
   };
 
   if (loading) return <div className="p-6">Chargement...</div>;

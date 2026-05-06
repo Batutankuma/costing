@@ -81,6 +81,10 @@ function pick(row: Record<string, unknown>, keys: string[]) {
   return "";
 }
 
+function isRowEffectivelyEmpty(row: Record<string, unknown>) {
+  return Object.values(row).every((value) => String(value ?? "").trim() === "");
+}
+
 export default function ImportDeliveryExcel({ options }: { options: TemplateOptions }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -182,12 +186,25 @@ export default function ImportDeliveryExcel({ options }: { options: TemplateOpti
     console.info("[delivery/import] Fichier sélectionné:", file.name);
     try {
       const workbook = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
-      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const firstSheetName = workbook.SheetNames?.[0];
+      if (!firstSheetName) {
+        throw new Error("Le fichier ne contient aucune feuille.");
+      }
+      const firstSheet = workbook.Sheets[firstSheetName];
+      if (!firstSheet) {
+        throw new Error("Impossible de lire la première feuille du fichier.");
+      }
       const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(firstSheet, { defval: "" });
       console.info("[delivery/import] Lignes brutes détectées:", rawRows.length);
+      if (rawRows.length === 0) {
+        throw new Error("Aucune ligne détectée. Vérifiez le template et la feuille active.");
+      }
 
-      const parsedRows = rawRows.map((raw, i) => {
+      const parsedRows: ParsedDeliveryRow[] = [];
+      const parsingErrors: string[] = [];
+      rawRows.forEach((raw, i) => {
         const rowNo = i + 2;
+        if (isRowEffectivelyEmpty(raw)) return;
         const commandNumber = String(pick(raw, ["Num Commande"])).trim();
         const truckTrailerNo = String(pick(raw, ["Truck & Trailer No"])).trim();
         const driverName = String(pick(raw, ["Driver Name"])).trim();
@@ -196,20 +213,23 @@ export default function ImportDeliveryExcel({ options }: { options: TemplateOpti
         const temperature = asNumber(pick(raw, ["Temp"]));
         const density = asNumber(pick(raw, ["Dens"]));
         const q20 = asNumber(pick(raw, ["Q @20"]));
-        const loadingDate = asDateString(pick(raw, ["Date of Loading"]));
+        const loadingDate = asDateString(pick(raw, ["Date of Loading", "Date Loading", "Date Chargement"]));
         const qOffloaded = asNumber(pick(raw, ["Q Offloaded"]));
-        const dateOffloaded = asDateString(pick(raw, ["Date Offloaded"]));
+        const dateOffloaded = asDateString(pick(raw, ["Date Offloaded", "Date Déchargement", "Date Dechargement"]));
         const departureDate = asDateString(pick(raw, ["Departure Date"]));
         const etaDate = asDateString(pick(raw, ["ETA"]));
         const ataDate = asDateString(pick(raw, ["ATA"]));
         const eod = String(pick(raw, ["EOD"])).trim();
         const remarks = String(pick(raw, ["Remarks"])).trim();
-        const rate = asNumber(pick(raw, ["Rate ($)"]));
+        const rate = asNumber(pick(raw, ["Rate ($)", "Rate", "Tarif"]));
 
-        if (!loadingDate || !dateOffloaded || !Number.isFinite(rate)) {
-          throw new Error(`Ligne ${rowNo}: données obligatoires manquantes`);
+        // Le taux peut être absent dans le fichier si un bon client est sélectionné :
+        // on appliquera alors le unitPrice du bon au moment de l'import.
+        if (!loadingDate || !dateOffloaded) {
+          parsingErrors.push(`Ligne ${rowNo}: dates obligatoires manquantes/invalides.`);
+          return;
         }
-        return {
+        parsedRows.push({
           commandNumber,
           truckTrailerNo,
           driverName,
@@ -226,18 +246,32 @@ export default function ImportDeliveryExcel({ options }: { options: TemplateOpti
           ataDate,
           eod,
           remarks,
-          rate,
-        };
+          rate: Number.isFinite(rate) ? rate : 0,
+        });
       });
+
+      if (parsedRows.length === 0) {
+        const detail = parsingErrors.length > 0 ? ` Détail: ${parsingErrors.slice(0, 3).join(" | ")}` : "";
+        throw new Error(`Aucune ligne valide trouvée.${detail}`);
+      }
 
       setRows(parsedRows);
       setFileName(file.name);
       console.info("[delivery/import] Lignes valides prêtes:", parsedRows.length);
-      toast({ title: "Fichier prêt", description: `${parsedRows.length} ligne(s) détectée(s).` });
+      if (parsingErrors.length > 0) {
+        toast({
+          variant: "destructive",
+          title: "Fichier chargé avec anomalies",
+          description: `${parsedRows.length} ligne(s) valide(s), ${parsingErrors.length} ignorée(s).`,
+        });
+      } else {
+        toast({ title: "Fichier prêt", description: `${parsedRows.length} ligne(s) détectée(s).` });
+      }
     } catch (error) {
       console.error("[delivery/import] Erreur parsing fichier:", error);
       setRows([]);
       setFileName("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
       toast({
         variant: "destructive",
         title: "Erreur de lecture",

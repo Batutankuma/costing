@@ -91,6 +91,7 @@ export async function findByIdAction(id: string) {
         produit: { select: { name: true } },
         depot: { select: { name: true } },
         fournisseur: { select: { nom: true } },
+        hospitalityRows: { select: { offlQty20: true } },
       },
     });
     

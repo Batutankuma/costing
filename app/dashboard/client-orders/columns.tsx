@@ -26,6 +26,7 @@ export type ClientOrderWithRelations = {
   produit: { name: string };
   orderedQty?: number;
   receivedQty?: number;
+  remainingQty?: number;
   reliquat?: number;
   perte?: number;
 };
@@ -92,10 +93,10 @@ export const columns: ColumnDef<ClientOrderWithRelations>[] = [
     size: 110,
   },
   {
-    header: "Reliquat",
-    accessorKey: "reliquat",
-    cell: ({ row }) => <span>{format2(row.original.reliquat || 0)}</span>,
-    size: 100,
+    header: "Qte restante",
+    accessorKey: "remainingQty",
+    cell: ({ row }) => <span>{format2(row.original.remainingQty ?? row.original.reliquat ?? 0)}</span>,
+    size: 120,
   },
   {
     header: "Perte",

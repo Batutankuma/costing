@@ -13,7 +13,24 @@ import { CustomTooltipContent } from "@/components/charts-extra";
 import { Badge } from "@/components/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/radio-group";
 
-const mrrData = [
+const chartConfig = {
+  actual: {
+    label: "Réel",
+    color: "var(--chart-1)",
+  },
+  projected: {
+    label: "Prévision",
+    color: "var(--chart-3)",
+  },
+} satisfies ChartConfig;
+
+type RevenueChartPoint = {
+  month: string;
+  actual: number;
+  projected: number;
+};
+
+const fallbackData: RevenueChartPoint[] = [
   { month: "Jan 2025", actual: 300000, projected: 120000 },
   { month: "Feb 2025", actual: 420000, projected: 180000 },
   { month: "Mar 2025", actual: 500000, projected: 90000 },
@@ -28,37 +45,25 @@ const mrrData = [
   { month: "Dec 2025", actual: 1380000, projected: 100000 },
 ];
 
-const arrData = [
-  { month: "Jan 2025", actual: 3600000, projected: 1440000 },
-  { month: "Feb 2025", actual: 4200000, projected: 1800000 },
-  { month: "Mar 2025", actual: 5000000, projected: 900000 },
-  { month: "Apr 2025", actual: 6300000, projected: 1100000 },
-  { month: "May 2025", actual: 7100000, projected: 1200000 },
-  { month: "Jun 2025", actual: 8000000, projected: 1000000 },
-  { month: "Jul 2025", actual: 9000000, projected: 1400000 },
-  { month: "Aug 2025", actual: 10100000, projected: 1200000 },
-  { month: "Sep 2025", actual: 10900000, projected: 1300000 },
-  { month: "Oct 2025", actual: 11800000, projected: 1100000 },
-  { month: "Nov 2025", actual: 12800000, projected: 1300000 },
-  { month: "Dec 2025", actual: 16560000, projected: 1200000 },
-];
+type Chart01Props = {
+  data?: RevenueChartPoint[];
+};
 
-const chartConfig = {
-  actual: {
-    label: "Actual",
-    color: "var(--chart-1)",
-  },
-  projected: {
-    label: "Projected",
-    color: "var(--chart-3)",
-  },
-} satisfies ChartConfig;
-
-export function Chart01() {
+export function Chart01({ data }: Chart01Props) {
   const id = useId();
   const [selectedValue, setSelectedValue] = useState("off");
 
-  const chartData = selectedValue === "on" ? arrData : mrrData;
+  const baseData = data && data.length > 0 ? data : fallbackData;
+  const chartData = selectedValue === "on"
+    ? baseData.map((item) => ({
+        ...item,
+        actual: item.actual * 12,
+        projected: item.projected * 12,
+      }))
+    : baseData;
+  const totalValue = chartData.reduce((sum, item) => sum + Number(item.actual || 0), 0);
+  const previousValue = chartData.reduce((sum, item) => sum + Number(item.projected || 0), 0);
+  const growthPct = previousValue > 0 ? ((totalValue - previousValue) / previousValue) * 100 : 0;
 
   const firstMonth = chartData[0]?.month as string;
   const lastMonth = chartData[chartData.length - 1]?.month as string;
@@ -68,13 +73,14 @@ export function Chart01() {
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
           <div className="space-y-0.5">
-            <CardTitle>Recurring Revenue</CardTitle>
+            <CardTitle>Revenus récurrents</CardTitle>
             <div className="flex items-start gap-2">
               <div className="font-semibold text-2xl">
-                {selectedValue === "off" ? "$1,439,346" : "$8,272,152"}
+                ${Math.round(totalValue).toLocaleString()}
               </div>
               <Badge className="mt-1.5 bg-emerald-500/24 text-emerald-500 border-none">
-                {selectedValue === "off" ? "+48.1%" : "+52.7%"}
+                {growthPct >= 0 ? "+" : ""}
+                {growthPct.toFixed(1)}%
               </Badge>
             </div>
           </div>
@@ -145,8 +151,8 @@ export function Chart01() {
                     projected: "var(--chart-3)",
                   }}
                   labelMap={{
-                    actual: "Actual",
-                    projected: "Projected",
+                    actual: "Réel",
+                    projected: "Prévision",
                   }}
                   dataKeys={["actual", "projected"]}
                   valueFormatter={(value) => `$${value.toLocaleString()}`}

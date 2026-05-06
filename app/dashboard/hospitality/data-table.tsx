@@ -3,6 +3,17 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
@@ -27,12 +38,15 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ChevronDown, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, ChevronUp, CircleX, Columns3, ListFilter } from "lucide-react";
+import { ChevronDown, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, ChevronUp, CircleAlert, CircleX, Columns3, ListFilter, Trash } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { columns, HospitalityWithRelations } from "./columns";
 import { useRouter } from "next/navigation";
 import ExportExcel from "@/components/exportExcel";
 import ImportHospitalityExcel from "./import-excel";
+import { deleteHospitality } from "./actions";
+import { useAction } from "next-safe-action/hooks";
+import { useToast } from "@/hooks/use-toast";
 
 type TemplateOptions = {
   suppliers: Array<{ id: string; nom: string }>;
@@ -46,11 +60,38 @@ export default function DataTables({ Element, templateOptions }: { Element: Hosp
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const router = useRouter();
+  const { toast } = useToast();
+  const { executeAsync: executeDeleteHospitality } = useAction(deleteHospitality);
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   const inputRef = useRef<HTMLInputElement>(null);
   const [sorting, setSorting] = useState<SortingState>([{ id: "driverName", desc: false }]);
   const [data, setData] = useState<HospitalityWithRelations[]>([]);
   useEffect(() => setData(Element), [Element]);
+
+  const handleDeleteRows = async () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+
+    const ids = selectedRows.map((row) => row.original.id);
+    const results = await Promise.all(ids.map((idValue) => executeDeleteHospitality({ id: idValue })));
+    const failed = results.filter((result) => !result?.data?.success).length;
+
+    if (failed > 0) {
+      toast({
+        variant: "destructive",
+        title: "Suppression partielle",
+        description: `${ids.length - failed} supprimee(s), ${failed} en echec.`,
+      });
+    } else {
+      toast({
+        title: "Suppression reussie",
+        description: `${ids.length} ligne(s) hospitality supprimee(s).`,
+      });
+    }
+
+    table.resetRowSelection();
+    router.refresh();
+  };
 
   const table = useReactTable({
     data,
@@ -125,6 +166,41 @@ export default function DataTables({ Element, templateOptions }: { Element: Hosp
           </DropdownMenu>
         </div>
         <div className="flex items-center gap-2">
+          {table.getSelectedRowModel().rows.length > 0 && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline">
+                  <Trash className="-ms-1 me-2 opacity-60" size={16} strokeWidth={2} aria-hidden="true" />
+                  Delete
+                  <span className="-me-1 ms-3 inline-flex h-5 max-h-full items-center rounded border border-border bg-background px-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
+                    {table.getSelectedRowModel().rows.length}
+                  </span>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <div className="flex flex-col gap-2 max-sm:items-center sm:flex-row sm:gap-4">
+                  <div
+                    className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border"
+                    aria-hidden="true"
+                  >
+                    <CircleAlert className="opacity-80" size={16} strokeWidth={2} />
+                  </div>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete{" "}
+                      {table.getSelectedRowModel().rows.length} selected{" "}
+                      {table.getSelectedRowModel().rows.length === 1 ? "row" : "rows"}.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteRows}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
           <Button onClick={() => router.push("/dashboard/hospitality/create")}>Nouvelle ligne</Button>
           <ImportHospitalityExcel options={templateOptions} />
           <ExportExcel

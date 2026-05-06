@@ -19,6 +19,7 @@ type CommandeData = z.infer<typeof CommandeSchema> & {
   produit?: { name: string };
   depot?: { name: string };
   fournisseur?: { nom: string };
+  hospitalityRows?: Array<{ offlQty20: number }>;
   createdAt?: Date | string;
   updatedAt?: Date | string;
 };
@@ -143,7 +144,8 @@ export default function ViewCommandePage() {
   };
 
   const calculateTotal = () => {
-    const quantite = commande.quantite || 0;
+    const hospitalityQty = commande.hospitalityRows?.reduce((sum, row) => sum + Number(row.offlQty20 || 0), 0) || 0;
+    const quantite = Number(commande.quantite || 0) + hospitalityQty;
     const unitPrice = commande.unitPrice || 0;
     const tva = commande.tva || 0;
     const subtotal = quantite * unitPrice;
@@ -233,7 +235,9 @@ export default function ViewCommandePage() {
 
             <div className="space-y-2">
               <Label className="text-sm font-medium text-muted-foreground">Quantité</Label>
-              <p className="text-lg font-semibold">{commande.quantite?.toLocaleString('fr-FR') || "N/A"}</p>
+              <p className="text-lg font-semibold">
+                {(Number(commande.quantite || 0) + (commande.hospitalityRows?.reduce((sum, row) => sum + Number(row.offlQty20 || 0), 0) || 0)).toLocaleString('fr-FR')}
+              </p>
             </div>
 
             <div className="space-y-2">

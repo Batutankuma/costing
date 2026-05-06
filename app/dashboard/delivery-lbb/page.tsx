@@ -137,7 +137,8 @@ export default async function DeliveryLBBPage() {
             templateOptions={{
               clients: clients.map((c) => ({ id: c.id, name: c.company || c.name })),
               transporters,
-              depots: lubumbashiDepots,
+              // L'import doit proposer tous les dépôts dans la liste/template.
+              depots,
               products: products.map((p) => ({ id: p.id, nom: p.name || "Produit" })),
               clientOrders: clientOrders.map((o) => ({
                 id: o.id,

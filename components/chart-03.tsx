@@ -12,7 +12,13 @@ import {
 import { CustomTooltipContent } from "@/components/charts-extra";
 import { Badge } from "@/components/badge";
 
-const chartData = [
+type GrowthChartPoint = {
+  month: string;
+  revenues: number;
+  churn: number;
+};
+
+const fallbackData: GrowthChartPoint[] = [
   { month: "Jan 2025", revenues: 750000, churn: -150000 },
   { month: "Feb 2025", revenues: 900000, churn: -70000 },
   { month: "Mar 2025", revenues: 950000, churn: -220000 },
@@ -29,17 +35,25 @@ const chartData = [
 
 const chartConfig = {
   revenues: {
-    label: "Revenues",
+    label: "Revenus",
     color: "var(--chart-1)",
   },
   churn: {
-    label: "Churn",
+    label: "Pertes",
     color: "var(--chart-4)",
   },
 } satisfies ChartConfig;
 
-export function Chart03() {
+type Chart03Props = {
+  data?: GrowthChartPoint[];
+};
+
+export function Chart03({ data }: Chart03Props) {
   const id = useId();
+  const chartData = data && data.length > 0 ? data : fallbackData;
+  const totalRevenue = chartData.reduce((sum, item) => sum + Number(item.revenues || 0), 0);
+  const totalChurnAbs = Math.abs(chartData.reduce((sum, item) => sum + Number(item.churn || 0), 0));
+  const growthPct = totalRevenue > 0 ? ((totalRevenue - totalChurnAbs) / totalRevenue) * 100 : 0;
 
   // Get first and last month with type assertions
   const firstMonth = chartData[0]?.month as string;
@@ -50,11 +64,12 @@ export function Chart03() {
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-0.5">
-            <CardTitle>MRR Growth</CardTitle>
+            <CardTitle>Évolution des revenus</CardTitle>
             <div className="flex items-start gap-2">
-              <div className="font-semibold text-2xl">$1,426,297</div>
+              <div className="font-semibold text-2xl">${Math.round(totalRevenue).toLocaleString("fr-FR")}</div>
               <Badge className="mt-1.5 bg-emerald-500/24 text-emerald-500 border-none">
-                +4.6%
+                {growthPct >= 0 ? "+" : ""}
+                {growthPct.toFixed(1)}%
               </Badge>
             </div>
           </div>
@@ -65,7 +80,7 @@ export function Chart03() {
                 className="size-1.5 shrink-0 rounded-xs bg-chart-1"
               ></div>
               <div className="text-[13px]/3 text-muted-foreground/50">
-                Revenues
+                Revenus
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -74,7 +89,7 @@ export function Chart03() {
                 className="size-1.5 shrink-0 rounded-xs bg-chart-4"
               ></div>
               <div className="text-[13px]/3 text-muted-foreground/50">
-                Churn
+                Pertes
               </div>
             </div>
           </div>
@@ -125,8 +140,8 @@ export function Chart03() {
                     churn: "var(--chart-4)",
                   }}
                   labelMap={{
-                    revenues: "Revenues",
-                    churn: "Churn",
+                    revenues: "Revenus",
+                    churn: "Pertes",
                   }}
                   dataKeys={["revenues", "churn"]}
                   valueFormatter={(value) => `$${value.toLocaleString()}`}

@@ -51,12 +51,14 @@ export default async function ClientOrdersPage() {
             Element={rows.map((row) => {
               const orderedQty = Number(row.quantity || 0);
               const receivedQty = Number(receivedByReference.get(row.reference) || 0);
-              const reliquat = orderedQty - receivedQty;
-              const loss = Math.max(0, reliquat);
+              const remainingQty = Math.max(0, orderedQty - receivedQty);
+              const reliquat = remainingQty;
+              const loss = Math.max(0, receivedQty - orderedQty);
               return {
                 ...row,
                 orderedQty,
                 receivedQty,
+                remainingQty,
                 reliquat,
                 perte: loss,
               };
