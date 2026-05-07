@@ -30,9 +30,6 @@ export type BuilderWithRelations = {
     priceReference?: {
         nomStructure: string;
     } | null;
-    nonMiningPriceStructure?: {
-        nomStructure: string;
-    } | null;
     totals?: {
         priceDDUUSD?: number | null;
         priceDDPUSD?: number | null;

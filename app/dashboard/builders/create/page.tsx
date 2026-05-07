@@ -32,20 +32,8 @@ export default function CreateBuilderPage() {
     fiscality?: { customsDuty?: number | null; importVAT?: number | null } | null;
     parafiscality?: { foner?: number | null; stockSecurity1?: number | null; stockSecurity2?: number | null; molecularMarking?: number | null; reconstructionEffort?: number | null; intervention?: number | null } | null;
   };
-  type NonMiningPrice = {
-    id: string;
-    nomStructure?: string | null;
-    cardinale?: string | null;
-    createdAt?: string | Date | null;
-    exchangeRate?: { rate?: number | null } | null;
-    fiscality?: { customsDuty?: number | null; importVAT?: number | null; netVAT?: number | null; consumptionDuty?: number | null } | null;
-    parafiscality?: { foner?: number | null; pmfFiscal?: number | null } | null;
-    securityStock?: { estStock?: number | null; sudStock?: number | null } | null;
-  };
   const [refs, setRefs] = React.useState<PriceReference[]>([]);
-  const [nonMiningPrices, setNonMiningPrices] = React.useState<NonMiningPrice[]>([]);
   const [selectedRefId, setSelectedRefId] = React.useState<string>("");
-  const [selectedNonMiningId, setSelectedNonMiningId] = React.useState<string>("");
   const [transportRates, setTransportRates] = React.useState<Array<{ id: string; destination: string; rateUsdPerCbm: number }>>([]);
   const [selectedTransportRateId, setSelectedTransportRateId] = React.useState<string>("");
 
@@ -90,22 +78,6 @@ export default function CreateBuilderPage() {
     })();
   }, []);
 
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/non-mining-prices", { cache: "no-store" });
-        if (res.ok) {
-          const data = await res.json();
-          setNonMiningPrices(Array.isArray(data) ? data : []);
-        } else {
-          setNonMiningPrices([]);
-        }
-      } catch {
-        setNonMiningPrices([]);
-      }
-    })();
-  }, []);
-
   const round1 = React.useCallback((n: number | null | undefined) => {
     const v = Number(n ?? 0);
     return Number.isFinite(v) ? Math.round(v * 10) / 10 : 0;
@@ -132,43 +104,6 @@ export default function CreateBuilderPage() {
     setValue("levies.economicInterventionUSD", round1(toUSD(pf.intervention)));
     const totalLevies = round1((round1(toUSD(pf.foner)) ?? 0) + combinedUSD + (round1(toUSD(pf.reconstructionEffort)) ?? 0) + (round1(toUSD(pf.intervention)) ?? 0));
     setValue("levies.totalLeviesUSD", totalLevies);
-    // Totals convenience
-    setValue("totals.totalCustomsUSD", subtotal);
-  }, [round1, setValue]);
-
-  const applyFromNonMiningPrice = React.useCallback((nonMiningItem: NonMiningPrice | null | undefined) => {
-    if (!nonMiningItem) return;
-    const rate = nonMiningItem?.exchangeRate?.rate ?? 2500;
-    const toUSD = (v?: number | null) => (typeof v === "number" && rate > 0 ? v / rate : undefined);
-
-    // Customs from fiscality
-    const cd = round1(toUSD(nonMiningItem?.fiscality?.customsDuty ?? undefined));
-    const iv = round1(toUSD(nonMiningItem?.fiscality?.importVAT ?? undefined));
-    const subtotal = round1((cd ?? 0) + (iv ?? 0));
-    setValue("customs.customsDutyUSD", cd);
-    setValue("customs.importVATUSD", iv);
-    setValue("customs.subtotalUSD", subtotal);
-
-    // Levies from parafiscality
-    const pf = nonMiningItem?.parafiscality ?? {};
-    setValue("levies.fonerUSD", round1(toUSD(pf.foner)));
-
-    // Stock de sécurité (EST + SUD)
-    const estStock = nonMiningItem?.securityStock?.estStock ?? 0;
-    const sudStock = nonMiningItem?.securityStock?.sudStock ?? 0;
-    const totalStock = round1(toUSD(estStock + sudStock) ?? 0);
-    setValue("levies.molecularMarkingOrStockUSD", totalStock);
-
-    // PMF Fiscal (peut être négatif)
-    const pmfFiscal = nonMiningItem?.parafiscality?.pmfFiscal ?? 0;
-    setValue("levies.reconstructionStrategicUSD", round1(toUSD(pmfFiscal)));
-
-    // Pas d'intervention économique pour non-minier
-    setValue("levies.economicInterventionUSD", 0);
-
-    const totalLevies = round1((round1(toUSD(pf.foner)) ?? 0) + totalStock + (round1(toUSD(pmfFiscal)) ?? 0));
-    setValue("levies.totalLeviesUSD", totalLevies);
-
     // Totals convenience
     setValue("totals.totalCustomsUSD", subtotal);
   }, [round1, setValue]);
@@ -289,9 +224,7 @@ export default function CreateBuilderPage() {
               onChange={(e) => {
                 const id = e.target.value;
                 setSelectedRefId(id);
-                setSelectedNonMiningId(""); // Réinitialiser l'autre sélection
                 setValue("priceReferenceId", id);
-                setValue("nonMiningPriceStructureId", null);
                 const found = refs.find((r) => r.id === id);
                 applyFromPriceRef(found);
               }}
@@ -307,36 +240,9 @@ export default function CreateBuilderPage() {
               })}
             </select>
           </div>
-          <div>
-            <Label>Structure officielle (Non-Minier)</Label>
-            <select
-              className="h-9 w-full rounded-md border border-border bg-background px-3"
-              value={selectedNonMiningId}
-              onChange={(e) => {
-                const id = e.target.value;
-                setSelectedNonMiningId(id);
-                setSelectedRefId(""); // Réinitialiser l'autre sélection
-                setValue("nonMiningPriceStructureId", id);
-                setValue("priceReferenceId", null);
-                const found = nonMiningPrices.find((r) => r.id === id);
-                applyFromNonMiningPrice(found);
-              }}
-            >
-              <option value="">— Sélectionner structure non-minier —</option>
-              {nonMiningPrices.map((r) => {
-                const displayDate = r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "";
-                return (
-                  <option key={r.id} value={r.id}>
-                    {r.nomStructure} — {r.cardinale} — {displayDate}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
         </div>
         <input type="hidden" {...register("userId")} />
         <input type="hidden" {...register("priceReferenceId")} />
-        <input type="hidden" {...register("nonMiningPriceStructureId")} />
 
         <Label className="text-lg font-semibold text-orange-400">Coûts de base du produit & transport initial</Label>
         <div className="grid md:grid-cols-5 gap-4">

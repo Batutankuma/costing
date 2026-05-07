@@ -103,27 +103,6 @@ export default function EditForm({ id, initial, onCancel, onSuccess }: EditFormP
             <span className="text-destructive">*</span> Champs obligatoires
           </p>
           <div className="grid md:grid-cols-2 gap-6">
-<<<<<<< HEAD
-            {/* Nom du fournisseur */}
-            <div className="space-y-2">
-              <Label htmlFor="nom" className="text-sm font-medium">
-                Nom <span className="text-destructive">*</span>
-              </Label>
-              <Input 
-                id="nom" 
-                placeholder="Ex: Entreprise ABC" 
-                required
-                aria-required="true"
-                {...register("nom")}
-                className="h-10"
-              />
-              {errors.nom && (
-                <p className="text-sm text-destructive">{errors.nom.message}</p>
-              )}
-            </div>
-
-=======
->>>>>>> Autre-Lubumbashi
             {/* Société */}
             <div className="space-y-2">
               <Label htmlFor="company" className="text-sm font-medium">

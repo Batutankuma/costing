@@ -81,9 +81,6 @@ type BuilderItem = {
   priceReference?: {
     nomStructure: string;
   } | null;
-  nonMiningPriceStructure?: {
-    nomStructure: string;
-  } | null;
   totals?: {
     priceDDUUSD?: number | null;
     priceDDPUSD?: number | null;
@@ -102,7 +99,6 @@ export default function DataTable({ items }: { items: BuilderItem[] }) {
         createdAt: new Date(it.createdAt),
         updatedAt: new Date(it.updatedAt),
         priceReference: it.priceReference,
-        nonMiningPriceStructure: it.nonMiningPriceStructure,
         totals: it.totals,
     })), [items]);
 

@@ -67,9 +67,7 @@ const moduleNavigation: ModuleNav = {
   ],
   FINANCE: [
     { title: "Build Minier", url: "/dashboard/builders", icon: RiPriceTagLine },
-    { title: "Build Non Minier", url: "/dashboard/non-mining-builders", icon: RiPriceTagLine },
     { title: "Tarif Transport", url: "/dashboard/transport-rates", icon: RiTruckLine },
-    { title: "Str Non Minier", url: "/dashboard/non-mining-prices", icon: RiPriceTagLine },
     { title: "Str Minier", url: "/dashboard/prices", icon: RiPriceTagLine },
     { title: "Build Kalemie", url: "/dashboard/build-const-kalemie", icon: RiPriceTagLine },
     { title: "Costing Kinshasa", url: "/dashboard/kinshasa-costings", icon: RiPriceTagLine },

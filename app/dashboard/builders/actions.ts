@@ -19,7 +19,6 @@ export const createBuilder = actionClient
         unit: data.unit,
         userId: data.userId,
         priceReferenceId: data.priceReferenceId ?? null,
-        nonMiningPriceStructureId: data.nonMiningPriceStructureId ?? null,
         baseCosts: data.base
           ? { create: {
               plattsFOBUSD: data.base.plattsFOBUSD ?? 0,
@@ -81,7 +80,7 @@ export const listBuilders = actionClient
   .schema(z.void())
   .action(async () => {
     const items = await prisma.costBuildUp.findMany({
-      include: { baseCosts: true, supplierDDU: true, customs: true, levies: true, transport: true, totals: true, priceReference: true, nonMiningPriceStructure: true },
+      include: { baseCosts: true, supplierDDU: true, customs: true, levies: true, transport: true, totals: true, priceReference: true },
       orderBy: { date: "desc" },
     });
     return { success: true, result: items };
@@ -90,7 +89,7 @@ export const listBuilders = actionClient
 export async function findBuilderById(id: string) {
   const item = await prisma.costBuildUp.findUnique({
     where: { id },
-    include: { baseCosts: true, supplierDDU: true, customs: true, levies: true, transport: true, totals: true, priceReference: { include: { exchangeRate: true } }, nonMiningPriceStructure: { include: { exchangeRate: true } } },
+    include: { baseCosts: true, supplierDDU: true, customs: true, levies: true, transport: true, totals: true, priceReference: { include: { exchangeRate: true } } },
   });
   if (!item) return { success: false, failure: "Introuvable" };
   return { success: true, result: item };
@@ -107,7 +106,6 @@ export const updateBuilder = actionClient
         title: c.title ?? undefined,
         unit: c.unit,
         priceReferenceId: c.priceReferenceId ?? undefined,
-        nonMiningPriceStructureId: c.nonMiningPriceStructureId ?? undefined,
         baseCosts: c.base ? {
           upsert: {
             create: {

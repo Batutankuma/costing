@@ -127,7 +127,6 @@ export const CreateCostBuildUpSchema = z.object({
   unit: z.enum(["USD_M3", "USD_LITRE"]),
   userId: z.string().min(1),
   priceReferenceId: z.string().optional().nullable(),
-  nonMiningPriceStructureId: z.string().optional().nullable(),
   base: BaseProductCostsSchema.optional(),
   supplier: SupplierDDUCostsSchema.optional(),
   customs: CustomsCollectedSchema.optional(),
