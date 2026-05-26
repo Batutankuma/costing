@@ -12,24 +12,24 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { deleteDGIFactureAction } from "./actions";
+import { removeFactureAction } from "./actions";
 import { useToast } from "@/hooks/use-toast";
 
-export default function DeleteFactureDgiButton({ id, invoiceNumber, children }: { id: string; invoiceNumber: string; children: ReactNode }) {
+export default function DeleteFactureButton({ id, invoiceNumber, children }: { id: string; invoiceNumber: string; children: ReactNode }) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
   const handleDelete = () => {
     startTransition(async () => {
-      const result = await deleteDGIFactureAction({ id });
+      const result = await removeFactureAction({ id });
       if (result?.data?.success) {
-        toast({ title: "Facture DGI supprimée", description: `La facture DGI ${invoiceNumber} a été supprimée.` });
+        toast({ title: "Facture supprimée", description: `La facture ${invoiceNumber} a été supprimée.` });
         window.location.reload();
       } else {
         toast({
           variant: "destructive",
           title: "Erreur",
-          description: result?.serverError || "Impossible de supprimer la facture DGI.",
+          description: result?.data?.failure || "Impossible de supprimer la facture.",
         });
       }
     });
@@ -40,9 +40,9 @@ export default function DeleteFactureDgiButton({ id, invoiceNumber, children }: 
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Supprimer la facture DGI ?</AlertDialogTitle>
+          <AlertDialogTitle>Supprimer la facture ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Cette action est irréversible. La facture DGI {invoiceNumber} sera définitivement supprimée.
+            Cette action est irréversible. La facture {invoiceNumber} sera définitivement supprimée.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -55,4 +55,3 @@ export default function DeleteFactureDgiButton({ id, invoiceNumber, children }: 
     </AlertDialog>
   );
 }
-

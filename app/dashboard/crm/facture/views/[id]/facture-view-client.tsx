@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { findFactureById } from "@/app/dashboard/crm/facture/actions";
 import { ManualFacture } from "@/models/mvc";
+import type { ManualFactureModuleConfig } from "@/lib/manual-facture-config";
 import { Badge } from "@/components/ui/badge";
 import QRCode from "react-qr-code";
 import { ArrowLeft, Printer } from "lucide-react";
@@ -97,9 +97,15 @@ const amountToWordsFR = (value: number, currency: string = "USD"): string => {
 
 interface FactureViewClientProps {
   factureId: string;
+  config: ManualFactureModuleConfig;
+  findFactureById: (id: string) => Promise<{
+    success: boolean;
+    result?: ManualFacture;
+    failure?: string;
+  }>;
 }
 
-export default function FactureViewClient({ factureId }: FactureViewClientProps) {
+export default function FactureViewClient({ factureId, config, findFactureById }: FactureViewClientProps) {
   const router = useRouter();
   const [facture, setFacture] = useState<ManualFacture | null>(null);
   const [loading, setLoading] = useState(true);
@@ -108,13 +114,13 @@ export default function FactureViewClient({ factureId }: FactureViewClientProps)
     (async () => {
       const result = await findFactureById(factureId);
       if (!result.success || !result.result) {
-        router.push("/dashboard/crm/facture");
+        router.push(config.basePath);
         return;
       }
       setFacture(result.result);
       setLoading(false);
     })();
-  }, [factureId, router]);
+  }, [factureId, router, config.basePath, findFactureById]);
 
   if (loading || !facture) {
     return (
@@ -153,7 +159,7 @@ export default function FactureViewClient({ factureId }: FactureViewClientProps)
       <Card className="shadow-lg">
         <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <CardTitle className="text-2xl">Facture {facture.invoiceNumber}</CardTitle>
+            <CardTitle className="text-2xl">{config.documentLabel} {facture.invoiceNumber}</CardTitle>
             <CardDescription>Émise le {formattedDate} • Échéance {dueDate}</CardDescription>
           </div>
           <QRCode value={facture.invoiceNumber} size={96} />
@@ -337,7 +343,7 @@ export default function FactureViewClient({ factureId }: FactureViewClientProps)
 
         {/* Numéro facture et date - même ligne */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <div style={{ fontSize: "16px", fontWeight: "bold" }}>N° FACTURE {facture.invoiceNumber}</div>
+          <div style={{ fontSize: "16px", fontWeight: "bold" }}>{config.printNumberLabel} {facture.invoiceNumber}</div>
           <div style={{ fontSize: "11px" }}>Kinshasa {format(facture.invoiceDate, "dd MMMM yyyy", { locale: fr })}</div>
         </div>
 

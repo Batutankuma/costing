@@ -1,15 +1,14 @@
 import { notFound } from "next/navigation";
-import FactureDgiViewClient from "./facture-dgi-view";
+import EditFactureClient from "./edit-facture-client";
 
 type PageProps = {
   params?: Promise<{ id: string }>;
 };
 
-export default async function FactureDgiViewPage({ params }: PageProps) {
+export default async function EditFacturePage({ params }: PageProps) {
   const resolved = params ? await params : null;
   if (!resolved?.id) {
     notFound();
   }
-  return <FactureDgiViewClient factureDgiId={resolved.id} />;
+  return <EditFactureClient factureId={resolved.id} />;
 }
-

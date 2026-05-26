@@ -140,14 +140,20 @@ export default function ViewCommandePage() {
 
   const formatCurrency = (amount: number | null | undefined, devise: string | null | undefined = "USD") => {
     if (amount === null || amount === undefined) return "N/A";
-    return `${amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${devise || "USD"}`;
+    const value = Number(amount);
+    return `${value.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 4 })} ${devise || "USD"}`;
+  };
+
+  const formatQuantity = (amount: number | null | undefined) => {
+    if (amount === null || amount === undefined) return "N/A";
+    return Number(amount).toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 4 });
   };
 
   const calculateTotal = () => {
     const hospitalityQty = commande.hospitalityRows?.reduce((sum, row) => sum + Number(row.offlQty20 || 0), 0) || 0;
     const quantite = Number(commande.quantite || 0) + hospitalityQty;
-    const unitPrice = commande.unitPrice || 0;
-    const tva = commande.tva || 0;
+    const unitPrice = Number(commande.unitPrice || 0);
+    const tva = Number(commande.tva || 0);
     const subtotal = quantite * unitPrice;
     const totalTVA = subtotal * (tva / 100);
     return {
@@ -236,7 +242,10 @@ export default function ViewCommandePage() {
             <div className="space-y-2">
               <Label className="text-sm font-medium text-muted-foreground">Quantité</Label>
               <p className="text-lg font-semibold">
-                {(Number(commande.quantite || 0) + (commande.hospitalityRows?.reduce((sum, row) => sum + Number(row.offlQty20 || 0), 0) || 0)).toLocaleString('fr-FR')}
+                {formatQuantity(
+                  Number(commande.quantite || 0) +
+                    (commande.hospitalityRows?.reduce((sum, row) => sum + Number(row.offlQty20 || 0), 0) || 0)
+                )}
               </p>
             </div>
 

@@ -22,6 +22,8 @@ import { Loader2, Calculator, Package, Building2, CreditCard, DollarSign, FileTe
 import { listProducts } from "@/app/dashboard/products/actions";
 import { findAllAction as findAllFournisseurs } from "@/app/dashboard/crm/fournisseur/actions";
 import { listDepots } from "@/app/dashboard/depots/actions";
+import { TYPE_FACTURE_OPTIONS } from "@/models/mvc";
+import { commandeDecimalRefine, COMMANDE_DECIMAL_PLACES } from "@/lib/commande-decimals";
 
 export default function CreateCommandePage() {
   type ProduitRef = { id: string; name: string };
@@ -70,15 +72,25 @@ export default function CreateCommandePage() {
     produitId: z.string().min(1, "Veuillez sélectionner un produit"),
     depotId: z.string().min(1, "Veuillez sélectionner un dépôt"),
     fournisseurId: z.string().min(1, "Veuillez sélectionner un fournisseur"),
-    quantity: z.number().min(0.01, "La quantité doit être supérieure à 0"),
-    unitPrice: z.number().min(0.0001, "Le prix unitaire doit être supérieur à 0"),
+    quantity: z
+      .number()
+      .min(0.0001, "La quantité doit être supérieure à 0")
+      .refine(commandeDecimalRefine.check, { message: commandeDecimalRefine.message }),
+    unitPrice: z
+      .number()
+      .min(0.0001, "Le prix unitaire doit être supérieur à 0")
+      .refine(commandeDecimalRefine.check, { message: commandeDecimalRefine.message }),
     devise: z.enum(["XOF", "USD", "EUR", "CDF"]),
     typePaiement: z.enum(["DIRECT", "CREDIT"]),
     // Champs facture
     numeroFacture: z.string().optional(),
-    typeFacture: z.string().optional(),
+    typeFacture: z.enum(TYPE_FACTURE_OPTIONS).optional(),
     dateFacture: z.date().optional().nullable(),
-    tva: z.number().optional().nullable(),
+    tva: z
+      .number()
+      .optional()
+      .nullable()
+      .refine((v) => v == null || commandeDecimalRefine.check(v), { message: commandeDecimalRefine.message }),
   });
 
   type CommandeForm = z.infer<typeof ClientCommandeSchema>;
@@ -119,7 +131,7 @@ export default function CreateCommandePage() {
   // Calcul du prix total
   const totalPrice = useMemo(() => {
     if (watchedQuantity && watchedUnitPrice) {
-      return (watchedQuantity * watchedUnitPrice).toFixed(2);
+      return (watchedQuantity * watchedUnitPrice).toFixed(COMMANDE_DECIMAL_PLACES);
     }
     return "0.00";
   }, [watchedQuantity, watchedUnitPrice]);
@@ -457,8 +469,8 @@ export default function CreateCommandePage() {
             <Input 
               id="quantity" 
               type="number" 
-              step="0.01" 
-                  placeholder="0.00"
+              step="0.0001" 
+                  placeholder="0.0000"
               {...register("quantity", { valueAsNumber: true })} 
                   className={errors.quantity ? "border-red-500" : ""}
                 />
@@ -638,11 +650,30 @@ export default function CreateCommandePage() {
                   <FileText className="w-4 h-4" />
                   Type de Facture
                 </Label>
-                <Input
-                  id="typeFacture"
-                  placeholder="Ex: Proforma, Définitive..."
-                  {...register("typeFacture")}
-                  className={errors.typeFacture ? "border-red-500" : ""}
+                <Controller
+                  name="typeFacture"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || "none"}
+                      onValueChange={(value) => field.onChange(value === "none" ? undefined : value)}
+                    >
+                      <SelectTrigger
+                        id="typeFacture"
+                        className={errors.typeFacture ? "border-red-500" : ""}
+                      >
+                        <SelectValue placeholder="Sélectionner un type de facture" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— Non renseigné —</SelectItem>
+                        {TYPE_FACTURE_OPTIONS.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
                 {errors.typeFacture && (
                   <p className="text-red-500 text-sm flex items-center gap-1">
@@ -681,9 +712,9 @@ export default function CreateCommandePage() {
                 <Input
                   id="tva"
                   type="number"
-                  step="0.01"
+                  step="0.0001"
                   min="0"
-                  placeholder="0.00"
+                  placeholder="0.0000"
                   {...register("tva", { valueAsNumber: true })}
                   className={errors.tva ? "border-red-500" : ""}
                 />

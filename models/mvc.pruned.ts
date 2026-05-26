@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { commandeDecimalRefine, roundCommandeDecimal } from "@/lib/commande-decimals";
 
 // ---- Users (align with Prisma Role enum) ----
 export const CreateUserSchema = z.object({
@@ -377,6 +378,8 @@ export const EquipmentSchema = CreateEquipmentSchema.extend({
 });
 
 // ===== Commande =====
+export const TYPE_FACTURE_OPTIONS = ["Proforma", "Définitive", "Acompte", "Avoir"] as const;
+
 export const CreateCommandeSchema = z.object({
   reference: z.string().min(1, "La référence est requise"),
   date: z.date(),
@@ -384,14 +387,28 @@ export const CreateCommandeSchema = z.object({
   depotId: z.string().optional().nullable(),
   produitId: z.string().min(1, "Le produit est requis"),
   fournisseurId: z.string().optional().nullable(),
-  quantite: z.number().min(0, "La quantité doit être positive"),
-  unitPrice: z.number().optional().nullable(),
+  quantite: z
+    .number()
+    .min(0, "La quantité doit être positive")
+    .refine(commandeDecimalRefine.check, { message: commandeDecimalRefine.message })
+    .transform(roundCommandeDecimal),
+  unitPrice: z
+    .number()
+    .optional()
+    .nullable()
+    .refine((v) => v == null || commandeDecimalRefine.check(v), { message: commandeDecimalRefine.message })
+    .transform((v) => (v == null ? null : roundCommandeDecimal(v))),
   devise: z.enum(["XOF", "USD", "EUR", "CDF"]).default("USD").optional().nullable(),
   // Champs facture
   numeroFacture: z.string().optional().nullable(),
-  typeFacture: z.string().optional().nullable(),
+  typeFacture: z.enum(TYPE_FACTURE_OPTIONS).optional().nullable(),
   dateFacture: z.date().optional().nullable(),
-  tva: z.number().optional().nullable(),
+  tva: z
+    .number()
+    .optional()
+    .nullable()
+    .refine((v) => v == null || commandeDecimalRefine.check(v), { message: commandeDecimalRefine.message })
+    .transform((v) => (v == null ? null : roundCommandeDecimal(v))),
 });
 
 export const CommandeSchema = CreateCommandeSchema.extend({
@@ -514,6 +531,8 @@ export const CreateLicenceSchema = z.object({
   numeroLicenceImport: z.string().optional().nullable(),
   numeroLettreEngagement: z.string().optional().nullable(),
   statusJustification: z.boolean().default(false),
+  dateJustification: z.date().optional().nullable(),
+  description: z.string().optional().nullable(),
 });
 
 export const LicenceSchema = CreateLicenceSchema.extend({

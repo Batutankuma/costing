@@ -59,7 +59,7 @@ export default async function CreateStockPage() {
     produitId: commande.produitId,
     fournisseurId: commande.fournisseurId,
     fournisseurNom: commande.fournisseur?.nom ?? null,
-    quantite: commande.quantite,
+    quantite: Number(commande.quantite),
   }));
 
   return (

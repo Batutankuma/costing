@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { LicenceSchema } from "@/models/mvc";
@@ -43,6 +44,8 @@ interface EditFormProps {
     numeroLicenceImport?: string | null;
     numeroLettreEngagement?: string | null;
     statusJustification: boolean;
+    dateJustification?: Date | string | null;
+    description?: string | null;
   };
   onCancel?: () => void;
   onSuccess?: () => void;
@@ -97,8 +100,19 @@ export default function EditForm({ id, initial, onCancel, onSuccess }: EditFormP
       numeroLicenceImport: initial.numeroLicenceImport ?? "",
       numeroLettreEngagement: initial.numeroLettreEngagement ?? "",
       statusJustification: initial.statusJustification,
+      dateJustification: initial.dateJustification
+        ? new Date(initial.dateJustification)
+        : null,
+      description: initial.description ?? "",
     },
   });
+
+  const formatDateForInput = (date: Date | string | null | undefined): string => {
+    if (!date) return "";
+    const d = date instanceof Date ? date : new Date(date);
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toISOString().split("T")[0];
+  };
 
   const onSubmit = async (data: FormOutput) => {
     setIsSubmitting(true);
@@ -268,21 +282,61 @@ export default function EditForm({ id, initial, onCancel, onSuccess }: EditFormP
             />
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Controller
-              name="statusJustification"
-              control={control}
-              render={({ field }) => (
-                <Checkbox
-                  id="statusJustification"
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              )}
-            />
-            <Label htmlFor="statusJustification" className="text-sm font-medium cursor-pointer">
-              Status de justification
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-sm font-medium">
+              Description
             </Label>
+            <Textarea
+              id="description"
+              placeholder="Notes ou commentaires sur la licence..."
+              rows={4}
+              {...register("description", {
+                setValueAs: (value) => (typeof value === "string" && value.trim() ? value.trim() : null),
+              })}
+            />
+          </div>
+
+          <div className="space-y-4 rounded-lg border p-4">
+            <div className="flex items-center space-x-2">
+              <Controller
+                name="statusJustification"
+                control={control}
+                render={({ field }) => (
+                  <Checkbox
+                    id="statusJustification"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                )}
+              />
+              <Label htmlFor="statusJustification" className="text-sm font-medium cursor-pointer">
+                Status de justification
+              </Label>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="dateJustification" className="text-sm font-medium">
+                Date de justification
+              </Label>
+              <Controller
+                name="dateJustification"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    id="dateJustification"
+                    type="date"
+                    className="h-10"
+                    value={formatDateForInput(field.value)}
+                    onChange={(e) =>
+                      field.onChange(e.target.value ? new Date(e.target.value) : null)
+                    }
+                  />
+                )}
+              />
+              {errors.dateJustification && (
+                <p className="text-sm text-destructive">{errors.dateJustification.message}</p>
+              )}
+            </div>
           </div>
 
           <div className="flex gap-3 pt-4 border-t">

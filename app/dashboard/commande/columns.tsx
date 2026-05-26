@@ -47,10 +47,10 @@ const multiColumnFilterFn: FilterFn<Commande> = (row, columnId, filterValue) => 
     return searchableRowContent.includes(searchTerm);
 };
 
-function format2(value: number) {
+function formatCommandeDecimal(value: number) {
     return Number(value || 0).toLocaleString("fr-FR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 4,
     });
 }
 
@@ -157,7 +157,7 @@ export const columns: ColumnDef<Commande>[] = [
         cell: ({ row }) => {
             const orderedQuantity = getInvoiceOrderedQuantity(row.original);
             const unit = row.original.produit?.unit || "L";
-            return <div className="font-semibold text-xs">{format2(orderedQuantity)} {unit}</div>;
+            return <div className="font-semibold text-xs">{formatCommandeDecimal(orderedQuantity)} {unit}</div>;
         },
     },
     {
@@ -167,7 +167,7 @@ export const columns: ColumnDef<Commande>[] = [
         cell: ({ row }) => {
             const receivedQuantity = getReceivedQuantity(row.original);
             const unit = row.original.produit?.unit || "L";
-            return <div className="font-semibold text-xs">{format2(receivedQuantity)} {unit}</div>;
+            return <div className="font-semibold text-xs">{formatCommandeDecimal(receivedQuantity)} {unit}</div>;
         },
     },
     {
@@ -177,7 +177,7 @@ export const columns: ColumnDef<Commande>[] = [
         cell: ({ row }) => {
             const hospitalityQty = getHospitalityQuantity(row.original);
             const unit = row.original.produit?.unit || "L";
-            return <div className="font-semibold text-xs">{format2(hospitalityQty)} {unit}</div>;
+            return <div className="font-semibold text-xs">{formatCommandeDecimal(hospitalityQty)} {unit}</div>;
         },
     },
     {
@@ -187,7 +187,7 @@ export const columns: ColumnDef<Commande>[] = [
         cell: ({ row }) => {
             const remainingQuantity = getOperationalRemainingQuantity(row.original);
             const unit = row.original.produit?.unit || "L";
-            return <div className="font-semibold text-xs">{format2(remainingQuantity)} {unit}</div>;
+            return <div className="font-semibold text-xs">{formatCommandeDecimal(remainingQuantity)} {unit}</div>;
         },
     },
     {
@@ -197,7 +197,7 @@ export const columns: ColumnDef<Commande>[] = [
         cell: ({ row }) => {
             const unitPrice = (row.getValue("unitPrice") as number) || 0;
             const devise = row.original.devise;
-            return <div className="font-medium text-xs">{format2(unitPrice)} {devise ?? ""}</div>;
+            return <div className="font-medium text-xs">{formatCommandeDecimal(unitPrice)} {devise ?? ""}</div>;
         },
     },
     {

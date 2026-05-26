@@ -32,6 +32,8 @@ export default async function EditHospitalityPage({ params }: { params: Promise<
     prisma.commande.findMany({ select: { id: true, reference: true, depotId: true, quantite: true }, orderBy: { reference: "asc" } }),
   ]);
 
+  const commandesWithNumbers = commandes.map((c) => ({ ...c, quantite: Number(c.quantite) }));
+
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
@@ -49,7 +51,7 @@ export default async function EditHospitalityPage({ params }: { params: Promise<
         suppliers={suppliers}
         transporters={transporters}
         depots={depots}
-        commandes={commandes}
+        commandes={commandesWithNumbers}
         initial={{
           id: hospitality.id,
           driverName: hospitality.driverName,

@@ -5,7 +5,12 @@ import prisma from "@/lib/prisma";
 import { actionClient } from "@/lib/safe-action";
 import { revalidatePath } from "next/cache";
 import { handlePrismaError } from "@/middlewares/message_error";
-import { CreateCommandeSchema } from "@/models/mvc";
+import { CreateCommandeSchema, TYPE_FACTURE_OPTIONS } from "@/models/mvc";
+import {
+  commandeDecimalRefine,
+  commandeDecimalsToNumber,
+  roundCommandeDecimal,
+} from "@/lib/commande-decimals";
 import { z } from "zod";
 
 /**
@@ -20,13 +25,19 @@ const ServerCommandeSchema = z.object({
   produitId: z.string().min(1, "Le produit est requis"),
   depotId: z.string().min(1, "Le dépôt est requis"),
   fournisseurId: z.string().min(1, "Le fournisseur est requis"),
-  quantity: z.number().min(0.01, "La quantité doit être supérieure à 0"),
-  unitPrice: z.number().min(0.0001, "Le prix unitaire doit être supérieur à 0"),
+  quantity: z
+    .number()
+    .min(0.0001, "La quantité doit être supérieure à 0")
+    .refine(commandeDecimalRefine.check, { message: commandeDecimalRefine.message }),
+  unitPrice: z
+    .number()
+    .min(0.0001, "Le prix unitaire doit être supérieur à 0")
+    .refine(commandeDecimalRefine.check, { message: commandeDecimalRefine.message }),
   devise: z.enum(["XOF", "USD", "EUR", "CDF"]),
   typePaiement: z.enum(["DIRECT", "CREDIT"]),
   // Champs facture
   numeroFacture: z.string().optional().nullable(),
-  typeFacture: z.string().optional().nullable(),
+  typeFacture: z.enum(TYPE_FACTURE_OPTIONS).optional().nullable(),
   dateFacture: z.date().optional().nullable(),
   tva: z.number().optional().nullable(),
 });
@@ -44,14 +55,14 @@ export const createAction = actionClient
         depotId: parsedInput.depotId,
         devise: parsedInput.devise,
         // Champ Prisma: quantite
-        quantite: parsedInput.quantity,
+        quantite: roundCommandeDecimal(parsedInput.quantity),
         fournisseurId: parsedInput.fournisseurId,
-        unitPrice: parsedInput.unitPrice,
+        unitPrice: roundCommandeDecimal(parsedInput.unitPrice),
         // Champs facture
         numeroFacture: parsedInput.numeroFacture ?? null,
         typeFacture: parsedInput.typeFacture ?? null,
         dateFacture: parsedInput.dateFacture ?? null,
-        tva: parsedInput.tva ?? null,
+        tva: parsedInput.tva != null ? roundCommandeDecimal(parsedInput.tva) : null,
       };
      
       const result = await prisma.commande.create({
@@ -64,7 +75,7 @@ export const createAction = actionClient
       });
      
       revalidatePath("/dashboard/commande");
-      return { success: result };
+      return { success: commandeDecimalsToNumber(result) };
     } catch (error) {
       console.error('[CMD-ACTION] error:', error);
       if (error instanceof z.ZodError) {
@@ -98,7 +109,7 @@ export async function findByIdAction(id: string) {
     if (!result) {
       return { success: false, failure: "Commande non trouvé." };
     }
-    return { success: true, result };
+    return { success: true, result: commandeDecimalsToNumber(result) };
   } catch (error) {
     return { success: false, failure: handlePrismaError(error) };
   }
@@ -133,7 +144,7 @@ export const findAllAction = actionClient
         const totalReceived = commande.receptions?.reduce((sum: number, r: { quantity: number }) => sum + (r.quantity || 0), 0) || 0;
         const currentQuantity = Math.max(0, commande.quantite - totalReceived);
         return {
-          ...commande,
+          ...commandeDecimalsToNumber(commande),
           currentQuantity,
           unit: commande.produit?.unit || 'L',
         };
@@ -155,10 +166,17 @@ export const updateAction = actionClient
   .action(async ({ parsedInput }) => {
     try {
       const { id, ...updateData } = parsedInput; // Destructurer pour exclure l'ID
+      const data = {
+        ...updateData,
+        quantite: roundCommandeDecimal(updateData.quantite),
+        unitPrice:
+          updateData.unitPrice != null ? roundCommandeDecimal(updateData.unitPrice) : null,
+        tva: updateData.tva != null ? roundCommandeDecimal(updateData.tva) : null,
+      };
 
       const result = await prisma.commande.update({
         where: { id },
-        data: updateData,
+        data,
         include: {
           produit: { select: { name: true } },
           depot: { select: { name: true } },
@@ -169,7 +187,7 @@ export const updateAction = actionClient
       revalidatePath("/dashboard/commande");
       revalidatePath(`/dashboard/commande/${id}`);
       revalidatePath(`/dashboard/commande/views/${id}`);
-      return { success: result };
+      return { success: commandeDecimalsToNumber(result) };
     } catch (error) {
       if (error instanceof z.ZodError) {
         return { failure: "Validation failed: " + error.errors.map((e) => e.message).join(", ") };

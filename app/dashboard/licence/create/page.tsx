@@ -4,6 +4,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -81,8 +82,17 @@ export default function CreateLicencePage() {
       numeroLicenceImport: "",
       numeroLettreEngagement: "",
       statusJustification: false,
+      dateJustification: null,
+      description: "",
     }
   });
+
+  const formatDateForInput = (date: Date | string | null | undefined): string => {
+    if (!date) return "";
+    const d = date instanceof Date ? date : new Date(date);
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toISOString().split("T")[0];
+  };
 
   const onSubmit = async (data: LicenceFormOutput) => {
     try {
@@ -266,21 +276,61 @@ export default function CreateLicencePage() {
               />
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Controller
-                name="statusJustification"
-                control={control}
-                render={({ field }) => (
-                  <Checkbox
-                    id="statusJustification"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                )}
-              />
-              <Label htmlFor="statusJustification" className="text-sm font-medium cursor-pointer">
-                Status de justification
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-sm font-medium">
+                Description
               </Label>
+              <Textarea
+                id="description"
+                placeholder="Notes ou commentaires sur la licence..."
+                rows={4}
+                {...register("description", {
+                  setValueAs: (value) => (typeof value === "string" && value.trim() ? value.trim() : null),
+                })}
+              />
+            </div>
+
+            <div className="space-y-4 rounded-lg border p-4">
+              <div className="flex items-center space-x-2">
+                <Controller
+                  name="statusJustification"
+                  control={control}
+                  render={({ field }) => (
+                    <Checkbox
+                      id="statusJustification"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
+                />
+                <Label htmlFor="statusJustification" className="text-sm font-medium cursor-pointer">
+                  Status de justification
+                </Label>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="dateJustification" className="text-sm font-medium">
+                  Date de justification
+                </Label>
+                <Controller
+                  name="dateJustification"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      id="dateJustification"
+                      type="date"
+                      className="h-10"
+                      value={formatDateForInput(field.value)}
+                      onChange={(e) =>
+                        field.onChange(e.target.value ? new Date(e.target.value) : null)
+                      }
+                    />
+                  )}
+                />
+                {errors.dateJustification && (
+                  <p className="text-sm text-destructive">{errors.dateJustification.message}</p>
+                )}
+              </div>
             </div>
 
             <div className="flex gap-3 pt-4 border-t">

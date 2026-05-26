@@ -49,7 +49,7 @@ model Session {
 model Account {
   id                    String       @id @default(cuid())
   accountId             String
-  providerId            String
+  providerId            String    @default("credential")
   userId                String
   user                  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
@@ -303,7 +303,6 @@ model Client {
   shipments  Shipment[]
   activities CRMActivity[]
   contacts   Contact[]
-  dgiFactures DGIFacture[]
   clientOrders ClientOrder[]
 
   @@map("client")
@@ -837,8 +836,14 @@ model Hospitality {
   @@map("hospitality")
 }
 
+enum ManualFactureKind {
+  STANDARD
+  PROFORMA
+}
+
 model ManualFacture {
-  id             String    @id @default(cuid())
+  id             String            @id @default(cuid())
+  kind           ManualFactureKind @default(STANDARD)
   invoiceNumber  String
   invoiceDate    DateTime
   vendorName     String
@@ -864,6 +869,7 @@ model ManualFacture {
   lines ManualFactureLine[]
 
   @@index([invoiceNumber], map: "idx_manual_facture_invoice_number")
+  @@index([kind], map: "idx_manual_facture_kind")
   @@map("manual_facture")
 }
 
@@ -878,62 +884,6 @@ model ManualFactureLine {
   facture ManualFacture @relation(fields: [factureId], references: [id], onDelete: Cascade)
 
   @@map("manual_facture_line")
-}
-
-// ===== Facture DGI =====
-model DGIFacture {
-  id             String    @id @default(cuid())
-  invoiceNumber  String    @unique // Numéro facture DGI (compteur)
-  invoiceDate    DateTime
-  
-  // Infos Client
-  clientName     String
-  clientAddress  String?
-  clientNif      String?   // Obligatoire pour les sociétés
-  clientRccm     String?
-  clientId       String?   // Lien optionnel vers client CRM
-  client         Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
-
-  // Infos Vendeur (Snapshot au moment de la facture)
-  vendorName     String    @default("AAGS PETROLE ET GAZ SARLU")
-  vendorNif      String    @default("A2441781R")
-  
-  // Données DGI & Sécurité
-  dgiNim         String?   // Numéro Identification Machine (si dispo)
-  dgiMeccef      String?   // Code MECeF / Signature électronique
-  dgiQrCode      String?   // Contenu complet du QR Code
-  dgiSignature   String?   // Signature textuelle courte
-
-  currency       DeviseCode @default(USD)
-  notes          String?
-
-  // Totaux
-  totalHT        Float     @default(0)
-  totalTVA       Float     @default(0) // 16% généralement
-  totalTTC       Float     @default(0)
-  
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  lines DGIFactureLine[]
-
-  @@map("dgi_facture")
-}
-
-model DGIFactureLine {
-  id           String     @id @default(cuid())
-  dgiFactureId String
-  description  String
-  unit         String?
-  quantity     Float
-  unitPrice    Float
-  totalHT      Float      // quantity * unitPrice
-  tvaRate      Float      @default(16) // Pour garder la flexibilité si besoin de 0% ou exonéré
-  createdat    DateTime   @default(now())
-  
-  dgiFacture   DGIFacture @relation(fields: [dgiFactureId], references: [id], onDelete: Cascade)
-
-  @@map("dgi_facture_line")
 }
 
 // ===== Stocks =====
@@ -986,14 +936,14 @@ model Commande {
   produit       Product        @relation(fields: [produitId], references: [id], onDelete: Cascade)
   fournisseurId String?
   fournisseur   Fournisseur?   @relation(fields: [fournisseurId], references: [id], onDelete: SetNull)
-  quantite      Float          @default(0)
-  unitPrice     Float?
+  quantite      Decimal        @default(0) @db.Decimal(18, 4)
+  unitPrice     Decimal?       @db.Decimal(18, 4)
   devise        Devise?        @default(USD)
   // Champs facture
   numeroFacture String?
   typeFacture   String?
   dateFacture   DateTime?
-  tva           Float?         @default(0)
+  tva           Decimal?       @default(0) @db.Decimal(18, 4)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -1232,6 +1182,8 @@ model Licence {
   numeroLicenceImport    String?
   numeroLettreEngagement String?
   statusJustification    Boolean        @default(false)
+  dateJustification      DateTime?
+  description            String?
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
 

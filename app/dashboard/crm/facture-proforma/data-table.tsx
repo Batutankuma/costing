@@ -5,12 +5,12 @@ import { useReactTable, ColumnFiltersState, SortingState, VisibilityState, getCo
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { columns, FactureDgiRow } from "./columns";
+import { columns, FactureRow } from "./columns";
 import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, CircleX, Filter } from "lucide-react";
 
-export default function FactureDgiDataTable({ data }: { data: FactureDgiRow[] }) {
+export default function FactureDataTable({ data }: { data: FactureRow[] }) {
   const [sorting, setSorting] = React.useState<SortingState>([{ id: "invoiceDate", desc: true }]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -32,7 +32,7 @@ export default function FactureDgiDataTable({ data }: { data: FactureDgiRow[] })
       <div className="flex flex-wrap items-center gap-2 justify-between">
         <div className="relative">
           <Input
-            placeholder="Rechercher une facture DGI"
+            placeholder="Rechercher une facture"
             value={(table.getColumn("invoiceNumber")?.getFilterValue() as string) ?? ""}
             onChange={(event) => table.getColumn("invoiceNumber")?.setFilterValue(event.target.value)}
             className="ps-9 min-w-[240px]"
@@ -88,7 +88,7 @@ export default function FactureDgiDataTable({ data }: { data: FactureDgiRow[] })
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">Aucune facture DGI trouvée.</TableCell>
+                <TableCell colSpan={columns.length} className="h-24 text-center">Aucune facture trouvée.</TableCell>
               </TableRow>
             )}
           </TableBody>
@@ -142,4 +142,3 @@ export default function FactureDgiDataTable({ data }: { data: FactureDgiRow[] })
     </div>
   );
 }
-

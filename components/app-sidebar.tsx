@@ -79,7 +79,7 @@ const moduleNavigation: ModuleNav = {
     { title: "Prospects", url: "/dashboard/prospects", icon: RiTeamLine },
     { title: "Fournisseurs", url: "/dashboard/crm/fournisseur", icon: RiTruckLine },
     { title: "Factures", url: "/dashboard/crm/facture", icon: RiBillLine },
-    { title: "Factures DGI", url: "/dashboard/crm/facture-dgi", icon: RiBillLine },
+    { title: "Factures proforma", url: "/dashboard/crm/facture-proforma", icon: RiBillLine },
     { title: "Banques", url: "/dashboard/banque", icon: RiBankLine },
   ],
   DEPOT_AUTRES: [

@@ -12,141 +12,120 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2 } from "lucide-react";
-import { findFactureDgiById, updateFactureDgiAction } from "../actions";
+import { findFactureById, updateFactureAction } from "../actions";
+import { CreateManualFactureSchema, ManualFacture } from "@/models/mvc";
 import { useAction } from "next-safe-action/hooks";
 import { format } from "date-fns";
 
-const FormSchema = z.object({
-  id: z.string(),
-  invoiceNumber: z.string().min(1, "Numéro requis"),
-  invoiceDate: z.date(),
-  clientName: z.string().min(1, "Nom client requis"),
-  clientNif: z.string().optional(),
-  clientAddress: z.string().optional(),
-  clientRccm: z.string().optional(),
-  clientId: z.string().optional(),
-  currency: z.enum(["USD", "CDF"]),
-  notes: z.string().optional(),
-  lines: z.array(
-    z.object({
-      description: z.string().min(1, "Description requise"),
-      unit: z.string().optional(),
-      quantity: z.number().min(0.001, "Quantité > 0"),
-      unitPrice: z.number().min(0, "Prix >= 0"),
-      tvaRate: z.number(),
-    })
-  ).min(1, "Ajoutez au moins une ligne"),
+const FormSchema = CreateManualFactureSchema.extend({
+  dueInDays: z.number(),
+  currency: z.string(),
+  taxRate: z.number(),
+  otherFees: z.number(),
 });
 
 type FormData = z.infer<typeof FormSchema>;
 
-interface EditFactureDgiClientProps {
-  factureDgiId: string;
+interface EditFactureClientProps {
+  factureId: string;
 }
 
-export default function EditFactureDgiClient({ factureDgiId }: EditFactureDgiClientProps) {
+export default function EditFactureClient({ factureId }: EditFactureClientProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const { executeAsync, status } = useAction(updateFactureDgiAction);
-  const [loading, setLoading] = useState(true);
+  const { executeAsync, status } = useAction(updateFactureAction);
+  const [factureMeta, setFactureMeta] = useState<ManualFacture | null>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      id: factureDgiId,
       invoiceNumber: "",
       invoiceDate: new Date(),
+      vendorName: "",
+      vendorAddress: "",
+      vendorTaxNumber: "",
       clientName: "",
-      clientNif: "",
       clientAddress: "",
-      clientRccm: "",
-      clientId: "",
+      clientTaxNumber: "",
+      purchaseOrder: "",
+      dueInDays: 7,
       currency: "USD",
       notes: "",
-      lines: [{ description: "", unit: "", quantity: 1, unitPrice: 0, tvaRate: 16 }],
-    },
+      taxRate: 0,
+      otherFees: 0,
+      lines: [{ description: "", unit: "", quantity: 1, unitPrice: 0 }],
+    } as FormData,
   });
 
   const { fields, append, remove, replace } = useFieldArray({ control: form.control, name: "lines" });
 
   useEffect(() => {
     (async () => {
-      const result = await findFactureDgiById(factureDgiId);
-      if (!result) {
-        toast({ variant: "destructive", title: "Erreur", description: "Facture DGI introuvable." });
-        router.push("/dashboard/crm/facture-dgi");
+      const result = await findFactureById(factureId);
+      if (!result.success || !result.result) {
+        toast({ variant: "destructive", title: "Erreur", description: result.failure || "Facture introuvable." });
+        router.push("/dashboard/crm/facture-proforma");
         return;
       }
-
+      const facture = result.result;
       form.reset({
-        id: result.id,
-        invoiceNumber: result.invoiceNumber,
-        invoiceDate: result.invoiceDate,
-        clientName: result.clientName,
-        clientNif: result.clientNif || "",
-        clientAddress: result.clientAddress || "",
-        clientRccm: result.clientRccm || "",
-        clientId: result.clientId || "",
-        currency: result.currency as "USD" | "CDF",
-        notes: result.notes || "",
-        lines: result.lines && result.lines.length > 0
-          ? result.lines.map((line: any) => ({
-            description: line.description,
-            unit: line.unit || "",
-            quantity: line.quantity,
-            unitPrice: line.unitPrice,
-            tvaRate: line.tvaRate,
-          }))
-          : [{ description: "", unit: "", quantity: 1, unitPrice: 0, tvaRate: 16 }],
+        invoiceNumber: facture.invoiceNumber,
+        invoiceDate: facture.invoiceDate,
+        vendorName: facture.vendorName,
+        vendorAddress: facture.vendorAddress || "",
+        vendorTaxNumber: facture.vendorTaxNumber || "",
+        clientName: facture.clientName,
+        clientAddress: facture.clientAddress || "",
+        clientTaxNumber: facture.clientTaxNumber || "",
+        purchaseOrder: facture.purchaseOrder || "",
+        dueInDays: facture.dueInDays,
+        currency: facture.currency,
+        notes: facture.notes || "",
+        taxRate: facture.taxRate,
+        otherFees: facture.otherFees,
+        lines: facture.lines,
       });
-
-      setLoading(false);
+      replace(facture.lines.length ? facture.lines : [{ description: "", unit: "", quantity: 1, unitPrice: 0 }]);
+      setFactureMeta(facture);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [factureDgiId]);
+  }, [factureId]);
 
   const totals = form.watch("lines").reduce(
-    (acc, line) => {
-      const lineHT = Number(line.quantity || 0) * Number(line.unitPrice || 0);
-      const lineTVA = lineHT * (Number(line.tvaRate || 0) / 100);
-      return {
-        totalHT: acc.totalHT + lineHT,
-        totalTVA: acc.totalTVA + lineTVA,
-      };
-    },
-    { totalHT: 0, totalTVA: 0 }
+    (acc, line) => ({ subtotal: acc.subtotal + Number(line.quantity || 0) * Number(line.unitPrice || 0) }),
+    { subtotal: 0 }
   );
-  const totalTTC = totals.totalHT + totals.totalTVA;
+  const taxAmount = (totals.subtotal * (form.watch("taxRate") ?? 0)) / 100;
+  const grandTotal = totals.subtotal + taxAmount + (form.watch("otherFees") ?? 0);
 
   const onSubmit = async (data: FormData) => {
-    const result = await executeAsync(data);
+    if (!factureMeta) return;
+    const payload: ManualFacture = {
+      ...factureMeta,
+      ...data,
+      invoiceDate: data.invoiceDate,
+      updatedAt: new Date(),
+    };
+    const result = await executeAsync(payload);
     if (result?.data?.success) {
-      toast({ title: "Facture DGI mise à jour" });
-      router.push("/dashboard/crm/facture-dgi");
+      toast({ title: "Facture mise à jour" });
+      router.push("/dashboard/crm/facture-proforma");
     } else {
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: result?.serverError || "Mise à jour impossible.",
+        description: result?.data?.failure || "Mise à jour impossible.",
       });
     }
   };
 
   const isSubmitting = status === "executing";
 
-  if (loading) {
-    return (
-      <div className="p-6">
-        <p>Chargement...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Modifier la facture DGI</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Modifier la facture</h1>
           <p className="text-muted-foreground">Mettez à jour les informations puis enregistrez.</p>
         </div>
       </div>
@@ -154,16 +133,13 @@ export default function EditFactureDgiClient({ factureDgiId }: EditFactureDgiCli
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>En-tête facture DGI</CardTitle>
+            <CardTitle>En-tête facture</CardTitle>
             <CardDescription>Informations générales</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label>Numéro *</Label>
               <Input {...form.register("invoiceNumber")} />
-              {form.formState.errors.invoiceNumber && (
-                <p className="text-sm text-red-500">{form.formState.errors.invoiceNumber.message}</p>
-              )}
             </div>
             <div className="space-y-2">
               <Label>Date *</Label>
@@ -174,30 +150,48 @@ export default function EditFactureDgiClient({ factureDgiId }: EditFactureDgiCli
               />
             </div>
             <div className="space-y-2">
-              <Label>Nom client *</Label>
-              <Input {...form.register("clientName")} />
-              {form.formState.errors.clientName && (
-                <p className="text-sm text-red-500">{form.formState.errors.clientName.message}</p>
-              )}
+              <Label>Nom vendeur *</Label>
+              <Input {...form.register("vendorName")} />
             </div>
             <div className="space-y-2">
-              <Label>NIF client</Label>
-              <Input {...form.register("clientNif")} />
+              <Label>N° impôt vendeur</Label>
+              <Input {...form.register("vendorTaxNumber")} />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Adresse vendeur</Label>
+              <Textarea rows={2} {...form.register("vendorAddress")} />
+            </div>
+            <div className="space-y-2">
+              <Label>Client *</Label>
+              <Input {...form.register("clientName")} />
+            </div>
+            <div className="space-y-2">
+              <Label>N° client</Label>
+              <Input {...form.register("clientTaxNumber")} />
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label>Adresse client</Label>
               <Textarea rows={2} {...form.register("clientAddress")} />
             </div>
             <div className="space-y-2">
-              <Label>RCCM client</Label>
-              <Input {...form.register("clientRccm")} />
+              <Label>Bon de commande</Label>
+              <Input {...form.register("purchaseOrder")} />
+            </div>
+            <div className="space-y-2">
+              <Label>Échéance (jours)</Label>
+              <Input type="number" {...form.register("dueInDays", { valueAsNumber: true })} />
             </div>
             <div className="space-y-2">
               <Label>Devise</Label>
-              <select {...form.register("currency")} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                <option value="USD">USD</option>
-                <option value="CDF">CDF</option>
-              </select>
+              <Input {...form.register("currency")} />
+            </div>
+            <div className="space-y-2">
+              <Label>TVA (%)</Label>
+              <Input type="number" step="0.01" {...form.register("taxRate", { valueAsNumber: true })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Autres frais</Label>
+              <Input type="number" step="0.01" {...form.register("otherFees", { valueAsNumber: true })} />
             </div>
           </CardContent>
         </Card>
@@ -208,13 +202,13 @@ export default function EditFactureDgiClient({ factureDgiId }: EditFactureDgiCli
           </CardHeader>
           <CardContent className="space-y-4">
             {fields.map((field, index) => (
-              <div key={field.id} className="grid grid-cols-1 md:grid-cols-6 gap-4 border p-4 rounded-lg">
+              <div key={field.id} className="grid grid-cols-1 md:grid-cols-5 gap-4 border p-4 rounded-lg">
                 <div className="md:col-span-2 space-y-2">
                   <Label>Description *</Label>
                   <Input {...form.register(`lines.${index}.description` as const)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Unité</Label>
+                  <Label>Unité *</Label>
                   <Input {...form.register(`lines.${index}.unit` as const)} />
                 </div>
                 <div className="space-y-2">
@@ -225,11 +219,7 @@ export default function EditFactureDgiClient({ factureDgiId }: EditFactureDgiCli
                   <Label>Prix unitaire *</Label>
                   <Input type="number" step="0.0001" {...form.register(`lines.${index}.unitPrice` as const, { valueAsNumber: true })} />
                 </div>
-                <div className="space-y-2">
-                  <Label>TVA (%)</Label>
-                  <Input type="number" step="0.01" {...form.register(`lines.${index}.tvaRate` as const, { valueAsNumber: true })} />
-                </div>
-                <div className="md:col-span-6 flex justify-end">
+                <div className="md:col-span-5 flex justify-end">
                   {fields.length > 1 && (
                     <Button type="button" variant="outline" onClick={() => remove(index)} className="gap-1">
                       <Trash2 className="h-4 w-4" />
@@ -243,7 +233,7 @@ export default function EditFactureDgiClient({ factureDgiId }: EditFactureDgiCli
               type="button"
               variant="outline"
               className="gap-2"
-              onClick={() => append({ description: "", unit: "", quantity: 1, unitPrice: 0, tvaRate: 16 })}
+              onClick={() => append({ description: "", unit: "", quantity: 1, unitPrice: 0 })}
             >
               <Plus className="h-4 w-4" /> Ajouter une ligne
             </Button>
@@ -262,21 +252,27 @@ export default function EditFactureDgiClient({ factureDgiId }: EditFactureDgiCli
               </div>
               <div className="space-y-2 bg-muted/40 rounded-lg p-4">
                 <div className="flex justify-between text-sm">
-                  <span>Total HT</span>
+                  <span>Sous-total</span>
                   <span>
-                    {totals.totalHT.toFixed(2)} {form.watch("currency")}
+                    {totals.subtotal.toFixed(2)} {form.watch("currency")}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>Total TVA</span>
+                  <span>TVA ({form.watch("taxRate")}%)</span>
                   <span>
-                    {totals.totalTVA.toFixed(2)} {form.watch("currency")}
+                    {taxAmount.toFixed(2)} {form.watch("currency")}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Autres</span>
+                  <span>
+                    {(form.watch("otherFees") ?? 0).toFixed(2)} {form.watch("currency")}
                   </span>
                 </div>
                 <div className="flex justify-between text-base font-semibold">
                   <span>Total TTC</span>
                   <span>
-                    {totalTTC.toFixed(2)} {form.watch("currency")}
+                    {grandTotal.toFixed(2)} {form.watch("currency")}
                   </span>
                 </div>
               </div>
@@ -296,3 +292,4 @@ export default function EditFactureDgiClient({ factureDgiId }: EditFactureDgiCli
     </div>
   );
 }
+

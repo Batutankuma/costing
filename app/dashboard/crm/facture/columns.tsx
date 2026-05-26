@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,17 @@ import DeleteFactureButton from "./delete";
 
 export type FactureRow = ManualFacture & { invoiceDate: Date };
 
-export const columns: ColumnDef<FactureRow>[] = [
+type DeleteButtonProps = {
+  id: string;
+  invoiceNumber: string;
+  children: React.ReactNode;
+};
+
+export function createManualFactureColumns(
+  basePath: string,
+  DeleteButton: React.ComponentType<DeleteButtonProps> = DeleteFactureButton
+): ColumnDef<FactureRow>[] {
+  return [
   {
     id: "select",
     header: ({ table }) => (
@@ -68,21 +79,24 @@ export const columns: ColumnDef<FactureRow>[] = [
     cell: ({ row }) => (
       <div className="flex items-center gap-2 justify-end">
         <Button asChild size="sm" variant="outline">
-          <Link href={`/dashboard/crm/facture/views/${row.original.id}`}>
+          <Link href={`${basePath}/views/${row.original.id}`}>
             <Eye className="h-4 w-4" />
           </Link>
         </Button>
         <Button asChild size="sm" variant="outline">
-          <Link href={`/dashboard/crm/facture/${row.original.id}`}>
+          <Link href={`${basePath}/${row.original.id}`}>
             <FileEdit className="h-4 w-4" />
           </Link>
         </Button>
-        <DeleteFactureButton id={row.original.id} invoiceNumber={row.original.invoiceNumber}>
+        <DeleteButton id={row.original.id} invoiceNumber={row.original.invoiceNumber}>
           <Button size="sm" variant="destructive">
             <Trash2 className="h-4 w-4" />
           </Button>
-        </DeleteFactureButton>
+        </DeleteButton>
       </div>
     ),
   },
 ];
+}
+
+export const columns = createManualFactureColumns("/dashboard/crm/facture");

@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { commandeDecimalsToNumber } from "@/lib/commande-decimals";
 import DataTablesWrapper from "./client-wrapper";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ export const revalidate = 0;
 export default async function Page() {
   try {
     // Récupérer toutes les commandes avec les relations
-    const Commande = await prisma.commande.findMany({
+    const commandesRaw = await prisma.commande.findMany({
       include: {
         produit: true,
         depot: true,
@@ -26,6 +27,7 @@ export default async function Page() {
       },
       orderBy: { createdAt: 'desc' },
     });
+    const Commande = commandesRaw.map(commandeDecimalsToNumber);
   
   return (
     <div className="p-6 max-w-7xl mx-auto">

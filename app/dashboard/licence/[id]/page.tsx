@@ -42,6 +42,8 @@ export default async function EditLicencePage({ params }: { params: Promise<{ id
           numeroLicenceImport: licence.numeroLicenceImport ?? "",
           numeroLettreEngagement: licence.numeroLettreEngagement ?? "",
           statusJustification: licence.statusJustification,
+          dateJustification: licence.dateJustification,
+          description: licence.description,
         }} />
       </div>
     </div>

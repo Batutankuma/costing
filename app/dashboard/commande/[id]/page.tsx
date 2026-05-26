@@ -22,6 +22,7 @@ import { findByIdAction, updateAction } from "../actions";
 import { z } from "zod";
 import { Loader2, ArrowLeft, Calculator, Package, Building2, CreditCard, DollarSign, FileText } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
+import { COMMANDE_DECIMAL_PLACES } from "@/lib/commande-decimals";
 
 // Import des actions pour récupérer les données
 import { listProducts } from "@/app/dashboard/products/actions";
@@ -97,7 +98,7 @@ export default function EditCommandePage({ params }: { params: Promise<{ id: str
   // Calcul du prix total
   const totalPrice = useMemo(() => {
     if (watchedQuantite && watchedUnitPrice) {
-      return (watchedQuantite * watchedUnitPrice).toFixed(2);
+      return (watchedQuantite * watchedUnitPrice).toFixed(COMMANDE_DECIMAL_PLACES);
     }
     return "0.00";
   }, [watchedQuantite, watchedUnitPrice]);
@@ -615,8 +616,8 @@ export default function EditCommandePage({ params }: { params: Promise<{ id: str
                 <Input 
                   id="quantite" 
                   type="number" 
-                  step="0.01"
-                  placeholder="0.00" 
+                  step="0.0001"
+                  placeholder="0.0000" 
                   {...register("quantite", { valueAsNumber: true })} 
                 />
                 {errors.quantite && (

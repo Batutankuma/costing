@@ -27,6 +27,8 @@ export type LicenceWithRelations = {
     numeroLicenceImport?: string | null;
     numeroLettreEngagement?: string | null;
     statusJustification: boolean;
+    dateJustification?: Date | string | null;
+    description?: string | null;
     createdAt: Date;
     updatedAt: Date;
     commande: {
@@ -40,7 +42,7 @@ export type LicenceWithRelations = {
 };
 
 const multiColumnFilterFn: FilterFn<LicenceWithRelations> = (row, columnId, filterValue) => {
-    const searchableRowContent = `${row.original.commande?.reference || ''} ${row.original.banque?.nom || ''} ${row.original.numeroBulletin || ''} ${row.original.numeroLicenceImport || ''}`.toLowerCase();
+    const searchableRowContent = `${row.original.commande?.reference || ''} ${row.original.banque?.nom || ''} ${row.original.numeroBulletin || ''} ${row.original.numeroLicenceImport || ''} ${row.original.description || ''}`.toLowerCase();
     const searchTerm = (filterValue ?? "").toLowerCase();
     return searchableRowContent.includes(searchTerm);
 };
@@ -120,6 +122,35 @@ export const columns: ColumnDef<LicenceWithRelations>[] = [
             </Badge>
         ),
         size: 120,
+    },
+    {
+        header: "Description",
+        accessorKey: "description",
+        cell: ({ row }) => {
+            const text = row.original.description;
+            if (!text) return <div className="text-muted-foreground">—</div>;
+            const preview = text.length > 60 ? `${text.slice(0, 60)}…` : text;
+            return <div className="text-xs max-w-[200px] truncate" title={text}>{preview}</div>;
+        },
+        size: 200,
+    },
+    {
+        header: "Date justification",
+        accessorKey: "dateJustification",
+        cell: ({ row }) => {
+            const date = row.original.dateJustification;
+            if (!date) return <div className="text-muted-foreground">—</div>;
+            return (
+                <div>
+                    {new Date(date).toLocaleDateString("fr-FR", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                    })}
+                </div>
+            );
+        },
+        size: 140,
     },
     {
         header: "Créé le",

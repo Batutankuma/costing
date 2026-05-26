@@ -77,7 +77,7 @@ export const adminResetPasswordAction = actionClient
       const updated = await prisma.account.updateMany({
         where: {
           userId: user.id,
-          providerId: { in: ["email", "credentials", "password"] },
+          providerId: { in: ["credential", "email", "credentials", "password"] },
         },
         data: { password: hash, updatedAt: new Date() },
       });
@@ -94,7 +94,7 @@ export const adminResetPasswordAction = actionClient
           await prisma.account.create({
             data: {
               accountId: user.email,
-              providerId: "email",
+              providerId: "credential",
               userId: user.id,
               password: hash,
               createdAt: now,
@@ -167,7 +167,7 @@ export const adminCreateWithPasswordAction = actionClient
       await prisma.account.create({
         data: {
           accountId: parsedInput.email,
-          providerId: "email",
+          providerId: "credential",
           userId: newUser.id,
           password: hashedPassword,
           createdAt: now,

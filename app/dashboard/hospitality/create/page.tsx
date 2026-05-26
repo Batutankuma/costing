@@ -9,5 +9,14 @@ export default async function CreateHospitalityPage() {
     prisma.commande.findMany({ select: { id: true, reference: true, depotId: true, quantite: true }, orderBy: { reference: "asc" } }),
   ]);
 
-  return <CreateHospitalityForm suppliers={suppliers} transporters={transporters} depots={depots} commandes={commandes} />;
+  const commandesWithNumbers = commandes.map((c) => ({ ...c, quantite: Number(c.quantite) }));
+
+  return (
+    <CreateHospitalityForm
+      suppliers={suppliers}
+      transporters={transporters}
+      depots={depots}
+      commandes={commandesWithNumbers}
+    />
+  );
 }

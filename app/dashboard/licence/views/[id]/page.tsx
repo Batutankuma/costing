@@ -91,6 +91,24 @@ export default async function ViewLicencePage({ params }: { params: Promise<{ id
                 </Badge>
               </div>
             </div>
+            <div className="md:col-span-2">
+              <Label htmlFor="description">Description</Label>
+              <p id="description" className="text-lg whitespace-pre-wrap">
+                {licence.description?.trim() ? licence.description : "N/A"}
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="dateJustification">Date de justification</Label>
+              <p id="dateJustification" className="text-lg">
+                {licence.dateJustification
+                  ? new Date(licence.dateJustification).toLocaleDateString("fr-FR", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "N/A"}
+              </p>
+            </div>
             <div>
               <Label>Date de création</Label>
               <p className="text-sm text-gray-600">{new Date(licence.createdAt).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
