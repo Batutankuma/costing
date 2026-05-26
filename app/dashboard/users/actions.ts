@@ -7,7 +7,11 @@ import { revalidatePath } from "next/cache";
 import { handlePrismaError } from "@/middlewares/message_error";
 import { hasAccess } from "@/lib/role-access";
 import { CreateUserSchema, UpdateUserSchema } from "@/models/mvc.pruned";
+import { auth } from "@/lib/authx";
+import { generateTemporaryPassword, hashPassword } from "@/lib/auth-password";
 import { z } from "zod";
+
+const CREDENTIAL_PROVIDER_IDS = ["credential", "email", "credentials", "password"] as const;
 
 const AdminCreateWithPasswordSchema = CreateUserSchema.extend({
   password: z.string().min(6, "Mot de passe trop court"),
@@ -58,26 +62,13 @@ export const adminResetPasswordAction = actionClient
       const user = await prisma.user.findUnique({ where: { id: parsedInput.id } });
       if (!user) return { failure: "Utilisateur introuvable." };
 
-      // Generate new random password
-      const newPassword = Math.random().toString(36).slice(-10) + "!A1";
+      const newPassword = generateTemporaryPassword();
+      const hash = await hashPassword(newPassword);
 
-      // Try to import bcryptjs dynamically (so repo can build without it)
-      let bcrypt: typeof import("bcryptjs");
-      try {
-        const bcryptModule = await import("bcryptjs");
-        bcrypt = (bcryptModule.default || bcryptModule) as typeof import("bcryptjs");
-      } catch {
-        return { failure: "bcryptjs non installé. Exécutez: pnpm add bcryptjs" };
-      }
-
-      const salt = await bcrypt.genSalt(10);
-      const hash = await bcrypt.hash(newPassword, salt);
-
-      // Update existing credential-like accounts for this user
       const updated = await prisma.account.updateMany({
         where: {
           userId: user.id,
-          providerId: { in: ["credential", "email", "credentials", "password"] },
+          providerId: { in: [...CREDENTIAL_PROVIDER_IDS] },
         },
         data: { password: hash, updatedAt: new Date() },
       });
@@ -113,7 +104,7 @@ export const adminResetPasswordAction = actionClient
     }
   });
 
-// Admin flow: create user via Better Auth email sign-up with password, then set role
+// Création admin via Better Auth (même hash / structure que l'inscription publique)
 export const adminCreateWithPasswordAction = actionClient
   .schema(CreateUserSchema)
   .action(async ({ parsedInput }) => {
@@ -123,7 +114,6 @@ export const adminCreateWithPasswordAction = actionClient
         return { failure: "Accès refusé : vous n'avez pas le droit de créer un utilisateur." };
       }
 
-      // Vérifier si l'utilisateur existe déjà
       const existingUser = await prisma.user.findUnique({
         where: { email: parsedInput.email },
       });
@@ -132,54 +122,49 @@ export const adminCreateWithPasswordAction = actionClient
         return { failure: "Un utilisateur avec cet email existe déjà." };
       }
 
-      // Generate random password
-      const generatedPassword = Math.random().toString(36).slice(-10) + "!A1";
+      const generatedPassword = generateTemporaryPassword();
 
-      // Importer bcryptjs dynamiquement
-      let bcrypt: typeof import("bcryptjs");
+      let signUpResult: Awaited<ReturnType<typeof auth.api.signUpEmail>>;
       try {
-        const bcryptModule = await import("bcryptjs");
-        bcrypt = (bcryptModule.default || bcryptModule) as typeof import("bcryptjs");
-      } catch {
-        return { failure: "bcryptjs non installé. Exécutez: pnpm add bcryptjs" };
+        signUpResult = await auth.api.signUpEmail({
+          body: {
+            name: parsedInput.name,
+            email: parsedInput.email,
+            password: generatedPassword,
+          },
+        });
+      } catch (signUpError) {
+        const message =
+          signUpError instanceof Error
+            ? signUpError.message
+            : "Impossible de créer le compte utilisateur.";
+        return { failure: message };
       }
 
-      // Hasher le mot de passe
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(generatedPassword, salt);
+      if (!signUpResult?.user) {
+        return {
+          failure:
+            "Impossible de créer le compte. Vérifiez que l'email est valide et que l'inscription est activée.",
+        };
+      }
 
       const now = new Date();
-
-      // Créer l'utilisateur dans Prisma
-      const newUser = await prisma.user.create({
+      await prisma.user.update({
+        where: { id: signUpResult.user.id },
         data: {
-          name: parsedInput.name,
-          email: parsedInput.email,
-          emailVerified: parsedInput.emailVerified ?? false,
           role: parsedInput.role,
-          image: null,
-          createdAt: now,
-          updatedAt: now,
-        },
-      });
-
-      // Créer le compte avec le mot de passe hashé
-      await prisma.account.create({
-        data: {
-          accountId: parsedInput.email,
-          providerId: "credential",
-          userId: newUser.id,
-          password: hashedPassword,
-          createdAt: now,
+          emailVerified: parsedInput.emailVerified ?? false,
           updatedAt: now,
         },
       });
 
       revalidatePath("/dashboard/users");
-      return { success: { ok: true, password: generatedPassword, userId: newUser.id } };
+      return {
+        success: { ok: true, password: generatedPassword, userId: signUpResult.user.id },
+      };
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return { failure: "Validation failed: " + error.errors.map(e => e.message).join(", ") };
+        return { failure: "Validation failed: " + error.errors.map((e) => e.message).join(", ") };
       }
       const errorMessage = handlePrismaError(error);
       console.error("Erreur lors de la création de l'utilisateur:", error);
