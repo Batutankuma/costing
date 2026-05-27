@@ -70,7 +70,7 @@ export default async function Page() {
     produitId: c.produitId,
     depotId: c.depotId || undefined,
     fournisseurId: c.fournisseurId || undefined,
-    unitPrice: c.unitPrice || null,
+    unitPrice: c.unitPrice != null ? Number(c.unitPrice) : null,
     fournisseur: c.fournisseur ? { nom: c.fournisseur.nom } : undefined,
   }));
 

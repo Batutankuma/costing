@@ -9,6 +9,10 @@ function getHospitalityMovementReference(hospitalityId: string) {
   return `HOSP-${hospitalityId}`;
 }
 
+function toNumber(value: unknown): number {
+  return Number(value ?? 0);
+}
+
 async function createOrUpdateHospitalityStockMovement(
   tx: Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
   params: {
@@ -53,7 +57,8 @@ async function createOrUpdateHospitalityStockMovement(
     unite: produit.unit,
     devise: sourceCommande.devise ?? "USD",
     fournisseurId: params.supplierId || sourceCommande.fournisseurId || null,
-    prixUnitaireAchat: sourceCommande.unitPrice,
+    prixUnitaireAchat:
+      sourceCommande.unitPrice != null ? toNumber(sourceCommande.unitPrice) : null,
     seuilMinimum: 0,
     accountId: null,
     clientId: null,
@@ -182,7 +187,7 @@ export const createHospitality = actionClient
           select: { id: true, quantite: true },
         });
         if (!commande) throw new Error("Commande introuvable.");
-        if (commande.quantite < parsedInput.offlQty20) {
+        if (toNumber(commande.quantite) < parsedInput.offlQty20) {
           throw new Error("Quantité insuffisante sur le bon de commande.");
         }
 
@@ -244,10 +249,10 @@ export const updateHospitality = actionClient
 
         if (previous.commandeId === data.commandeId) {
           const delta = data.offlQty20 - previous.offlQty20;
-          if (delta > 0 && newCommande.quantite < delta) {
+          if (delta > 0 && toNumber(newCommande.quantite) < delta) {
             throw new Error("Quantité insuffisante sur le bon de commande.");
           }
-        } else if (newCommande.quantite < data.offlQty20) {
+        } else if (toNumber(newCommande.quantite) < data.offlQty20) {
           throw new Error("Quantité insuffisante sur le nouveau bon de commande.");
         }
 
@@ -400,7 +405,7 @@ export const importHospitalityRows = actionClient
           if (resolvedCommande.depotId && resolvedCommande.depotId !== depotId) {
             throw new Error(`La commande ${commandeReference} n'appartient pas au depot ${row.depotName}`);
           }
-          if (resolvedCommande.quantite < row.offlQty20) {
+          if (toNumber(resolvedCommande.quantite) < row.offlQty20) {
             throw new Error(`Quantité insuffisante sur la commande ${commandeReference}`);
           }
 

@@ -115,7 +115,7 @@ export default function CreateCommandePage() {
       quantity: 0,
       unitPrice: 0,
       numeroFacture: "",
-      typeFacture: "",
+      typeFacture: undefined,
       dateFacture: undefined,
       tva: 0,
     }
@@ -149,7 +149,7 @@ export default function CreateCommandePage() {
     devise: "XOF" | "USD" | "EUR" | "CDF";
     typePaiement: "DIRECT" | "CREDIT";
     numeroFacture?: string;
-    typeFacture?: string;
+    typeFacture?: z.infer<typeof ClientCommandeSchema>["typeFacture"];
     dateFacture?: Date | null;
     tva?: number | null;
   };
@@ -185,9 +185,9 @@ export default function CreateCommandePage() {
         typePaiement: data.typePaiement,
         currentQuantity: 0,
         numeroFacture: data.numeroFacture || null,
-        typeFacture: data.typeFacture || null,
+        typeFacture: data.typeFacture ?? null,
         dateFacture: data.dateFacture || null,
-        tva: data.tva || null,
+        tva: data.tva ?? null,
       };
 
    

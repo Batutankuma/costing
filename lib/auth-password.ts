@@ -1,8 +1,5 @@
 import bcrypt from "bcryptjs";
 import { scrypt, timingSafeEqual } from "node:crypto";
-import { promisify } from "node:util";
-
-const scryptAsync = promisify(scrypt);
 
 /** Aligné sur Better Auth (scrypt par défaut) pour les comptes créés via inscription publique */
 const SCRYPT_OPTIONS = {
@@ -45,7 +42,12 @@ async function verifyLegacyScryptPassword(stored: string, password: string): Pro
   try {
     const salt = Buffer.from(saltHex, "hex");
     const storedKey = Buffer.from(keyHex, "hex");
-    const derivedKey = (await scryptAsync(password, salt, 64, SCRYPT_OPTIONS)) as Buffer;
+    const derivedKey = await new Promise<Buffer>((resolve, reject) => {
+      scrypt(password, salt, 64, SCRYPT_OPTIONS, (error, derived) => {
+        if (error) reject(error);
+        else resolve(derived as Buffer);
+      });
+    });
 
     if (storedKey.length !== derivedKey.length) return false;
     return timingSafeEqual(storedKey, derivedKey);

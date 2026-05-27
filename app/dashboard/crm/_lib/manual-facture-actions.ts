@@ -1,5 +1,3 @@
-"use server";
-
 import prisma from "@/lib/prisma";
 import { actionClient } from "@/lib/safe-action";
 import { revalidatePath } from "next/cache";

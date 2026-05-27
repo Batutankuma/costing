@@ -142,7 +142,8 @@ export const findAllAction = actionClient
       };
       const resultWithCurrentQuantity = result.map((commande: CommandeWithReceptions) => {
         const totalReceived = commande.receptions?.reduce((sum: number, r: { quantity: number }) => sum + (r.quantity || 0), 0) || 0;
-        const currentQuantity = Math.max(0, commande.quantite - totalReceived);
+        const quantite = Number(commande.quantite);
+        const currentQuantity = Math.max(0, quantite - totalReceived);
         return {
           ...commandeDecimalsToNumber(commande),
           currentQuantity,

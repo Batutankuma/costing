@@ -411,8 +411,9 @@ export const CreateCommandeSchema = z.object({
     .transform((v) => (v == null ? null : roundCommandeDecimal(v))),
 });
 
-export const CommandeSchema = CreateCommandeSchema.extend({
+export const CommandeSchema = CreateCommandeSchema.omit({ typeFacture: true }).extend({
   id: z.string(),
+  typeFacture: z.string().optional().nullable(),
 });
 
 // ===== Reception =====

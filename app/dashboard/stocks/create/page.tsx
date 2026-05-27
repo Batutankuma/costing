@@ -51,7 +51,7 @@ export default async function CreateStockPage() {
   const fournisseurSuggestions = fournisseurs.map((f: FournisseurRef) => ({ id: f.id, nom: f.nom }));
   const clientSuggestions = clients.map((c: ClientRef) => ({ id: c.id, name: c.name }));
   const depotSuggestions = depots.map((d: DepotRef) => ({ id: d.id, name: d.name }));
-  const commandeSuggestions = commandes.map((commande: CommandeRef) => ({
+  const commandeSuggestions = commandes.map((commande) => ({
     id: commande.id,
     reference: commande.reference,
     status: commande.status as "COMPLETED" | "DRAFT" | "CONFIRMED" | "CANCELLED" | "PARTIALLY_RECEIVED",
