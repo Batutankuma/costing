@@ -80,6 +80,10 @@ export default async function ViewPaiementBanquePage({ params }: { params: Promi
               <p id="montant" className="text-lg font-semibold">{paiement.montant ? `${paiement.montant.toLocaleString('fr-FR')} $` : "N/A"}</p>
             </div>
             <div>
+              <Label htmlFor="description">Description</Label>
+              <p id="description" className="text-lg whitespace-pre-wrap">{paiement.description?.trim() || "—"}</p>
+            </div>
+            <div>
               <Label>Date de création</Label>
               <p className="text-sm text-gray-600">{new Date(paiement.createdAt).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
             </div>

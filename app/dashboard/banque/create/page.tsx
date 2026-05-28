@@ -34,6 +34,7 @@ export default function CreateBanquePage() {
       numeroCompte: "",
       devise: "USD",
       swift: "",
+      nomGestionnaire: "",
       mailGestionnaire: "",
       contactGestionnaire: "",
     }
@@ -175,6 +176,18 @@ export default function CreateBanquePage() {
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="nomGestionnaire" className="text-sm font-medium">
+                  Nom du Gestionnaire
+                </Label>
+                <Input
+                  id="nomGestionnaire"
+                  placeholder="Nom complet du gestionnaire"
+                  {...register("nomGestionnaire")}
+                  className="h-10"
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="mailGestionnaire" className="text-sm font-medium">
                   Email du Gestionnaire

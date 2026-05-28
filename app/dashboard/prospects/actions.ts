@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { actionClient } from "@/lib/safe-action";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { getCurrentUserServer } from "@/lib/server-auth";
 
 const ProspectSchema = z.object({
   id: z.string().optional(),
@@ -91,6 +92,7 @@ export const createProspect = actionClient
   .schema(CreateProspectSchema)
   .action(async ({ parsedInput }) => {
     try {
+      const currentUser = await getCurrentUserServer();
       const { email, website, ...rest } = parsedInput;
       const created = await prisma.prospect.create({
         data: {
@@ -99,6 +101,20 @@ export const createProspect = actionClient
           website: website === "" ? null : website,
         },
       });
+      if (currentUser) {
+        await prisma.auditLog.create({
+          data: {
+            action: "CREATE",
+            entityType: "PROSPECT",
+            entityId: created.id,
+            actorId: currentUser.id,
+            actorName: currentUser.name,
+            actorEmail: currentUser.email,
+            actorRole: currentUser.role,
+            details: { name: created.name, stage: created.stage },
+          },
+        });
+      }
       revalidatePath("/dashboard/prospects");
       return { success: created };
     } catch (error) {
@@ -142,6 +158,7 @@ export const deleteProspect = actionClient
   .schema(z.object({ id: z.string() }))
   .action(async ({ parsedInput }) => {
     try {
+      const currentUser = await getCurrentUserServer();
       const { id } = parsedInput;
       
       // Vérifier si le prospect existe
@@ -151,6 +168,20 @@ export const deleteProspect = actionClient
       }
       
       await prisma.prospect.delete({ where: { id } });
+      if (currentUser) {
+        await prisma.auditLog.create({
+          data: {
+            action: "DELETE",
+            entityType: "PROSPECT",
+            entityId: id,
+            actorId: currentUser.id,
+            actorName: currentUser.name,
+            actorEmail: currentUser.email,
+            actorRole: currentUser.role,
+            details: { name: existing.name, stage: existing.stage },
+          },
+        });
+      }
       revalidatePath("/dashboard/prospects");
       return { success: true };
     } catch (error) {

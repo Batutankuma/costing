@@ -402,7 +402,7 @@ export default function CreateFacturePage() {
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div className="space-y-2">
               <Label>Mode de facturation</Label>
               <Select value={billingMode} onValueChange={(value: "manual" | "auto") => setBillingMode(value)}>
@@ -418,7 +418,7 @@ export default function CreateFacturePage() {
             {billingMode === "auto" ? (
               <div className="space-y-2">
                 <Label>Bon de commande</Label>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Select value={selectedCommandeRef} onValueChange={setSelectedCommandeRef}>
                     <SelectTrigger className="h-9">
                       <SelectValue placeholder="Choisir un numéro de commande" />
@@ -436,6 +436,7 @@ export default function CreateFacturePage() {
                     variant="secondary"
                     onClick={loadAutomaticFromCommande}
                     disabled={autoLoadStatus === "executing"}
+                    className="w-full sm:w-auto"
                   >
                     Charger
                   </Button>
@@ -447,7 +448,7 @@ export default function CreateFacturePage() {
             ) : null}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div className="space-y-2">
               <Label htmlFor="invoiceNumber">Numéro de facture *</Label>
               <Input id="invoiceNumber" {...form.register("invoiceNumber")} />
@@ -502,7 +503,7 @@ export default function CreateFacturePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-1 md:grid-cols-6 gap-4 border p-4 rounded-lg">
+              <div key={field.id} className="grid grid-cols-1 md:grid-cols-6 gap-3 md:gap-4 border p-4 rounded-lg">
                   <div className="space-y-2">
                     <Label>DN (Bon de livraison)</Label>
                     <Input
@@ -569,7 +570,7 @@ export default function CreateFacturePage() {
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div className="space-y-2">
               <Label>Notes</Label>
               <Textarea rows={3} {...form.register("notes")} />
@@ -603,14 +604,14 @@ export default function CreateFacturePage() {
           </div>
         </div>
 
-        <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+          <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
             Annuler
           </Button>
-          <Button type="button" variant="secondary" onClick={onSaveAndPrint} disabled={isSubmitting}>
+          <Button type="button" variant="secondary" onClick={onSaveAndPrint} disabled={isSubmitting} className="w-full sm:w-auto">
             {isSubmitting ? "Enregistrement..." : "Enregistrer et imprimer"}
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
             {isSubmitting ? "Enregistrement..." : "Enregistrer"}
           </Button>
         </div>

@@ -4,6 +4,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -78,6 +79,7 @@ export default function CreatePaiementBanquePage() {
       statusPaiement: "EN_ATTENTE",
       datePaiement: undefined,
       montant: undefined,
+      description: "",
     }
   });
 
@@ -258,6 +260,23 @@ export default function CreatePaiementBanquePage() {
               />
               {errors.montant && (
                 <p className="text-sm text-destructive">{errors.montant.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-sm font-medium">
+                Description
+              </Label>
+              <Textarea
+                id="description"
+                placeholder="Description du paiement (optionnel)"
+                {...register("description", {
+                  setValueAs: (value) => (value && String(value).trim() !== "" ? String(value).trim() : null),
+                })}
+                className="min-h-[100px]"
+              />
+              {errors.description && (
+                <p className="text-sm text-destructive">{errors.description.message}</p>
               )}
             </div>
 

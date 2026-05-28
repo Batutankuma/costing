@@ -69,6 +69,7 @@ import { columns, FournisseurWithRelations } from "./columns";
 import ExportExcel from "@/components/exportExcel";
 import { useRouter } from "next/navigation";
 import { deleteFournisseur } from "./actions";
+import Link from "next/link";
 
 export default function DataTables({ Element }: { Element: FournisseurWithRelations[] }) {
     const id = useId();
@@ -239,7 +240,36 @@ export default function DataTables({ Element }: { Element: FournisseurWithRelati
                 </div>
             </div>
 
-            <div className="overflow-x-auto rounded-lg border border-border bg-background">
+            <div className="space-y-3 md:hidden">
+                {table.getRowModel().rows.length ? (
+                    table.getRowModel().rows.map((row) => (
+                        <div key={row.original.id} className="rounded-lg border bg-background p-3 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                                <p className="font-semibold">{row.original.company || row.original.nom}</p>
+                                <p className="text-xs text-muted-foreground">{new Date(row.original.createdAt).toLocaleDateString('fr-FR')}</p>
+                            </div>
+                            <div className="text-sm space-y-1">
+                                <p><span className="text-muted-foreground">Contact:</span> {row.original.contactName || "N/A"}</p>
+                                <p><span className="text-muted-foreground">Téléphone:</span> {row.original.phone || "N/A"}</p>
+                            </div>
+                            <div className="flex gap-2 pt-1">
+                                <Button asChild size="sm" variant="outline" className="flex-1">
+                                    <Link href={`/dashboard/fournisseurs/views/${row.original.id}`}>Voir</Link>
+                                </Button>
+                                <Button asChild size="sm" className="flex-1">
+                                    <Link href={`/dashboard/fournisseurs/${row.original.id}`}>Modifier</Link>
+                                </Button>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="h-24 rounded-lg border bg-background grid place-items-center text-sm text-muted-foreground">
+                        Aucun résultat.
+                    </div>
+                )}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto rounded-lg border border-border bg-background">
                 <Table className="table-fixed">
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (

@@ -29,6 +29,7 @@ export default async function EditBanquePage({ params }: { params: Promise<{ id:
           numeroCompte: banque.numeroCompte,
           devise: banque.devise,
           swift: banque.swift ?? "",
+          nomGestionnaire: banque.nomGestionnaire ?? "",
           mailGestionnaire: banque.mailGestionnaire ?? "",
           contactGestionnaire: banque.contactGestionnaire ?? "",
         }} />

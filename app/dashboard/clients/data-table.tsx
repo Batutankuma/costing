@@ -69,6 +69,7 @@ import { columns, ClientWithRelations } from "./columns";
 import ExportExcel from "@/components/exportExcel";
 import { useRouter } from "next/navigation";
 import { deleteClient } from "./actions";
+import Link from "next/link";
 
 export default function DataTables({ Element }: { Element: ClientWithRelations[] }) {
     const id = useId();
@@ -124,14 +125,14 @@ export default function DataTables({ Element }: { Element: ClientWithRelations[]
     
         return (
         <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">
                     <div className="relative">
                         <Input
                             id={`${id}-input`}
                             ref={inputRef}
                             className={cn(
-                                "peer min-w-60 ps-9",
+                                "peer w-full sm:min-w-60 ps-9",
                                 Boolean(table.getColumn("name")?.getFilterValue()) && "pe-9",
                             )}
                             value={(table.getColumn("name")?.getFilterValue() ?? "") as string}
@@ -145,7 +146,7 @@ export default function DataTables({ Element }: { Element: ClientWithRelations[]
                         </div>
                         {Boolean(table.getColumn("name")?.getFilterValue()) && (
                             <button
-                                className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-lg text-muted-foreground/80 outline-offset-2 transition-colors hover:text-foreground focus:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                                className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-lg text-muted-foreground/80 outline-offset-2 transition-colors hover:text-foreground focus:z-10 focus-visible:outline-2 focus-visible:outline-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                                 aria-label="Clear filter"
                                 onClick={() => {
                                     table.getColumn("name")?.setFilterValue("");
@@ -192,11 +193,11 @@ export default function DataTables({ Element }: { Element: ClientWithRelations[]
             </DropdownMenuContent>
           </DropdownMenu>
                 </div>
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
+                <div className="flex w-full flex-wrap items-center gap-2 sm:gap-3 lg:w-auto lg:justify-end">
+                    <div className="flex w-full items-center gap-2 sm:w-auto">
                         <Label>Statut</Label>
                         <Select value={selectedStatus} onValueChange={(v)=> setSelectedStatus(v as "ALL" | "ACTIVE" | "INACTIVE")}>
-                            <SelectTrigger className="min-w-32"><SelectValue placeholder="Tous" /></SelectTrigger>
+                            <SelectTrigger className="w-full sm:min-w-32"><SelectValue placeholder="Tous" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="ALL">Tous</SelectItem>
                                 <SelectItem value="ACTIVE">Actif</SelectItem>
@@ -244,7 +245,7 @@ export default function DataTables({ Element }: { Element: ClientWithRelations[]
                             </AlertDialogContent>
                         </AlertDialog>
                     )}
-                    <Button onClick={()=> router.push(`/dashboard/clients/create`) }>Nouveau Client</Button>
+                    <Button className="w-full sm:w-auto" onClick={()=> router.push(`/dashboard/clients/create`) }>Nouveau Client</Button>
                     <ExportExcel
                       data={filteredData}
                       filename="clients"
@@ -266,7 +267,39 @@ export default function DataTables({ Element }: { Element: ClientWithRelations[]
                 </div>
             </div>
 
-            <div className="overflow-x-auto rounded-lg border border-border bg-background">
+            <div className="space-y-3 md:hidden">
+                {table.getRowModel().rows.length ? (
+                    table.getRowModel().rows.map((row) => (
+                        <div key={row.original.id} className="rounded-lg border bg-background p-3 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                                <div>
+                                    <p className="font-semibold">{row.original.company || row.original.name}</p>
+                                    <p className="text-xs text-muted-foreground">{row.original.contactName || "N/A"}</p>
+                                </div>
+                                <div>{row.original.status === "ACTIVE" ? "Actif" : "Inactif"}</div>
+                            </div>
+                            <div className="text-sm space-y-1">
+                                <p><span className="text-muted-foreground">Email:</span> {row.original.email || "N/A"}</p>
+                                <p><span className="text-muted-foreground">Téléphone:</span> {row.original.phone || "N/A"}</p>
+                            </div>
+                            <div className="flex gap-2 pt-1">
+                                <Button asChild size="sm" variant="outline" className="flex-1">
+                                    <Link href={`/dashboard/clients/views/${row.original.id}`}>Voir</Link>
+                                </Button>
+                                <Button asChild size="sm" className="flex-1">
+                                    <Link href={`/dashboard/clients/${row.original.id}`}>Modifier</Link>
+                                </Button>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="h-24 rounded-lg border bg-background grid place-items-center text-sm text-muted-foreground">
+                        Aucun résultat.
+                    </div>
+                )}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto rounded-lg border border-border bg-background">
                 <Table className="table-fixed">
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -347,7 +380,7 @@ export default function DataTables({ Element }: { Element: ClientWithRelations[]
                 </Table>
             </div>
 
-            <div className="flex items-center justify-between gap-8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <div className="flex items-center gap-3">
                     <Label htmlFor={id} className="max-sm:sr-only">
                         Lignes par page
@@ -370,7 +403,7 @@ export default function DataTables({ Element }: { Element: ClientWithRelations[]
                         </SelectContent>
                     </Select>
                 </div>
-                <div className="flex grow justify-end whitespace-nowrap text-sm text-muted-foreground">
+                <div className="flex grow justify-start sm:justify-end whitespace-nowrap text-sm text-muted-foreground">
                     <p className="whitespace-nowrap text-sm text-muted-foreground" aria-live="polite">
                         <span className="text-foreground">
                             {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}-
@@ -387,7 +420,7 @@ export default function DataTables({ Element }: { Element: ClientWithRelations[]
                     </p>
                 </div>
 
-                <div>
+                <div className="self-end sm:self-auto">
                     <Pagination>
                         <PaginationContent>
                             <PaginationItem>

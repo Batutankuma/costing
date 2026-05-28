@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -82,17 +81,11 @@ export default function LoginPage() {
               <Input id="email" type="email" placeholder="me@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link href="#" className="text-xs text-muted-foreground hover:underline">Forgot your password?</Link>
-              </div>
+              <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
             <Button className="w-full" type="submit" disabled={loading}>{loading ? "Logging in..." : "Login"}</Button>
           </form>
-          <p className="text-xs text-muted-foreground">
-            Don’t have an account? <Link className="underline" href="/signup">Sign up</Link>
-          </p>
         </div>
       </div>
       {/* Right: hero image */}

@@ -50,6 +50,10 @@ export default async function ViewBanquePage({ params }: { params: Promise<{ id:
               <p id="swift" className="text-lg">{banque.swift ?? "N/A"}</p>
             </div>
             <div>
+              <Label htmlFor="nomGestionnaire">Nom du Gestionnaire</Label>
+              <p id="nomGestionnaire" className="text-lg">{banque.nomGestionnaire ?? "N/A"}</p>
+            </div>
+            <div>
               <Label htmlFor="mailGestionnaire">Email du Gestionnaire</Label>
               <p id="mailGestionnaire" className="text-lg">{banque.mailGestionnaire ?? "N/A"}</p>
             </div>

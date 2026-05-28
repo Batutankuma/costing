@@ -25,6 +25,7 @@ export type PaiementBanqueWithRelations = {
     statusPaiement: "EN_ATTENTE" | "PAYE" | "PARTIEL" | "ANNULE";
     datePaiement?: Date | null;
     montant?: number | null;
+    description?: string | null;
     createdAt: Date;
     updatedAt: Date;
     commande: {

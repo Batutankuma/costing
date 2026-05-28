@@ -5,11 +5,18 @@ import { FilePlus2 } from "lucide-react";
 import { findAllFacturesAction } from "./actions";
 import FactureDataTable from "./data-table";
 import { ManualFacture } from "@/models/mvc";
+import { redirect } from "next/navigation";
+import { requireAdminServer } from "@/lib/server-auth";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function FacturePage() {
+  const currentUser = await requireAdminServer();
+  if (!currentUser) {
+    redirect("/login");
+  }
+
   const result = await findAllFacturesAction();
   const rawFactures = (result?.data?.result ?? []) as ManualFacture[];
   const factures = rawFactures.map((facture) => ({

@@ -40,6 +40,7 @@ export default async function EditPaiementBanquePage({ params }: { params: Promi
           statusPaiement: paiement.statusPaiement,
           datePaiement: paiement.datePaiement,
           montant: paiement.montant,
+          description: paiement.description,
         }} />
       </div>
     </div>

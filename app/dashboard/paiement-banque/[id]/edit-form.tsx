@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { PaiementBanqueSchema } from "@/models/mvc";
@@ -40,6 +41,7 @@ interface EditFormProps {
     statusPaiement: "EN_ATTENTE" | "PAYE" | "PARTIEL" | "ANNULE";
     datePaiement?: Date | null;
     montant?: number | null;
+    description?: string | null;
   };
   onCancel?: () => void;
   onSuccess?: () => void;
@@ -92,6 +94,7 @@ export default function EditForm({ id, initial, onCancel, onSuccess }: EditFormP
       statusPaiement: initial.statusPaiement,
       datePaiement: initial.datePaiement || undefined,
       montant: initial.montant || undefined,
+      description: initial.description ?? "",
     },
   });
 
@@ -259,6 +262,24 @@ export default function EditForm({ id, initial, onCancel, onSuccess }: EditFormP
             />
             {errors.montant && (
               <p className="text-sm text-destructive">{errors.montant.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-sm font-medium">
+              Description
+            </Label>
+            <Textarea
+              id="description"
+              placeholder="Description du paiement (optionnel)"
+              defaultValue={initial.description ?? ""}
+              {...register("description", {
+                setValueAs: (value) => (value && String(value).trim() !== "" ? String(value).trim() : null),
+              })}
+              className="min-h-[100px]"
+            />
+            {errors.description && (
+              <p className="text-sm text-destructive">{errors.description.message}</p>
             )}
           </div>
 

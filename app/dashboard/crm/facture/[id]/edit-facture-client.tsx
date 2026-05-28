@@ -122,8 +122,8 @@ export default function EditFactureClient({ factureId }: EditFactureClientProps)
   const isSubmitting = status === "executing";
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Modifier la facture</h1>
           <p className="text-muted-foreground">Mettez à jour les informations puis enregistrez.</p>
@@ -136,7 +136,7 @@ export default function EditFactureClient({ factureId }: EditFactureClientProps)
             <CardTitle>En-tête facture</CardTitle>
             <CardDescription>Informations générales</CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <div className="space-y-2">
               <Label>Numéro *</Label>
               <Input {...form.register("invoiceNumber")} />
@@ -202,7 +202,7 @@ export default function EditFactureClient({ factureId }: EditFactureClientProps)
           </CardHeader>
           <CardContent className="space-y-4">
             {fields.map((field, index) => (
-              <div key={field.id} className="grid grid-cols-1 md:grid-cols-5 gap-4 border p-4 rounded-lg">
+              <div key={field.id} className="grid grid-cols-1 md:grid-cols-5 gap-3 md:gap-4 border p-4 rounded-lg">
                 <div className="md:col-span-2 space-y-2">
                   <Label>Description *</Label>
                   <Input {...form.register(`lines.${index}.description` as const)} />
@@ -245,7 +245,7 @@ export default function EditFactureClient({ factureId }: EditFactureClientProps)
             <CardTitle>Résumé</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div className="space-y-2">
                 <Label>Notes</Label>
                 <Textarea rows={3} {...form.register("notes")} />
@@ -280,11 +280,11 @@ export default function EditFactureClient({ factureId }: EditFactureClientProps)
           </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+          <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
             Annuler
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
             {isSubmitting ? "Enregistrement..." : "Mettre à jour"}
           </Button>
         </div>

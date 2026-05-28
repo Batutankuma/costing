@@ -24,6 +24,7 @@ export type BanqueWithRelations = {
     numeroCompte: string;
     devise: "XOF" | "USD" | "EUR" | "CDF";
     swift?: string | null;
+    nomGestionnaire?: string | null;
     mailGestionnaire?: string | null;
     contactGestionnaire?: string | null;
     createdAt: Date;
@@ -31,7 +32,7 @@ export type BanqueWithRelations = {
 };
 
 const multiColumnFilterFn: FilterFn<BanqueWithRelations> = (row, columnId, filterValue) => {
-    const searchableRowContent = `${row.original.nom} ${row.original.numeroCompte || ''} ${row.original.swift || ''} ${row.original.mailGestionnaire || ''}`.toLowerCase();
+    const searchableRowContent = `${row.original.nom} ${row.original.numeroCompte || ''} ${row.original.swift || ''} ${row.original.nomGestionnaire || ''} ${row.original.mailGestionnaire || ''}`.toLowerCase();
     const searchTerm = (filterValue ?? "").toLowerCase();
     return searchableRowContent.includes(searchTerm);
 };
@@ -86,6 +87,12 @@ export const columns: ColumnDef<BanqueWithRelations>[] = [
         accessorKey: "swift",
         cell: ({ row }) => <div>{row.original.swift || "N/A"}</div>,
         size: 150,
+    },
+    {
+        header: "Nom Gestionnaire",
+        accessorKey: "nomGestionnaire",
+        cell: ({ row }) => <div>{row.original.nomGestionnaire || "N/A"}</div>,
+        size: 170,
     },
     {
         header: "Email Gestionnaire",

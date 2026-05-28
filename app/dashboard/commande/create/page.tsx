@@ -218,14 +218,14 @@ export default function CreateCommandePage() {
   // Ne pas bloquer l'interface: on continue même si chargement ou listes vides
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Nouvelle Commande</h1>
           <p className="text-gray-600 mt-1">Créer une nouvelle commande de produits</p>
         </div>
-        <Badge variant="outline" className="text-sm">
+        <Badge variant="outline" className="text-sm w-fit">
           <FileText className="w-4 h-4 mr-2" />
           Formulaire de commande
         </Badge>
@@ -238,7 +238,7 @@ export default function CreateCommandePage() {
             <span>Chargement des données de référence…</span>
           </div>
         )}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
           {/* Section Informations Générales */}
           <Card className="lg:col-span-2">
             <CardHeader>
@@ -251,7 +251,7 @@ export default function CreateCommandePage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="reference" className="flex items-center gap-2">
                     <FileText className="w-4 h-4" />
@@ -325,7 +325,7 @@ export default function CreateCommandePage() {
 
               <Separator />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="produitId" className="flex items-center gap-2">
                     <Package className="w-4 h-4" />
@@ -539,7 +539,7 @@ export default function CreateCommandePage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div className="space-y-2">
                 <Label htmlFor="devise" className="flex items-center gap-2">
                   <DollarSign className="w-4 h-4" />
@@ -625,7 +625,7 @@ export default function CreateCommandePage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div className="space-y-2">
                 <Label htmlFor="numeroFacture" className="flex items-center gap-2">
                   <FileText className="w-4 h-4" />
@@ -730,19 +730,19 @@ export default function CreateCommandePage() {
         </Card>
 
         {/* Actions */}
-        <div className="flex justify-end gap-4 pt-6">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:gap-4 pt-6">
           <Button
             type="button"
             variant="outline"
             onClick={() => router.push('/dashboard/commande')}
-            className="min-w-[120px]"
+            className="w-full sm:w-auto sm:min-w-[120px]"
           >
             Annuler
           </Button>
           <Button
             type="submit"
             disabled={isSubmitting || loading || produits.length === 0 || depots.length === 0 || fournisseurs.length === 0}
-            className="min-w-[120px]"
+            className="w-full sm:w-auto sm:min-w-[120px]"
           >
             {isSubmitting ? (
               <>

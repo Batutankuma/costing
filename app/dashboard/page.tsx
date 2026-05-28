@@ -8,6 +8,9 @@ import { Chart03 } from "@/components/chart-03";
 import { Chart04 } from "@/components/chart-04";
 import { Chart05 } from "@/components/chart-05";
 import { Chart06 } from "@/components/chart-06";
+import { getCurrentUserServer } from "@/lib/server-auth";
+import Image from "next/image";
+import logo from "@/public/assets/logo.png";
 
 type MonthlyPoint = { month: string; actual: number; projected: number };
 type GrowthPoint = { month: string; revenues: number; churn: number };
@@ -41,6 +44,17 @@ export default async function Page({
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const currentUser = await getCurrentUserServer();
+  if (!currentUser || currentUser.role !== "ADMIN") {
+    return (
+      <div className="px-4 md:px-6 lg:px-8 min-h-[70vh] flex items-center justify-center">
+        <div className="flex items-center justify-center">
+          <Image src={logo} alt="Logo société" width={260} height={260} priority />
+        </div>
+      </div>
+    );
+  }
+
   const resolvedParams = (await searchParams) ?? {};
   const selectedDepotId = typeof resolvedParams.depotId === "string" ? resolvedParams.depotId : "all";
   const selectedProduitId = typeof resolvedParams.produitId === "string" ? resolvedParams.produitId : "all";

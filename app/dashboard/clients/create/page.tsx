@@ -77,15 +77,15 @@ export default function CreateClientPage() {
   };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center gap-4">
+    <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6">
+      <div className="flex flex-wrap items-center gap-3 sm:gap-4">
         <Link href="/dashboard/clients">
           <Button variant="ghost" size="sm" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             Retour
           </Button>
         </Link>
-        <div className="h-6 w-px bg-border" />
+        <div className="hidden sm:block h-6 w-px bg-border" />
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Nouveau Client</h1>
           <p className="text-muted-foreground">
@@ -109,7 +109,7 @@ export default function CreateClientPage() {
             <p className="text-sm text-muted-foreground">
               <span className="text-destructive">*</span> Champs obligatoires
             </p>
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-4 md:gap-6">
               <div className="space-y-2">
                 <Label htmlFor="company" className="text-sm font-medium">
                   Société <span className="text-destructive">*</span>
@@ -140,7 +140,7 @@ export default function CreateClientPage() {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-4 md:gap-6">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
                   Email du contact
@@ -182,7 +182,7 @@ export default function CreateClientPage() {
               />
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-3 gap-4 md:gap-6">
               <div className="space-y-2">
                 <Label htmlFor="rccm" className="text-sm font-medium">
                   RCCM
@@ -232,11 +232,11 @@ export default function CreateClientPage() {
               />
             </div>
 
-            <div className="flex gap-3 pt-4 border-t">
+            <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t">
               <Button 
                 type="submit" 
                 disabled={isSubmitting} 
-                className="flex-1 gap-2"
+                className="w-full sm:flex-1 gap-2"
               >
                 <Save className="h-4 w-4" />
                 {isSubmitting ? "Enregistrement..." : "Enregistrer le client"}
@@ -245,6 +245,7 @@ export default function CreateClientPage() {
                 type="button" 
                 variant="outline" 
                 onClick={() => router.back()}
+                className="w-full sm:w-auto"
               >
                 Annuler
               </Button>

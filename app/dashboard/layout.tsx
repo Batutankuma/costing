@@ -9,8 +9,6 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import AuthGuard from "@/components/auth-guard";
-import BottomNav from "@/components/bottom-nav";
-
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
@@ -18,11 +16,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <SidebarInset className="px-0 md:px-6 lg:px-8 bg-white text-neutral-900">
         <AuthGuard>
           <AppBar />
-          <div className="p-0">
-            {children}
-          </div>
-          {/* Mobile bottom navigation */}
-          <BottomNav />
+          <div className="p-0">{children}</div>
         </AuthGuard>
       </SidebarInset>
     </SidebarProvider>

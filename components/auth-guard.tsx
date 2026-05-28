@@ -14,8 +14,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [isPending, session, router]);
 
-  if (isPending || !session) return null;
+  if (isPending || !session) {
+    return null;
+  }
+
   return <>{children}</>;
 }
-
-

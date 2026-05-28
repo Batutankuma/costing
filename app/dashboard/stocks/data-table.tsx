@@ -71,6 +71,7 @@ import { useRouter } from "next/navigation";
 import { deleteStock } from "./actions";
 import { useAction } from "next-safe-action/hooks";
 import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
 
 
 type DepotOption = { id: string; name: string };
@@ -343,7 +344,37 @@ export default function DataTables({ Element, Depots, Commandes }: { Element: St
                 </div>
             </div>
 
-            <div className="overflow-x-auto rounded-lg border border-border bg-background">
+            <div className="space-y-3 md:hidden">
+                {table.getRowModel().rows.length ? (
+                    table.getRowModel().rows.map((row) => (
+                        <div key={row.original.id} className="rounded-lg border bg-background p-3 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                                <p className="font-semibold">{row.original.reference}</p>
+                                <p className="text-sm">{row.original.type}</p>
+                            </div>
+                            <div className="text-sm space-y-1">
+                                <p><span className="text-muted-foreground">Produit:</span> {row.original.produit?.nom || "N/A"}</p>
+                                <p><span className="text-muted-foreground">Dépôt:</span> {row.original.depot?.name || "N/A"}</p>
+                                <p><span className="text-muted-foreground">Qté:</span> {row.original.quantite} {row.original.unite}</p>
+                            </div>
+                            <div className="flex gap-2 pt-1">
+                                <Button asChild size="sm" variant="outline" className="flex-1">
+                                    <Link href={`/dashboard/stocks/views/${row.original.id}`}>Voir</Link>
+                                </Button>
+                                <Button asChild size="sm" className="flex-1">
+                                    <Link href={`/dashboard/stocks/${row.original.id}`}>Modifier</Link>
+                                </Button>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="h-24 rounded-lg border bg-background grid place-items-center text-sm text-muted-foreground">
+                        No results.
+                    </div>
+                )}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto rounded-lg border border-border bg-background">
                 <Table className="table-fixed text-xs">
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (

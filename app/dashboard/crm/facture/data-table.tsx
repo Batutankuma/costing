@@ -9,6 +9,7 @@ import { columns, FactureRow } from "./columns";
 import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, CircleX, Filter } from "lucide-react";
+import Link from "next/link";
 
 export default function FactureDataTable({ data }: { data: FactureRow[] }) {
   const [sorting, setSorting] = React.useState<SortingState>([{ id: "invoiceDate", desc: true }]);
@@ -29,13 +30,13 @@ export default function FactureDataTable({ data }: { data: FactureRow[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2 justify-between">
-        <div className="relative">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative w-full lg:w-auto">
           <Input
             placeholder="Rechercher une facture"
             value={(table.getColumn("invoiceNumber")?.getFilterValue() as string) ?? ""}
             onChange={(event) => table.getColumn("invoiceNumber")?.setFilterValue(event.target.value)}
-            className="ps-9 min-w-[240px]"
+            className="ps-9 w-full lg:min-w-[240px]"
           />
           <Filter className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           {table.getColumn("invoiceNumber")?.getFilterValue() ? (
@@ -48,10 +49,10 @@ export default function FactureDataTable({ data }: { data: FactureRow[] }) {
             </button>
           ) : null}
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex w-full items-center gap-2 text-sm text-muted-foreground lg:w-auto lg:justify-end">
           Colonnes
           <Select onValueChange={(value) => table.getAllColumns().forEach((column) => column.toggleVisibility(value === 'all' || column.id === value))}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="Affichage" />
             </SelectTrigger>
             <SelectContent>
@@ -64,7 +65,38 @@ export default function FactureDataTable({ data }: { data: FactureRow[] }) {
         </div>
       </div>
 
-      <div className="rounded-md border">
+      <div className="space-y-3 md:hidden">
+        {table.getRowModel().rows.length ? (
+          table.getRowModel().rows.map((row) => (
+            <div key={row.original.id} className="rounded-lg border bg-background p-3 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-semibold">{row.original.invoiceNumber}</p>
+                <p className="text-sm font-medium">
+                  {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: row.original.currency || 'USD' }).format(row.original.total)}
+                </p>
+              </div>
+              <div className="text-sm space-y-1">
+                <p><span className="text-muted-foreground">Client:</span> {row.original.clientName}</p>
+                <p><span className="text-muted-foreground">Date:</span> {new Date(row.original.invoiceDate).toLocaleDateString('fr-FR')}</p>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <Button asChild size="sm" variant="outline" className="flex-1">
+                  <Link href={`/dashboard/crm/facture/views/${row.original.id}`}>Voir</Link>
+                </Button>
+                <Button asChild size="sm" className="flex-1">
+                  <Link href={`/dashboard/crm/facture/${row.original.id}`}>Modifier</Link>
+                </Button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="h-24 rounded-lg border bg-background grid place-items-center text-sm text-muted-foreground">
+            Aucune facture trouvee.
+          </div>
+        )}
+      </div>
+
+      <div className="hidden md:block overflow-x-auto rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -95,7 +127,7 @@ export default function FactureDataTable({ data }: { data: FactureRow[] }) {
         </Table>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           Lignes par page
           <Select
@@ -114,7 +146,7 @@ export default function FactureDataTable({ data }: { data: FactureRow[] }) {
             </SelectContent>
           </Select>
         </div>
-        <Pagination>
+        <Pagination className="self-end sm:self-auto">
           <PaginationContent>
             <PaginationItem>
               <Button

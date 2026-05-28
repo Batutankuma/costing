@@ -26,6 +26,7 @@ model User {
   prospects      Prospect[]
   activities     CRMActivity[]
   userModules    UserModule[]
+  auditLogs      AuditLog[]
 
   @@unique([email])
   @@map("user")
@@ -886,6 +887,26 @@ model ManualFactureLine {
   @@map("manual_facture_line")
 }
 
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  entityType  String
+  entityId    String?
+  details     Json?
+  actorId     String?
+  actorName   String?
+  actorEmail  String?
+  actorRole   String?
+  createdAt   DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId], map: "idx_audit_entity")
+  @@index([actorId], map: "idx_audit_actor")
+  @@index([createdAt], map: "idx_audit_created_at")
+  @@map("audit_log")
+}
+
 // ===== Stocks =====
 model Stock {
   id              String      @id @default(cuid())
@@ -1152,6 +1173,7 @@ model Banque {
   numeroCompte      String
   devise            Devise   @default(USD)
   swift             String?
+  nomGestionnaire   String?
   mailGestionnaire  String?
   contactGestionnaire String?
   createdAt         DateTime @default(now())
@@ -1207,6 +1229,7 @@ model PaiementBanque {
   statusPaiement    StatusPaiement @default(EN_ATTENTE)
   datePaiement      DateTime?
   montant           Float?
+  description       String?        @db.Text
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 

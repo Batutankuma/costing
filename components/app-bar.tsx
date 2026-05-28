@@ -47,10 +47,10 @@ export default function AppBar() {
   const isClients = pathname.startsWith("/dashboard/clients");
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-2 border-b px-3">
-      <div className="flex flex-1 items-center gap-2">
-        <SidebarTrigger className="-ms-1" />
-        <div className="max-lg:hidden lg:contents">
+    <header className="flex min-h-16 shrink-0 items-center gap-2 border-b px-2 md:px-3">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        <SidebarTrigger className="-ms-1 size-9 shrink-0 md:size-7" />
+        <div className="hidden min-w-0 lg:contents">
           <Separator orientation="vertical" className="me-2 data-[orientation=vertical]:h-4" />
           <Breadcrumb>
             <BreadcrumbList>
@@ -62,14 +62,14 @@ export default function AppBar() {
                   <BreadcrumbSeparator className="hidden md:block" />
                 </BreadcrumbItem>
               ))}
-              <BreadcrumbItem>
+              <BreadcrumbItem className="max-w-[40vw]">
                 <BreadcrumbPage>{crumbs[crumbs.length - 1].label}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
         </div>
       </div>
-      <div className="flex gap-3 ml-auto">
+      <div className="ml-auto flex items-center gap-2 md:gap-3">
         {isDashboardHome ? <ActionButtons /> : null}
         {isClients ? <FeedbackDialog /> : null}
         <UserDropdown />

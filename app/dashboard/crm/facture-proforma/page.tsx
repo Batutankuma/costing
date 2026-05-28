@@ -6,6 +6,7 @@ import { findAllFacturesAction } from "./actions";
 import FactureDataTable from "./data-table";
 import { ManualFacture } from "@/models/mvc";
 import { MANUAL_FACTURE_CONFIG } from "@/lib/manual-facture-config";
+import { getCurrentUserServer } from "@/lib/server-auth";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -13,6 +14,8 @@ export const revalidate = 0;
 const config = MANUAL_FACTURE_CONFIG.PROFORMA;
 
 export default async function FactureProformaPage() {
+  const currentUser = await getCurrentUserServer();
+
   const result = await findAllFacturesAction();
   const rawFactures = (result?.data?.result ?? []) as ManualFacture[];
   const factures = rawFactures.map((facture) => ({
@@ -26,6 +29,11 @@ export default async function FactureProformaPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{config.listTitle}</h1>
           <p className="text-muted-foreground">{config.listDescription}</p>
+          {currentUser && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Connecté: {currentUser.name} ({currentUser.role})
+            </p>
+          )}
         </div>
         <Button asChild>
           <Link href={`${config.basePath}/create`} className="gap-2">

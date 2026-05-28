@@ -24,6 +24,7 @@ interface EditFormProps {
     numeroCompte: string;
     devise: "XOF" | "USD" | "EUR" | "CDF";
     swift?: string | null;
+    nomGestionnaire?: string | null;
     mailGestionnaire?: string | null;
     contactGestionnaire?: string | null;
   };
@@ -49,6 +50,7 @@ export default function EditForm({ id, initial, onCancel, onSuccess }: EditFormP
       numeroCompte: initial.numeroCompte,
       devise: initial.devise as "XOF" | "USD" | "EUR" | "CDF",
       swift: initial.swift ?? "",
+      nomGestionnaire: initial.nomGestionnaire ?? "",
       mailGestionnaire: initial.mailGestionnaire ?? "",
       contactGestionnaire: initial.contactGestionnaire ?? "",
     },
@@ -176,6 +178,18 @@ export default function EditForm({ id, initial, onCancel, onSuccess }: EditFormP
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="nomGestionnaire" className="text-sm font-medium">
+                Nom du Gestionnaire
+              </Label>
+              <Input
+                id="nomGestionnaire"
+                placeholder="Nom complet du gestionnaire"
+                {...register("nomGestionnaire")}
+                className="h-10"
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="mailGestionnaire" className="text-sm font-medium">
                 Email du Gestionnaire

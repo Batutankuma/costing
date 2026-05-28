@@ -70,6 +70,8 @@ import ExportExcel from "@/components/exportExcel";
 import { useRouter } from "next/navigation";
 import { removeByIdAction } from "./actions";
 import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 
 
 export default function DataTables({ Element }: { Element: Commande[] }) {
@@ -143,14 +145,14 @@ export default function DataTables({ Element }: { Element: Commande[] }) {
     
     return (
         <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">
                     <div className="relative">
                         <Input
                             id={`${id}-input`}
                             ref={inputRef}
                             className={cn(
-                                "peer min-w-60 ps-9",
+                                "peer w-full sm:min-w-60 ps-9",
                                 Boolean(table.getColumn("reference")?.getFilterValue()) && "pe-9",
                             )}
                             value={(table.getColumn("reference")?.getFilterValue() ?? "") as string}
@@ -211,7 +213,7 @@ export default function DataTables({ Element }: { Element: Commande[] }) {
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex w-full flex-wrap items-center gap-2 sm:gap-3 lg:w-auto lg:justify-end">
                     {table.getSelectedRowModel().rows.length > 0 && (
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
@@ -252,12 +254,42 @@ export default function DataTables({ Element }: { Element: Commande[] }) {
                             </AlertDialogContent>
                         </AlertDialog>
                     )}
-                    <Button onClick={()=> router.push(`/dashboard/commande/create`) }>Nouvelle Commande</Button>
+                    <Button className="w-full sm:w-auto" onClick={()=> router.push(`/dashboard/commande/create`) }>Nouvelle Commande</Button>
                     <ExportExcel data={data} filename="commandes" />
                 </div>
             </div>
 
-            <div className="overflow-x-auto rounded-lg border border-border bg-background">
+            <div className="space-y-3 md:hidden">
+                {table.getRowModel().rows.length ? (
+                    table.getRowModel().rows.map((row) => (
+                        <div key={row.original.id} className="rounded-lg border bg-background p-3 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                                <p className="font-semibold">{row.original.reference}</p>
+                                <Badge variant="outline">{row.original.status}</Badge>
+                            </div>
+                            <div className="text-sm space-y-1">
+                                <p><span className="text-muted-foreground">Produit:</span> {row.original.produit?.name || "-"}</p>
+                                <p><span className="text-muted-foreground">Fournisseur:</span> {row.original.fournisseur?.nom || "-"}</p>
+                                <p><span className="text-muted-foreground">Qté:</span> {row.original.quantite}</p>
+                            </div>
+                            <div className="flex gap-2 pt-1">
+                                <Button asChild size="sm" variant="outline" className="flex-1">
+                                    <Link href={`/dashboard/commande/views/${row.original.id}`}>Voir</Link>
+                                </Button>
+                                <Button asChild size="sm" className="flex-1">
+                                    <Link href={`/dashboard/commande/${row.original.id}`}>Modifier</Link>
+                                </Button>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="h-24 rounded-lg border bg-background grid place-items-center text-sm text-muted-foreground">
+                        Aucun résultat.
+                    </div>
+                )}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto rounded-lg border border-border bg-background">
                 <Table className="table-fixed text-xs">
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -338,7 +370,7 @@ export default function DataTables({ Element }: { Element: Commande[] }) {
                 </Table>
             </div>
 
-            <div className="flex items-center justify-between gap-8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <div className="flex items-center gap-3">
                     <Label htmlFor={id} className="max-sm:sr-only">
                         Lignes par page
@@ -361,7 +393,7 @@ export default function DataTables({ Element }: { Element: Commande[] }) {
                         </SelectContent>
                     </Select>
                 </div>
-                <div className="flex grow justify-end whitespace-nowrap text-sm text-muted-foreground">
+                <div className="flex grow justify-start sm:justify-end whitespace-nowrap text-sm text-muted-foreground">
                     <p className="whitespace-nowrap text-sm text-muted-foreground" aria-live="polite">
                         <span className="text-foreground">
                             {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}-
@@ -378,7 +410,7 @@ export default function DataTables({ Element }: { Element: Commande[] }) {
                     </p>
                 </div>
 
-                <div>
+                <div className="self-end sm:self-auto">
                     <Pagination>
                         <PaginationContent>
                             <PaginationItem>

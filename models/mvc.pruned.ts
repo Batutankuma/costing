@@ -509,6 +509,7 @@ export const CreateBanqueSchema = z.object({
   numeroCompte: z.string().min(1, "Le numéro de compte est requis"),
   devise: z.enum(["XOF", "USD", "EUR", "CDF"]),
   swift: z.string().optional().nullable(),
+  nomGestionnaire: z.string().optional().nullable(),
   mailGestionnaire: z.string().email("Email invalide").optional().nullable().or(z.literal("")),
   contactGestionnaire: z.string().optional().nullable(),
 });
@@ -519,6 +520,7 @@ export const BanqueSchema = z.object({
   numeroCompte: z.string().min(1, "Le numéro de compte est requis"),
   devise: z.enum(["XOF", "USD", "EUR", "CDF"]),
   swift: z.string().optional().nullable(),
+  nomGestionnaire: z.string().optional().nullable(),
   mailGestionnaire: z.string().email("Email invalide").optional().nullable().or(z.literal("")),
   contactGestionnaire: z.string().optional().nullable(),
 });
@@ -547,6 +549,7 @@ export const CreatePaiementBanqueSchema = z.object({
   statusPaiement: z.enum(["EN_ATTENTE", "PAYE", "PARTIEL", "ANNULE"]).default("EN_ATTENTE"),
   datePaiement: z.date().optional().nullable(),
   montant: z.number().optional().nullable(),
+  description: z.string().optional().nullable(),
 });
 
 export const PaiementBanqueSchema = CreatePaiementBanqueSchema.extend({

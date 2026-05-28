@@ -8,6 +8,7 @@ import {
   type ManualFactureKind,
   type ManualFactureModuleConfig,
 } from "@/lib/manual-facture-config";
+import { getCurrentUserServer } from "@/lib/server-auth";
 import { z } from "zod";
 
 type ManualFactureWithLines = z.infer<typeof ManualFactureSchema>;
@@ -85,11 +86,17 @@ function parseNextIndex(invoiceNumber: string, config: ManualFactureModuleConfig
 
 export function createManualFactureActions(kind: ManualFactureKind) {
   const config = MANUAL_FACTURE_CONFIG[kind];
+  const adminOnly = kind === "STANDARD";
 
   const createFactureAction = actionClient
     .schema(CreateManualFactureSchema)
     .action(async ({ parsedInput }) => {
       try {
+        const currentUser = await getCurrentUserServer();
+        if (!currentUser || (adminOnly && currentUser.role !== "ADMIN")) {
+          return { failure: "Accès refusé." };
+        }
+
         const accountId = await getDefaultAccountId();
         const { subtotal, taxAmount, total } = computeTotals(parsedInput);
         const created = await prisma.manualFacture.create({
@@ -123,6 +130,18 @@ export function createManualFactureActions(kind: ManualFactureKind) {
             },
           },
           include: { lines: true },
+        });
+        await prisma.auditLog.create({
+          data: {
+            action: "CREATE",
+            entityType: "MANUAL_FACTURE",
+            entityId: created.id,
+            actorId: currentUser.id,
+            actorName: currentUser.name,
+            actorEmail: currentUser.email,
+            actorRole: currentUser.role,
+            details: { kind, invoiceNumber: created.invoiceNumber },
+          },
         });
         revalidatePath(config.basePath);
         return { success: mapFacture(created) };
@@ -264,6 +283,11 @@ export function createManualFactureActions(kind: ManualFactureKind) {
 
   const updateFactureAction = actionClient.schema(ManualFactureSchema).action(async ({ parsedInput }) => {
     try {
+      const currentUser = await getCurrentUserServer();
+      if (!currentUser || (adminOnly && currentUser.role !== "ADMIN")) {
+        return { failure: "Accès refusé." };
+      }
+
       const existing = await prisma.manualFacture.findFirst({
         where: { id: parsedInput.id, kind },
         select: { id: true },
@@ -320,12 +344,29 @@ export function createManualFactureActions(kind: ManualFactureKind) {
 
   const removeFactureAction = actionClient.schema(z.object({ id: z.string() })).action(async ({ parsedInput }) => {
     try {
+      const currentUser = await getCurrentUserServer();
+      if (!currentUser || (adminOnly && currentUser.role !== "ADMIN")) {
+        return { failure: "Accès refusé." };
+      }
+
       const existing = await prisma.manualFacture.findFirst({
         where: { id: parsedInput.id, kind },
-        select: { id: true },
+        select: { id: true, invoiceNumber: true },
       });
       if (!existing) return { failure: "Facture introuvable." };
       await prisma.manualFacture.delete({ where: { id: parsedInput.id } });
+      await prisma.auditLog.create({
+        data: {
+          action: "DELETE",
+          entityType: "MANUAL_FACTURE",
+          entityId: parsedInput.id,
+          actorId: currentUser.id,
+          actorName: currentUser.name,
+          actorEmail: currentUser.email,
+          actorRole: currentUser.role,
+          details: { kind, invoiceNumber: existing.invoiceNumber },
+        },
+      });
       revalidatePath(config.basePath);
       return { success: true };
     } catch (error) {
