@@ -1,10 +1,8 @@
 "use client";
 
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import Image from "next/image";
-import { CreateManualFactureSchema } from "@/models/mvc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -25,21 +23,11 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useEffect, useState, useMemo } from "react";
 import QRCode from "react-qr-code";
+import { formatManualFactureNumber, roundManualFactureDecimal } from "@/lib/manual-facture-format";
+import { ManualFactureFormSchema, type ManualFactureFormData } from "../../_lib/manual-facture-form-schema";
+import ManualFactureDecimalInput from "@/components/manual-facture-decimal-input";
 
-const FormSchema = CreateManualFactureSchema.omit({
-  dueInDays: true,
-  currency: true,
-  taxRate: true,
-  otherFees: true,
-}).extend({
-  invoiceDate: z.date({ required_error: "Date requise" }),
-  currency: z.string().min(1, "Devise requise"),
-  dueInDays: z.number().min(0, "Échéance invalide"),
-  taxRate: z.number().min(0, "TVA invalide").max(100, "TVA invalide"),
-  otherFees: z.number().min(0, "Frais invalides"),
-});
-
-type FormData = z.infer<typeof FormSchema>;
+type FormData = ManualFactureFormData;
 
 // Informations de la société (codées en dur)
 const COMPANY_INFO = {
@@ -90,7 +78,7 @@ export default function CreateFacturePage() {
   const [deliveryNotes, setDeliveryNotes] = useState<string[]>([""]);
 
   const form = useForm<FormData>({
-    resolver: zodResolver(FormSchema),
+    resolver: zodResolver(ManualFactureFormSchema),
     defaultValues: {
       invoiceNumber: "",
       invoiceDate: new Date(),
@@ -306,7 +294,17 @@ export default function CreateFacturePage() {
   };
 
   const onSubmit = async (data: FormData) => {
-    const result = await executeAsync(data);
+    const payload: FormData = {
+      ...data,
+      taxRate: roundManualFactureDecimal(data.taxRate),
+      otherFees: roundManualFactureDecimal(data.otherFees),
+      lines: data.lines.map((line) => ({
+        ...line,
+        quantity: roundManualFactureDecimal(line.quantity),
+        unitPrice: roundManualFactureDecimal(line.unitPrice),
+      })),
+    };
+    const result = await executeAsync(payload);
     if (result?.data?.success) {
       toast({ title: "Facture créée", description: "La facture a été enregistrée." });
       if (printMode) {
@@ -487,12 +485,24 @@ export default function CreateFacturePage() {
 
             <div className="space-y-2">
               <Label htmlFor="taxRate">TVA (%)</Label>
-              <Input id="taxRate" type="number" step="0.01" {...form.register("taxRate", { valueAsNumber: true })} />
+              <Controller
+                name="taxRate"
+                control={form.control}
+                render={({ field }) => (
+                  <ManualFactureDecimalInput id="taxRate" value={field.value ?? 0} onChange={field.onChange} onBlur={field.onBlur} />
+                )}
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="otherFees">Autres frais</Label>
-              <Input id="otherFees" type="number" step="0.01" {...form.register("otherFees", { valueAsNumber: true })} />
+              <Controller
+                name="otherFees"
+                control={form.control}
+                render={({ field }) => (
+                  <ManualFactureDecimalInput id="otherFees" value={field.value ?? 0} onChange={field.onChange} onBlur={field.onBlur} />
+                )}
+              />
             </div>
           </div>
 
@@ -529,11 +539,23 @@ export default function CreateFacturePage() {
                   </div>
                   <div className="space-y-2">
                     <Label>Quantité *</Label>
-                    <Input type="number" step="0.01" {...form.register(`lines.${index}.quantity` as const, { valueAsNumber: true })} />
+                    <Controller
+                      name={`lines.${index}.quantity`}
+                      control={form.control}
+                      render={({ field }) => (
+                        <ManualFactureDecimalInput value={field.value ?? 0} onChange={field.onChange} onBlur={field.onBlur} />
+                      )}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>P.U Hors TVA *</Label>
-                    <Input type="number" step="0.0001" {...form.register(`lines.${index}.unitPrice` as const, { valueAsNumber: true })} />
+                    <Controller
+                      name={`lines.${index}.unitPrice`}
+                      control={form.control}
+                      render={({ field }) => (
+                        <ManualFactureDecimalInput value={field.value ?? 0} onChange={field.onChange} onBlur={field.onBlur} />
+                      )}
+                    />
                   </div>
                   <div className="md:col-span-6 flex justify-end">
                     {fields.length > 1 && (
@@ -579,25 +601,25 @@ export default function CreateFacturePage() {
               <div className="flex justify-between text-sm">
                 <span>Sous-total</span>
                 <span>
-                  {totals.subtotal.toFixed(2)} {form.watch("currency")}
+                  {formatManualFactureNumber(totals.subtotal)} {form.watch("currency")}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>TVA ({taxRate}%)</span>
                 <span>
-                  {taxAmount.toFixed(2)} {form.watch("currency")}
+                  {formatManualFactureNumber(taxAmount)} {form.watch("currency")}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Autres</span>
                 <span>
-                  {otherFees.toFixed(2)} {form.watch("currency")}
+                  {formatManualFactureNumber(otherFees)} {form.watch("currency")}
                 </span>
               </div>
               <div className="flex justify-between text-base font-semibold">
                 <span>Total TTC</span>
                 <span>
-                  {grandTotal.toFixed(2)} {form.watch("currency")}
+                  {formatManualFactureNumber(grandTotal)} {form.watch("currency")}
                 </span>
               </div>
             </div>
@@ -730,9 +752,9 @@ export default function CreateFacturePage() {
                   <td style={{ padding: "8px", textAlign: "center", border: "1px solid #333" }}>{index + 1}</td>
                   <td style={{ padding: "8px", border: "1px solid #333" }}>{line.description}</td>
                   <td style={{ padding: "8px", textAlign: "center", border: "1px solid #333" }}>{line.unit}</td>
-                  <td style={{ padding: "8px", textAlign: "center", border: "1px solid #333" }}>{Number(line.quantity || 0).toLocaleString("fr-FR")}</td>
-                  <td style={{ padding: "8px", textAlign: "center", border: "1px solid #333" }}>{Number(line.unitPrice || 0).toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
-                  <td style={{ padding: "8px", textAlign: "right", border: "1px solid #333" }}>{lineTotal.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                  <td style={{ padding: "8px", textAlign: "center", border: "1px solid #333" }}>{formatManualFactureNumber(line.quantity)}</td>
+                  <td style={{ padding: "8px", textAlign: "center", border: "1px solid #333" }}>{formatManualFactureNumber(line.unitPrice)}</td>
+                  <td style={{ padding: "8px", textAlign: "right", border: "1px solid #333" }}>{formatManualFactureNumber(lineTotal)}</td>
                 </tr>
               );
             })}
@@ -755,19 +777,19 @@ export default function CreateFacturePage() {
           <div style={{ border: "2px solid #333", padding: "12px", width: "240px", fontSize: "10px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
               <span style={{ fontWeight: "bold" }}>Total Hors TVA</span>
-              <span style={{ fontWeight: "bold" }}>{totals.subtotal.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+              <span style={{ fontWeight: "bold" }}>{formatManualFactureNumber(totals.subtotal)}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
               <span>TVA</span>
-              <span>{taxAmount.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+              <span>{formatManualFactureNumber(taxAmount)}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
               <span>Autres</span>
-              <span>{otherFees > 0 ? otherFees.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : ""}</span>
+              <span>{otherFees > 0 ? formatManualFactureNumber(otherFees) : ""}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid #333", paddingTop: "8px", marginTop: "8px", fontSize: "14px", fontWeight: "bold" }}>
               <span>Total TTC</span>
-              <span>{grandTotal.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+              <span>{formatManualFactureNumber(grandTotal)}</span>
             </div>
           </div>
         </div>

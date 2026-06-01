@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,18 +12,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2 } from "lucide-react";
 import { findFactureById, updateFactureAction } from "../actions";
-import { CreateManualFactureSchema, ManualFacture } from "@/models/mvc";
+import { ManualFacture } from "@/models/mvc";
 import { useAction } from "next-safe-action/hooks";
 import { format } from "date-fns";
+import { formatManualFactureNumber, roundManualFactureDecimal } from "@/lib/manual-facture-format";
+import { ManualFactureFormSchema, type ManualFactureFormData } from "../../_lib/manual-facture-form-schema";
+import ManualFactureDecimalInput from "@/components/manual-facture-decimal-input";
 
-const FormSchema = CreateManualFactureSchema.extend({
-  dueInDays: z.number(),
-  currency: z.string(),
-  taxRate: z.number(),
-  otherFees: z.number(),
-});
-
-type FormData = z.infer<typeof FormSchema>;
+type FormData = ManualFactureFormData;
 
 interface EditFactureClientProps {
   factureId: string;
@@ -37,7 +32,7 @@ export default function EditFactureClient({ factureId }: EditFactureClientProps)
   const [factureMeta, setFactureMeta] = useState<ManualFacture | null>(null);
 
   const form = useForm<FormData>({
-    resolver: zodResolver(FormSchema),
+    resolver: zodResolver(ManualFactureFormSchema),
     defaultValues: {
       invoiceNumber: "",
       invoiceDate: new Date(),
@@ -70,7 +65,7 @@ export default function EditFactureClient({ factureId }: EditFactureClientProps)
       const facture = result.result;
       form.reset({
         invoiceNumber: facture.invoiceNumber,
-        invoiceDate: facture.invoiceDate,
+        invoiceDate: new Date(facture.invoiceDate),
         vendorName: facture.vendorName,
         vendorAddress: facture.vendorAddress || "",
         vendorTaxNumber: facture.vendorTaxNumber || "",
@@ -81,9 +76,13 @@ export default function EditFactureClient({ factureId }: EditFactureClientProps)
         dueInDays: facture.dueInDays,
         currency: facture.currency,
         notes: facture.notes || "",
-        taxRate: facture.taxRate,
-        otherFees: facture.otherFees,
-        lines: facture.lines,
+        taxRate: roundManualFactureDecimal(facture.taxRate),
+        otherFees: roundManualFactureDecimal(facture.otherFees),
+        lines: facture.lines.map((line) => ({
+          ...line,
+          quantity: roundManualFactureDecimal(line.quantity),
+          unitPrice: roundManualFactureDecimal(line.unitPrice),
+        })),
       });
       replace(facture.lines.length ? facture.lines : [{ description: "", unit: "", quantity: 1, unitPrice: 0 }]);
       setFactureMeta(facture);
@@ -104,6 +103,13 @@ export default function EditFactureClient({ factureId }: EditFactureClientProps)
       ...factureMeta,
       ...data,
       invoiceDate: data.invoiceDate,
+      taxRate: roundManualFactureDecimal(data.taxRate),
+      otherFees: roundManualFactureDecimal(data.otherFees),
+      lines: data.lines.map((line) => ({
+        ...line,
+        quantity: roundManualFactureDecimal(line.quantity),
+        unitPrice: roundManualFactureDecimal(line.unitPrice),
+      })),
       updatedAt: new Date(),
     };
     const result = await executeAsync(payload);
@@ -187,11 +193,23 @@ export default function EditFactureClient({ factureId }: EditFactureClientProps)
             </div>
             <div className="space-y-2">
               <Label>TVA (%)</Label>
-              <Input type="number" step="0.01" {...form.register("taxRate", { valueAsNumber: true })} />
+              <Controller
+                name="taxRate"
+                control={form.control}
+                render={({ field }) => (
+                  <ManualFactureDecimalInput value={field.value ?? 0} onChange={field.onChange} onBlur={field.onBlur} />
+                )}
+              />
             </div>
             <div className="space-y-2">
               <Label>Autres frais</Label>
-              <Input type="number" step="0.01" {...form.register("otherFees", { valueAsNumber: true })} />
+              <Controller
+                name="otherFees"
+                control={form.control}
+                render={({ field }) => (
+                  <ManualFactureDecimalInput value={field.value ?? 0} onChange={field.onChange} onBlur={field.onBlur} />
+                )}
+              />
             </div>
           </CardContent>
         </Card>
@@ -213,11 +231,23 @@ export default function EditFactureClient({ factureId }: EditFactureClientProps)
                 </div>
                 <div className="space-y-2">
                   <Label>Quantité *</Label>
-                  <Input type="number" step="0.01" {...form.register(`lines.${index}.quantity` as const, { valueAsNumber: true })} />
+                  <Controller
+                    name={`lines.${index}.quantity`}
+                    control={form.control}
+                    render={({ field }) => (
+                      <ManualFactureDecimalInput value={field.value ?? 0} onChange={field.onChange} onBlur={field.onBlur} />
+                    )}
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label>Prix unitaire *</Label>
-                  <Input type="number" step="0.0001" {...form.register(`lines.${index}.unitPrice` as const, { valueAsNumber: true })} />
+                  <Label>P.U Hors TVA *</Label>
+                  <Controller
+                    name={`lines.${index}.unitPrice`}
+                    control={form.control}
+                    render={({ field }) => (
+                      <ManualFactureDecimalInput value={field.value ?? 0} onChange={field.onChange} onBlur={field.onBlur} />
+                    )}
+                  />
                 </div>
                 <div className="md:col-span-5 flex justify-end">
                   {fields.length > 1 && (
@@ -254,25 +284,25 @@ export default function EditFactureClient({ factureId }: EditFactureClientProps)
                 <div className="flex justify-between text-sm">
                   <span>Sous-total</span>
                   <span>
-                    {totals.subtotal.toFixed(2)} {form.watch("currency")}
+                    {formatManualFactureNumber(totals.subtotal)} {form.watch("currency")}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>TVA ({form.watch("taxRate")}%)</span>
                   <span>
-                    {taxAmount.toFixed(2)} {form.watch("currency")}
+                    {formatManualFactureNumber(taxAmount)} {form.watch("currency")}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Autres</span>
                   <span>
-                    {(form.watch("otherFees") ?? 0).toFixed(2)} {form.watch("currency")}
+                    {formatManualFactureNumber(form.watch("otherFees") ?? 0)} {form.watch("currency")}
                   </span>
                 </div>
                 <div className="flex justify-between text-base font-semibold">
                   <span>Total TTC</span>
                   <span>
-                    {grandTotal.toFixed(2)} {form.watch("currency")}
+                    {formatManualFactureNumber(grandTotal)} {form.watch("currency")}
                   </span>
                 </div>
               </div>

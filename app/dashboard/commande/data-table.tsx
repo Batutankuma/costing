@@ -65,7 +65,7 @@ import {
     Trash,
 } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
-import { columns, Commande } from "./columns";
+import { columns, Commande, mapCommandeForExport } from "./columns";
 import ExportExcel from "@/components/exportExcel";
 import { useRouter } from "next/navigation";
 import { removeByIdAction } from "./actions";
@@ -255,7 +255,11 @@ export default function DataTables({ Element }: { Element: Commande[] }) {
                         </AlertDialog>
                     )}
                     <Button className="w-full sm:w-auto" onClick={()=> router.push(`/dashboard/commande/create`) }>Nouvelle Commande</Button>
-                    <ExportExcel data={data} filename="commandes" />
+                    <ExportExcel
+                      data={data}
+                      filename="commandes"
+                      mapRow={mapCommandeForExport}
+                    />
                 </div>
             </div>
 

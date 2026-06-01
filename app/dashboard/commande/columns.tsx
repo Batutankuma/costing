@@ -20,6 +20,7 @@ type CommandeStatus = "DRAFT" | "CONFIRMED" | "PARTIALLY_RECEIVED" | "COMPLETED"
 export type Commande = {
   id: string;
   reference: string;
+  date?: Date | string;
   status: CommandeStatus;
   produitId: string;
   fournisseurId?: string | null;
@@ -27,6 +28,12 @@ export type Commande = {
   quantite: number;
   unitPrice?: number | null;
   devise?: string | null;
+  tva?: number | null;
+  numeroFacture?: string | null;
+  typeFacture?: string | null;
+  dateFacture?: Date | string | null;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
   produit?: { name: string; unit?: string } | null;
   fournisseur?: { nom: string } | null;
   depot?: { name: string } | null;
@@ -52,6 +59,46 @@ function formatCommandeDecimal(value: number) {
         minimumFractionDigits: 0,
         maximumFractionDigits: 4,
     });
+}
+
+const COMMANDE_STATUS_LABELS: Record<CommandeStatus, string> = {
+    DRAFT: "Brouillon",
+    CONFIRMED: "Confirmée",
+    PARTIALLY_RECEIVED: "Partiellement reçue",
+    COMPLETED: "Terminée",
+    CANCELLED: "Annulée",
+};
+
+function formatCommandeDate(value?: Date | string | null) {
+    if (!value) return "";
+    const d = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString("fr-FR");
+}
+
+/** Ligne d'export CSV/Excel sans IDs — libellés lisibles */
+export function mapCommandeForExport(row: Commande) {
+    const unit = row.produit?.unit || "L";
+    const qty = (n: number) => `${formatCommandeDecimal(n)} ${unit}`.trim();
+    return {
+        Référence: row.reference,
+        Date: formatCommandeDate(row.date),
+        Statut: COMMANDE_STATUS_LABELS[row.status] ?? row.status,
+        Produit: row.produit?.name ?? "",
+        Fournisseur: row.fournisseur?.nom ?? "",
+        Dépôt: row.depot?.name ?? "",
+        "Qté commandée": qty(getInvoiceOrderedQuantity(row)),
+        "Qté réceptionnée": qty(getReceivedQuantity(row)),
+        "Qté hospitality": qty(getHospitalityQuantity(row)),
+        Restant: qty(getOperationalRemainingQuantity(row)),
+        "Prix unitaire": row.unitPrice ?? "",
+        Devise: row.devise ?? "",
+        "N° facture": row.numeroFacture ?? "",
+        "Type facture": row.typeFacture ?? "",
+        "Date facture": formatCommandeDate(row.dateFacture),
+        "TVA (%)": row.tva ?? "",
+        "Créé le": formatCommandeDate(row.createdAt),
+        "Modifié le": formatCommandeDate(row.updatedAt),
+    };
 }
 
 function getReceivedQuantity(commande: Commande) {

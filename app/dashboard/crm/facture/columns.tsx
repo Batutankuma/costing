@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Eye, Trash2, FileEdit } from "lucide-react";
 import { ManualFacture } from "@/models/mvc";
+import { formatManualFactureCurrency } from "@/lib/manual-facture-format";
 import DeleteFactureButton from "./delete";
 
 export type FactureRow = ManualFacture & { invoiceDate: Date };
@@ -67,7 +68,7 @@ export function createManualFactureColumns(
     size: 120,
     cell: ({ row }) => (
       <span className="font-medium">
-        {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: row.original.currency || 'USD' }).format(row.original.total)}
+        {formatManualFactureCurrency(row.original.total, row.original.currency || "USD")}
       </span>
     ),
   },

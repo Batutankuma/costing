@@ -10,6 +10,7 @@ import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/p
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, CircleX, Filter } from "lucide-react";
 import Link from "next/link";
+import { formatManualFactureCurrency } from "@/lib/manual-facture-format";
 
 export default function FactureDataTable({ data }: { data: FactureRow[] }) {
   const [sorting, setSorting] = React.useState<SortingState>([{ id: "invoiceDate", desc: true }]);
@@ -72,7 +73,7 @@ export default function FactureDataTable({ data }: { data: FactureRow[] }) {
               <div className="flex items-start justify-between gap-2">
                 <p className="font-semibold">{row.original.invoiceNumber}</p>
                 <p className="text-sm font-medium">
-                  {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: row.original.currency || 'USD' }).format(row.original.total)}
+                  {formatManualFactureCurrency(row.original.total, row.original.currency || "USD")}
                 </p>
               </div>
               <div className="text-sm space-y-1">

@@ -13,6 +13,7 @@ import { ArrowLeft, Printer } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { formatManualFactureNumber } from "@/lib/manual-facture-format";
 
 // Informations de la société (codées en dur)
 const COMPANY_INFO = {
@@ -214,12 +215,12 @@ export default function FactureViewClient({ factureId, config, findFactureById }
                   <tr key={idx} className="border-t">
                     <td className="px-4 py-2">{line.description}</td>
                     <td className="px-4 py-2">{line.unit}</td>
-                    <td className="px-4 py-2 text-right">{line.quantity.toLocaleString("fr-FR")}</td>
+                    <td className="px-4 py-2 text-right">{formatManualFactureNumber(line.quantity)}</td>
                     <td className="px-4 py-2 text-right">
-                      {line.unitPrice.toFixed(4)} {facture.currency}
+                      {formatManualFactureNumber(line.unitPrice)} {facture.currency}
                     </td>
                     <td className="px-4 py-2 text-right">
-                      {(line.quantity * line.unitPrice).toFixed(2)} {facture.currency}
+                      {formatManualFactureNumber(line.quantity * line.unitPrice)} {facture.currency}
                     </td>
                   </tr>
                 ))}
@@ -240,26 +241,26 @@ export default function FactureViewClient({ factureId, config, findFactureById }
               <div className="flex justify-between">
                 <span>Sous-total</span>
                 <span>
-                  {facture.subtotal.toFixed(2)} {facture.currency}
+                  {formatManualFactureNumber(facture.subtotal)} {facture.currency}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span>TVA ({facture.taxRate}%)</span>
                 <span>
-                  {facture.taxAmount.toFixed(2)} {facture.currency}
+                  {formatManualFactureNumber(facture.taxAmount)} {facture.currency}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span>Autres</span>
                 <span>
-                  {facture.otherFees.toFixed(2)} {facture.currency}
+                  {formatManualFactureNumber(facture.otherFees)} {facture.currency}
                 </span>
               </div>
               <Separator className="my-2" />
               <div className="flex justify-between font-semibold text-lg">
                 <span>Total TTC</span>
                 <span>
-                  {facture.total.toFixed(2)} {facture.currency}
+                  {formatManualFactureNumber(facture.total)} {facture.currency}
                 </span>
               </div>
             </div>
@@ -383,9 +384,9 @@ export default function FactureViewClient({ factureId, config, findFactureById }
                   <td style={{ padding: "8px", textAlign: "center", border: "1px solid #333" }}>{index + 1}</td>
                   <td style={{ padding: "8px", border: "1px solid #333" }}>{line.description}</td>
                   <td style={{ padding: "8px", textAlign: "center", border: "1px solid #333" }}>{line.unit}</td>
-                  <td style={{ padding: "8px", textAlign: "center", border: "1px solid #333" }}>{line.quantity.toLocaleString("fr-FR")}</td>
-                  <td style={{ padding: "8px", textAlign: "center", border: "1px solid #333" }}>{line.unitPrice.toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
-                  <td style={{ padding: "8px", textAlign: "right", border: "1px solid #333" }}>{lineTotal.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                  <td style={{ padding: "8px", textAlign: "center", border: "1px solid #333" }}>{formatManualFactureNumber(line.quantity)}</td>
+                  <td style={{ padding: "8px", textAlign: "center", border: "1px solid #333" }}>{formatManualFactureNumber(line.unitPrice)}</td>
+                  <td style={{ padding: "8px", textAlign: "right", border: "1px solid #333" }}>{formatManualFactureNumber(lineTotal)}</td>
                 </tr>
               );
             })}
@@ -408,23 +409,23 @@ export default function FactureViewClient({ factureId, config, findFactureById }
           <div style={{ border: "2px solid #333", padding: "12px", width: "240px", fontSize: "10px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
               <span style={{ fontWeight: "bold" }}>Total Hors TVA</span>
-              <span style={{ fontWeight: "bold" }}>{facture.subtotal.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+              <span style={{ fontWeight: "bold" }}>{formatManualFactureNumber(facture.subtotal)}</span>
             </div>
             {facture.taxRate > 0 && (
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
                 <span>TVA</span>
-                <span>{facture.taxAmount.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                <span>{formatManualFactureNumber(facture.taxAmount)}</span>
               </div>
             )}
             {facture.otherFees > 0 && (
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
                 <span>Autres</span>
-                <span>{facture.otherFees.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                <span>{formatManualFactureNumber(facture.otherFees)}</span>
               </div>
             )}
             <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid #333", paddingTop: "8px", marginTop: "8px", fontSize: "14px", fontWeight: "bold" }}>
               <span>Total TTC</span>
-              <span>{facture.total.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+              <span>{formatManualFactureNumber(facture.total)}</span>
             </div>
           </div>
         </div>
